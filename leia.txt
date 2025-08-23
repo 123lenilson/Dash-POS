@@ -1,0 +1,663 @@
+---------------- CSS ------------------
+
+/* styles.css - CSS completo do dashboard (MAIN à esquerda, CART à direita fixa/Clamped) */
+
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --muted:#8b8fa3;
+  --text:#23243a;
+  --accent:#6c5ce7;
+  --accent-2:#9b8cff;
+  --ok:#22c55e;
+  --warn:#ef4444;
+  --line:#ececf3;
+  --shadow: 0 6px 20px rgba(10,10,40,.06);
+  --shadow-strong: 0 12px 30px rgba(10,10,40,.08);
+  --radius: 16px;
+
+  /* Sidebar width: clamp(min, preferred, max)
+     - min 280px, preferred 22vw, max 360px
+     Ajusta estes valores conforme preferires */
+  --sidebar-width: clamp(280px, 22vw, 360px);
+}
+
+/* reset / base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font:14px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+}
+
+/* LAYOUT: MAIN (flex) + SIDE (carrinho) com largura controlada por --sidebar-width */
+.interface{
+  display:grid;
+  grid-template-columns: 1fr var(--sidebar-width); /* changed: main flexible, sidebar clamped */
+  gap:0;
+  height:100vh;
+}
+
+/* MAIN (esquerda) */
+.main{
+  background:transparent;
+  overflow:auto;
+  padding:0;
+  margin:0;
+  position:relative;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* main-header (sticky no topo do main) */
+.main-header{
+  position:sticky;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 20px;
+  border-radius:0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(235,232,255,0.6);
+}
+.main-header-left{ display:flex; gap:12px; align-items:center; }
+.main-header-right{ display:flex; gap:12px; align-items:center; }
+
+/* main nav */
+.main .main-nav{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.main .main-nav .nav-link{
+  border:0;
+  background:transparent;
+  padding:10px 14px;
+  border-radius:12px;
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:700;
+  transition: all .12s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.main .main-nav .nav-link:hover{
+  background:#f6f5ff;
+  color:var(--accent);
+  transform:translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+.main .main-nav .nav-link.is-active{
+  color:#fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px rgba(108,92,231,0.18);
+}
+
+/* buttons / user */
+#newOrderBtn{ padding:10px 14px; border-radius:12px; font-weight:700; box-shadow: 0 8px 24px rgba(108,92,231,0.12); border:0; cursor:pointer; }
+.date-time{ color:var(--muted); font-size:13px; white-space:nowrap; min-width:120px; text-align:right; }
+.user{ display:flex; align-items:center; gap:10px; }
+.avatar{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:#f0f1f6; color:#5b5e72; font-weight:700; }
+.user-info{ display:flex; flex-direction:column; line-height:1; }
+.user-info span{ font-size:11px; color:var(--muted); }
+
+/* SEARCH ROW */
+.search-row{ margin:12px 0; padding:0 20px; }
+.search{ position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:8px 44px 8px 40px; box-shadow: var(--shadow); margin-bottom:0; }
+.search-icon{ position:absolute; left:12px; top:50%; transform:translateY(-50%); }
+.search input{ width:100%; border:0; outline:0; font-size:15px; background:transparent; color:var(--text); }
+.clear-btn{ position:absolute; right:6px; top:50%; transform:translateY(-50%); border:0; background:transparent; font-size:22px; color:#9aa0b4; cursor:pointer; padding:6px 10px; line-height:1; }
+
+/* CATEGORY BAR */
+.category-bar{ display:flex; flex-wrap:wrap; gap:12px; margin:14px 0 18px; padding:0 20px; }
+.category{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); background:#fff; border-radius:16px; box-shadow:var(--shadow); cursor:pointer; transition:.15s; }
+.category.is-active{ outline:2px solid #e8e4ff; background:#fbfaff; }
+.category .circle{ width:34px; height:34px; border-radius:12px; display:grid; place-items:center; background:#f3f0ff; color:var(--accent); }
+.category .meta{ display:flex; flex-direction:column; line-height:1.05; }
+.category .meta small{ color:var(--muted); font-size:11px; }
+
+/* PRODUCT GRID */
+.product-grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding:0 20px 24px; }
+
+/* CARD */
+.card{ background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform .06s ease; }
+.card:active{ transform:scale(.995); }
+.card .thumb{ width:100%; aspect-ratio:4/3; background:#f5f6fb; display:grid; place-items:center; }
+.card .thumb img{ width:96%; height:96%; object-fit:cover; border-radius:14px; }
+.card .body{ padding:12px 14px 10px; }
+.card .title{ font-weight:700; margin:6px 0 2px; font-size:15px; color:var(--text); }
+.badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#eafaf0; color:var(--ok); margin:6px 0; }
+.badge.na{ background:#fdecec; color:var(--warn); }
+.price{ margin-top:8px; font-weight:800; font-size:16px; color:var(--text); }
+.controls{ margin-top:8px; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
+.qtybtn.plus{ background:#f1edff; color:var(--accent); }
+
+/* SIDE / CART */
+.side{
+  background:#fff;
+  border-left:1px solid var(--line);
+  overflow:auto;
+  padding:14px;                 /* ligeiramente reduzido para estética */
+  display:flex;
+  flex-direction:column;
+  min-width: var(--sidebar-width); /* garante largura mínima respectiva */
+  max-width: var(--sidebar-width); /* trava o crescimento */
+  box-sizing:border-box;
+}
+.side-inner{ display:flex; flex-direction:column; min-height:100%; gap:12px; }
+.side-body{ flex:1; display:flex; flex-direction:column; gap:12px; }
+.cart-title{ font-size:16px; margin-bottom:6px; color:var(--text); font-weight:700; display: flex; justify-content: space-between;}
+.cart-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; max-height:none; }
+.cart-item{ display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+.cart-item .title{ font-weight:700; font-size:14px; color:var(--text); }
+.cart-item .meta{ color:var(--muted); font-size:12px; }
+.cart-item .right{ display:flex; align-items:center; gap:8px; }
+.iconbtn{ width:32px; height:32px; display:grid; place-items:center; border-radius:8px; border:0; cursor:pointer; background:#f3f4fa; font-weight:800; }
+.iconbtn.del{ background:#ffefef; color:#cc2a2a; }
+
+/* CART SUMMARY & ACTIONS */
+.cart-summary{ border-top:1px dashed var(--line); padding-top:10px; margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+.cart-summary .row{ display:flex; align-items:center; justify-content:space-between; }
+.cart-summary .row.total{ font-size:18px; font-weight:800; margin-top:6px; }
+.payment{ margin:14px 0 10px; }
+.pmethods{ display:flex; gap:8px; }
+.pm{ border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; }
+.pm.is-active{ border-color:#dfd7ff; background:#f8f7ff; color:var(--accent); }
+
+/* Buttons */
+.btn{ border:0; cursor:pointer; padding:10px 14px; border-radius:12px; font-weight:600; background:#f3f4f9; color:#3b3d56; transition:.15s; }
+.btn:hover{ filter:brightness(.97); }
+.btn.purple{ background: linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 20px rgba(108,92,231,0.12); }
+.btn.light{ background:#f1f2f9; color:#666; }
+
+/* Ajuste do botão de ação para ficar proporcional na sidebar menor */
+.btn.action{
+  width:100%;
+  padding:12px 12px;        /* menos padding horizontal para não ficar "muito largo" */
+  font-size:15px;
+  border-radius:12px;
+  background: linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;
+  box-shadow: var(--shadow);
+}
+
+/* MOBILE FLOATING CART */
+.mobile-cart-btn{ display:none; position:fixed; right:18px; bottom:18px; z-index:1400; width:64px; height:64px; border-radius:999px; border:0; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 30px rgba(108,92,231,0.22); display:grid; place-items:center; cursor:pointer; font-size:22px; }
+.cart-badge{ position:absolute; right:8px; top:6px; min-width:20px; height:20px; padding:0 6px; border-radius:999px; display:inline-grid; place-items:center; background:#ef4444; color:#fff; font-weight:800; font-size:12px; line-height:1; box-shadow:0 4px 10px rgba(0,0,0,0.12); transform:translateY(-2px); }
+
+/* CART DRAWER (mobile) */
+.cart-overlay{ display:none; position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1300; transition:opacity .18s ease; opacity:0; }
+.cart-overlay.is-open{ display:block; opacity:1; }
+.cart-drawer{ position:fixed; right:0; top:0; height:100%; width:92%; max-width:420px; background:#fff; box-shadow:-16px 0 40px rgba(10,10,40,.12); transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.9,.2,1); display:flex; flex-direction:column; }
+.cart-overlay.is-open .cart-drawer{ transform: translateX(0); }
+.cart-drawer-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); }
+.cart-drawer-body{ overflow-y:auto; padding-bottom:18px; }
+
+/* util / controls */
+.iconbtn{ font-weight:800; border:0; cursor:pointer; }
+.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
+.qtybtn.plus{ background:#f1edff; color:var(--accent); }
+
+/* scrollbars */
+.side::-webkit-scrollbar, .main::-webkit-scrollbar, .cart-drawer-body::-webkit-scrollbar { width:8px; height:8px; }
+.side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .cart-drawer-body::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:8px; }
+
+/* responsiveness */
+@media (max-width:1100px){
+  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding:0 16px 24px; }
+}
+@media (max-width:900px){
+  .interface{ grid-template-columns: 1fr var(--sidebar-width); } /* still two columns but adjusted for narrower screens */
+}
+@media (max-width:760px){
+  .interface{ grid-template-columns: 1fr; }
+  .side{ display:none; }
+  .mobile-cart-btn{ display:grid; }
+  .main{ height: calc(100vh); overflow:auto; padding-bottom:90px; }
+  .search-row{ padding:0 12px; }
+  .category-bar{ padding:0 12px; }
+  .product-grid{ padding:0 12px 120px; }
+}
+
+/* ====== Mobile menu button: escondido por padrão, só aparece em telas pequenas ====== */
+
+/* regra base (muito específica) — garante esconder no desktop */
+.main-header .mobile-menu-btn,
+.header .mobile-menu-btn,
+.navbar .mobile-menu-btn {
+  display: none !important; /* !important só aqui para garantir que nenhuma outra regra assuma */
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+/* quando em mobile/tablet (<= 760px) mostramos o botão */
+@media (max-width: 890px) {
+  .main-header .mobile-menu-btn,
+  .header .mobile-menu-btn,
+  .navbar .mobile-menu-btn {
+    display: inline-grid !important;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    width:40px;
+    height:40px;
+    border-radius:8px;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    place-items:center;
+    cursor:pointer;
+    transition: all .12s ease;
+    font-size:18px;
+  }
+}
+/* esconde .date-time em telas menores ou iguais a 1050px para evitar distorções */
+@media (max-width: 1050px) {
+  .date-time {
+    display: none !important;
+    visibility: hidden !important;
+    /* acessibilidade: sinaliza que está oculto */
+    aria-hidden: true;
+  }
+}
+
+/* mobile/tablet: esconder nav por padrão e mostrar hamburger */
+@media (max-width: 890px) {
+  /* força esconder o nav por padrão no mobile - usa !important para evitar conflitos */
+  .main .main-nav {
+    display: none !important;
+}
+
+
+
+-------------- JS -------------
+
+/* ======= MOCK DE DADOS ======= */
+const PRODUCTS = [
+  {id:1,  cat:"All Menu", name:"Elegant Pan Seared Chicken Plate", price:5200, available:true,  img:""},
+  {id:2,  cat:"Appetizer", name:"Bruschetta Classic", price:1900, available:true, img:""},
+  {id:3,  cat:"Seafood", name:"Elegant Salmon Sashimi Presentation", price:8000, available:true, img:""},
+  {id:4,  cat:"Chicken", name:"Chicken Pop Matah", price:3500, available:true, img:""},
+  {id:5,  cat:"Steak", name:"Sirloin Steak 250g", price:11000, available:true, img:""},
+  {id:6,  cat:"Salad", name:"Caesar Salad Bowl", price:3700, available:true, img:""},
+  {id:7,  cat:"Spicy Food", name:"Artistic Overhead Pasta", price:4200, available:false, img:""},
+  {id:8,  cat:"Dessert", name:"Bolognese Spaghetti", price:2400, available:true, img:""},
+  {id:9,  cat:"Beverages", name:"Cinnaple Coffee", price:2120, available:true, img:""},
+  {id:10, cat:"Cocktail", name:"Mango Sunrise", price:4500, available:true, img:""},
+  {id:11, cat:"Seafood", name:"Gourmet Grilled Vegee Fish Dish", price:4000, available:true, img:""},
+  {id:12, cat:"Pasta", name:"Elegantly Plated Fettuccine Pasta", price:3800, available:true, img:""},
+  {id:13, cat:"Salad", name:"Greek Salad (Veg)", price:3300, available:true, img:""},
+  {id:14, cat:"Chicken", name:"Honey Garlic Chicken", price:4200, available:true, img:""},
+  {id:15, cat:"Beverages", name:"Iced Lemon Tea", price:1500, available:true, img:""},
+  {id:16, cat:"Dessert", name:"Chocolate Lava Cake", price:3100, available:true, img:""},
+  {id:17, cat:"Appetizer", name:"Fried Calamari", price:2700, available:true, img:""},
+  {id:18, cat:"Spicy Food", name:"Volcano Ramen", price:3900, available:true, img:""},
+  {id:19, cat:"Cocktail", name:"Berry Mojito", price:4700, available:true, img:""},
+  {id:20, cat:"Pasta", name:"Penne Alfredo", price:3600, available:true, img:""}
+];
+
+const TAX_RATE = 0.15; // 15%
+const currency = new Intl.NumberFormat('pt-AO', { style:'currency', currency:'AOA', maximumFractionDigits:2 });
+
+/* ======= ESTADO ======= */
+let activeCategory = "All Menu";
+let searchTerm = "";
+const cart = new Map(); // id -> {product, qty}
+
+/* ======= DOM ======= */
+const dateTimeEl   = document.getElementById('dateTime');
+const categoryBar  = document.getElementById('categoryBar');
+const productGrid  = document.getElementById('productGrid');
+const searchInput  = document.getElementById('searchInput');
+const clearSearch  = document.getElementById('clearSearch');
+
+const cartList     = document.getElementById('cartList');
+const cartItemsCount = document.getElementById('cartItemsCount');
+const cartSubtotal = document.getElementById('cartSubtotal');
+const cartTax      = document.getElementById('cartTax');
+const cartTotal    = document.getElementById('cartTotal');
+
+const cartListOverlay = document.getElementById('cartListOverlay');
+const cartItemsCountOverlay = document.getElementById('cartItemsCountOverlay');
+const cartSubtotalOverlay = document.getElementById('cartSubtotalOverlay');
+const cartTaxOverlay = document.getElementById('cartTaxOverlay');
+const cartTotalOverlay = document.getElementById('cartTotalOverlay');
+
+const taxRateLabel = document.getElementById('taxRateLabel');
+const clearCartBtn = document.getElementById('clearCart');
+const placeOrderBtn = document.getElementById('placeOrder');
+
+const clearCartOverlayBtn = document.getElementById('clearCartOverlay');
+const placeOrderOverlayBtn = document.getElementById('placeOrderOverlay');
+
+const mobileCartBtn = document.getElementById('mobileCartBtn');
+const mobileCartBadge = document.getElementById('mobileCartBadge');
+const cartOverlay = document.getElementById('cartOverlay');
+const closeCartOverlayBtn = document.getElementById('closeCartOverlay');
+
+/* ======= UTIL ======= */
+function nowFancy(){
+  const d = new Date();
+  return d.toLocaleDateString('pt-PT', { weekday:'short', day:'2-digit', month:'short', year:'numeric'}) +
+         " • " + d.toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
+}
+function placeholderIMG(name){
+  const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const hue = (name.length*37) % 360;
+  const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='hsl(${hue},74%,92%)' />
+      <stop offset='100%' stop-color='hsl(${(hue+40)%360},74%,85%)' />
+    </linearGradient></defs>
+    <rect width='100%' height='100%' fill='url(#g)'/>
+    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, -apple-system, Segoe UI, Roboto' font-weight='700' font-size='64' fill='hsl(${hue},35%,28%)'>${initials}</text>
+  </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function isMobileView(){
+  return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+}
+
+/* ======= RENDER ======= */
+function buildCategories(){
+  const counts = {};
+  for(const p of PRODUCTS){ const c = p.cat; counts[c] = (counts[c]||0)+1; }
+  counts["All Menu"] = PRODUCTS.length;
+
+  const order = ["All Menu", ...Object.keys(counts).filter(c=>c!=="All Menu").sort()];
+  categoryBar.innerHTML = order.map(cat => `
+    <button class="category ${cat===activeCategory?'is-active':''}" data-cat="${cat}">
+      <div class="circle">🏷️</div>
+      <div class="meta">
+        <strong>${cat}</strong>
+        <small>${counts[cat]} items</small>
+      </div>
+    </button>
+  `).join('');
+
+  categoryBar.querySelectorAll('.category').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeCategory = btn.dataset.cat;
+      buildCategories();
+      renderProducts();
+    });
+  });
+}
+
+function renderProducts(){
+  const list = PRODUCTS
+    .filter(p => activeCategory==="All Menu" ? true : p.cat === activeCategory)
+    .filter(p => p.name.toLowerCase().includes(searchTerm));
+
+  if(list.length === 0){
+    productGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;">Nenhum produto encontrado.</div>`;
+    return;
+  }
+
+  productGrid.innerHTML = list.map(p => `
+    <article class="card" data-id="${p.id}">
+      <div class="thumb"><img alt="${p.name}" src="${p.img || placeholderIMG(p.name)}"></div>
+      <div class="body">
+        <div class="title">${p.name}</div>
+        <span class="badge ${p.available? '':'na'}">${p.available? 'Available':'Not Available'}</span>
+        <div class="price">${currency.format(p.price)}</div>
+        <div class="controls" onclick="event.stopPropagation()">
+          <button class="qtybtn minus" data-action="minus" aria-label="Diminuir">−</button>
+          <button class="qtybtn plus"  data-action="plus"  aria-label="Adicionar">+</button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  productGrid.querySelectorAll('.card').forEach(card=>{
+    const id = +card.dataset.id;
+    card.addEventListener('click', ()=> addToCart(id, 1));
+    card.querySelector('.qtybtn.plus').addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); });
+    card.querySelector('.qtybtn.minus').addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); });
+  });
+}
+
+function renderCart(){
+  const items = [...cart.values()];
+
+  cartList.innerHTML = items.map(({product, qty})=>{
+    const line = product.price * qty;
+    return `
+      <li class="cart-item" data-id="${product.id}">
+        <div>
+          <div class="title">${product.name}</div>
+          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+        </div>
+        <div class="right">
+          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
+          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
+          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
+          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  cartListOverlay.innerHTML = items.map(({product, qty})=>{
+    const line = product.price * qty;
+    return `
+      <li class="cart-item" data-id="${product.id}">
+        <div>
+          <div class="title">${product.name}</div>
+          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+        </div>
+        <div class="right">
+          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
+          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
+          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
+          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  cartList.querySelectorAll('.cart-item').forEach(row=>{
+    const id = +row.dataset.id;
+    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
+    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
+    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+  });
+
+  cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
+    const id = +row.dataset.id;
+    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
+    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
+    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+  });
+
+  const stats = items.reduce((acc, it)=>{
+    acc.items += it.qty;
+    acc.subtotal += it.product.price * it.qty;
+    return acc;
+  }, {items:0, subtotal:0});
+
+  const tax = stats.subtotal * TAX_RATE;
+  const total = stats.subtotal + tax;
+
+  cartItemsCount.textContent = stats.items;
+  cartSubtotal.textContent = currency.format(stats.subtotal);
+  cartTax.textContent = currency.format(tax);
+  cartTotal.textContent = currency.format(total);
+  taxRateLabel.textContent = `${(TAX_RATE*100).toFixed(0)}%`;
+
+  cartItemsCountOverlay.textContent = stats.items;
+  cartSubtotalOverlay.textContent = currency.format(stats.subtotal);
+  cartTaxOverlay.textContent = currency.format(tax);
+  cartTotalOverlay.textContent = currency.format(total);
+  document.getElementById('taxRateLabelOverlay').textContent = `${(TAX_RATE*100).toFixed(0)}%`;
+
+  mobileCartBadge.textContent = stats.items;
+  mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
+}
+
+/* ======= ACTIONS ======= */
+function addToCart(id, delta){
+  const product = PRODUCTS.find(p=>p.id===id);
+  if(!product) return;
+  const entry = cart.get(id) || {product, qty:0};
+  entry.qty += delta;
+  if(entry.qty <= 0) cart.delete(id);
+  else cart.set(id, entry);
+  renderCart();
+}
+function removeFromCart(id){
+  cart.delete(id);
+  renderCart();
+}
+
+/* SEARCH */
+searchInput.addEventListener('input', () => {
+  searchTerm = searchInput.value.trim().toLowerCase();
+  renderProducts();
+});
+clearSearch.addEventListener('click', ()=>{
+  searchInput.value = "";
+  searchTerm = "";
+  searchInput.focus();
+  renderProducts();
+});
+
+/* GLOBAL BUTTONS */
+
+document.getElementById('placeOrder')?.addEventListener('click', ()=>{
+  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
+  alert('Pedido realizado! (demonstração)');
+  cart.clear(); renderCart();
+});
+document.getElementById('placeOrderOverlay')?.addEventListener('click', ()=>{
+  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
+  alert('Pedido realizado! (demonstração)');
+  cart.clear(); renderCart();
+});
+clearCartBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
+clearCartOverlayBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
+
+/* MOBILE DRAWER */
+mobileCartBtn?.addEventListener('click', ()=> openCartOverlay());
+closeCartOverlayBtn?.addEventListener('click', ()=> closeCartOverlay());
+cartOverlay?.addEventListener('click', (e)=>{ if(e.target === cartOverlay) closeCartOverlay(); });
+
+function openCartOverlay(){
+  cartOverlay.classList.add('is-open');
+  cartOverlay.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+}
+function closeCartOverlay(){
+  cartOverlay.classList.remove('is-open');
+  cartOverlay.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+}
+
+
+
+/* MAIN MENU (isolar .main nav) */
+document.querySelectorAll('.main .main-nav .nav-link').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.main .main-nav .nav-link').forEach(x=>x.classList.remove('is-active'));
+    btn.classList.add('is-active');
+  });
+});
+
+/* DATETIME & INIT */
+function updateDateTime(){
+  const dt = document.getElementById('dateTime');
+  if(dt) dt.textContent = nowFancy();
+}
+
+function updateResponsiveUI(){
+  if(isMobileView()){
+    document.querySelector('.side') && (document.querySelector('.side').style.display = 'none');
+    mobileCartBtn && (mobileCartBtn.style.display = 'grid');
+  } else {
+    document.querySelector('.side') && (document.querySelector('.side').style.display = '');
+    mobileCartBtn && (mobileCartBtn.style.display = 'none');
+    closeCartOverlay();
+  }
+}
+
+function init(){
+  buildCategories();
+  renderProducts();
+  renderCart();
+  updateDateTime();
+  setInterval(updateDateTime, 30000);
+  if(+mobileCartBadge.textContent === 0) mobileCartBadge.style.display = 'none';
+  updateResponsiveUI();
+  window.addEventListener('resize', updateResponsiveUI);
+}
+init();
+/* ===== Menu responsivo: toggle hamburger, fechar ao clicar fora, limpar no resize ===== */
+(function setupResponsiveMenu(){
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const mainHeader = document.querySelector('.main-header');
+
+  if(!mobileBtn || !mainHeader) return;
+
+  function setOpenState(open){
+    if(open){
+      mainHeader.classList.add('nav-open');
+      mobileBtn.setAttribute('aria-expanded','true');
+      // opcional: bloquear scroll do body quando o menu móvel estiver aberto
+      // document.body.style.overflow = 'hidden';
+    } else {
+      mainHeader.classList.remove('nav-open');
+      mobileBtn.setAttribute('aria-expanded','false');
+      // document.body.style.overflow = '';
+    }
+  }
+
+  mobileBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const isOpen = mainHeader.classList.contains('nav-open');
+    setOpenState(!isOpen);
+  });
+
+  // fechar o menu ao clicar nalguma nav-link (útil em mobile)
+  document.querySelectorAll('.main .main-nav .nav-link').forEach(link=>{
+    link.addEventListener('click', ()=>{
+      if(window.matchMedia && window.matchMedia('(max-width:760px)').matches){
+        setOpenState(false);
+      }
+    });
+  });
+
+  // fechar ao clicar fora (document)
+  document.addEventListener('click', (e)=>{
+    if(!mainHeader.classList.contains('nav-open')) return;
+    // se o clique não estiver dentro do header, fecha
+    if(!mainHeader.contains(e.target) && e.target !== mobileBtn){
+      setOpenState(false);
+    }
+  });
+
+  // fechar ao redimensionar para desktop
+  window.addEventListener('resize', ()=>{
+    if(!(window.matchMedia && window.matchMedia('(max-width:760px)').matches)){
+      setOpenState(false);
+    }
+  });
+})();

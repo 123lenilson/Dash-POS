@@ -1,0 +1,348 @@
+/* styles.css - CSS completo do dashboard (MAIN à esquerda, CART à direita fixa/Clamped) */
+
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --muted:#8b8fa3;
+  --text:#23243a;
+  --accent:#6c5ce7;
+  --accent-2:#9b8cff;
+  --ok:#22c55e;
+  --warn:#ef4444;
+  --line:#ececf3;
+  --shadow: 0 6px 20px rgba(10,10,40,.06);
+  --shadow-strong: 0 12px 30px rgba(10,10,40,.08);
+  --radius: 16px;
+
+  /* Sidebar width: clamp(min, preferred, max)
+     - min 280px, preferred 22vw, max 360px
+     Ajusta estes valores conforme preferires */
+  --sidebar-width: clamp(280px, 22vw, 360px);
+  --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
+}
+
+/* reset / base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font:14px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+}
+
+/* LAYOUT: MAIN (flex) + SIDE (carrinho) com largura controlada por --sidebar-width */
+.interface{
+  display:grid;
+  grid-template-columns: 1fr var(--sidebar-width); /* changed: main flexible, sidebar clamped */
+  gap:0;
+  height:100vh;
+}
+
+/* MAIN (esquerda) */
+.main{
+  background:transparent;
+  overflow:auto;
+  padding:0;
+  margin:0;
+  position:relative;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* main-header (sticky no topo do main) */
+.main-header{
+  position:sticky;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 20px;
+  border-radius:0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(235,232,255,0.6);
+}
+.main-header-left{ display:flex; gap:12px; align-items:center; }
+.main-header-right{ display:flex; gap:12px; align-items:center; }
+
+/* main nav */
+.main .main-nav{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.main .main-nav .nav-link{
+  border:0;
+  background:transparent;
+  padding:10px 14px;
+  border-radius:12px;
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:700;
+  transition: all .12s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.main .main-nav .nav-link:hover{
+  background:#f6f5ff;
+  color:var(--accent);
+  transform:translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+.main .main-nav .nav-link.is-active{
+  color:#fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px rgba(108,92,231,0.18);
+}
+
+/* buttons / user */
+#newOrderBtn{ padding:10px 14px; border-radius:12px; font-weight:700; box-shadow: 0 8px 24px rgba(108,92,231,0.12); border:0; cursor:pointer; }
+.date-time{ color:var(--muted); font-size:13px; white-space:nowrap; min-width:120px; text-align:right; }
+.user{ display:flex; align-items:center; gap:10px; }
+.avatar{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:#f0f1f6; color:#5b5e72; font-weight:700; }
+.user-info{ display:flex; flex-direction:column; line-height:1; }
+.user-info span{ font-size:11px; color:var(--muted); }
+
+/* SEARCH ROW */
+.search-row{ margin:12px 0; padding:0 20px; }
+.search{ position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:8px 44px 8px 40px; box-shadow: var(--shadow); margin-bottom:0; }
+.search-icon{ position:absolute; left:12px; top:50%; transform:translateY(-50%); }
+.search input{ width:100%; border:0; outline:0; font-size:15px; background:transparent; color:var(--text); }
+.clear-btn{ position:absolute; right:6px; top:50%; transform:translateY(-50%); border:0; background:transparent; font-size:22px; color:#9aa0b4; cursor:pointer; padding:6px 10px; line-height:1; }
+
+/* CATEGORY BAR */
+.category-bar{ display:flex; flex-wrap:wrap; gap:12px; margin:14px 0 18px; padding:0 20px; }
+.category{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); background:#fff; border-radius:16px; box-shadow:var(--shadow); cursor:pointer; transition:.15s; }
+.category.is-active{ outline:2px solid #e8e4ff; background:#fbfaff; }
+.category .circle{ width:34px; height:34px; border-radius:12px; display:grid; place-items:center; background:#f3f0ff; color:var(--accent); }
+.category .meta{ display:flex; flex-direction:column; line-height:1.05; }
+.category .meta small{ color:var(--muted); font-size:11px; }
+
+/* PRODUCT GRID */
+.product-grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding:0 20px 24px; }
+
+/* CARD */
+.card{ background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform .06s ease; }
+.card:active{ transform:scale(.995); }
+.card .thumb{ width:100%; aspect-ratio:4/3; background:#f5f6fb; display:grid; place-items:center; }
+.card .thumb img{ width:96%; height:96%; object-fit:cover; border-radius:14px; }
+.card .body{ padding:12px 14px 10px; }
+.card .title{ font-weight:700; margin:6px 0 2px; font-size:15px; color:var(--text); }
+.badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#eafaf0; color:var(--ok); margin:6px 0; }
+.badge.na{ background:#fdecec; color:var(--warn); }
+.price{ margin-top:8px; font-weight:800; font-size:16px; color:var(--text); }
+.controls{ margin-top:8px; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
+.qtybtn.plus{ background:#f1edff; color:var(--accent); }
+
+/* SIDE / CART */
+.side{
+  background:#fff;
+  border-left:1px solid var(--line);
+  overflow:auto;
+  padding:14px;                 /* ligeiramente reduzido para estética */
+  display:flex;
+  flex-direction:column;
+  min-width: var(--sidebar-width); /* garante largura mínima respectiva */
+  max-width: var(--sidebar-width); /* trava o crescimento */
+  box-sizing:border-box;
+}
+.side-inner{ display:flex; flex-direction:column; min-height:100%; gap:12px; }
+.side-body{ flex:1; display:flex; flex-direction:column; gap:12px; }
+.cart-title{ font-size:16px; margin-bottom:6px; color:var(--text); font-weight:700; display: flex; justify-content: space-between;}
+.cart-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; max-height:none; }
+.cart-item{ display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+.cart-item .title{ font-weight:700; font-size:14px; color:var(--text); }
+.cart-item .meta{ color:var(--muted); font-size:12px; }
+.cart-item .right{ display:flex; align-items:center; gap:8px; }
+.iconbtn{ width:32px; height:32px; display:grid; place-items:center; border-radius:8px; border:0; cursor:pointer; background:#f3f4fa; font-weight:800; }
+.iconbtn.del{ background:#ffefef; color:#cc2a2a; }
+
+/* CART SUMMARY & ACTIONS */
+.cart-summary{ border-top:1px dashed var(--line); padding-top:10px; margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+.cart-summary .row{ display:flex; align-items:center; justify-content:space-between; }
+.cart-summary .row.total{ font-size:18px; font-weight:800; margin-top:6px; }
+.payment{ margin:14px 0 10px; }
+.pmethods{ display:flex; gap:8px; }
+.pm{ border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; }
+.pm.is-active{ border-color:#dfd7ff; background:#f8f7ff; color:var(--accent); }
+
+/* Buttons */
+.btn{ border:0; cursor:pointer; padding:10px 14px; border-radius:12px; font-weight:600; background:#f3f4f9; color:#3b3d56; transition:.15s; }
+.btn:hover{ filter:brightness(.97); }
+.btn.purple{ background: linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 20px rgba(108,92,231,0.12); }
+.btn.light{ background:#f1f2f9; color:#666; }
+
+/* Ajuste do botão de ação para ficar proporcional na sidebar menor */
+.btn.action{
+  width:100%;
+  padding:12px 12px;        /* menos padding horizontal para não ficar "muito largo" */
+  font-size:15px;
+  border-radius:12px;
+  background: linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;
+  box-shadow: var(--shadow);
+}
+
+/* MOBILE FLOATING CART */
+.mobile-cart-btn{ display:none; position:fixed; right:18px; bottom:18px; z-index:1400; width:64px; height:64px; border-radius:999px; border:0; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 30px rgba(108,92,231,0.22); display:grid; place-items:center; cursor:pointer; font-size:22px; }
+.cart-badge{ position:absolute; right:8px; top:6px; min-width:20px; height:20px; padding:0 6px; border-radius:999px; display:inline-grid; place-items:center; background:#ef4444; color:#fff; font-weight:800; font-size:12px; line-height:1; box-shadow:0 4px 10px rgba(0,0,0,0.12); transform:translateY(-2px); }
+
+/* CART DRAWER (mobile) */
+.cart-overlay{ display:none; position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1300; transition:opacity .18s ease; opacity:0; }
+.cart-overlay.is-open{ display:block; opacity:1; }
+.cart-drawer{ position:fixed; right:0; top:0; height:100%; width:92%; max-width:420px; background:#fff; box-shadow:-16px 0 40px rgba(10,10,40,.12); transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.9,.2,1); display:flex; flex-direction:column; }
+.cart-overlay.is-open .cart-drawer{ transform: translateX(0); }
+.cart-drawer-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); }
+.cart-drawer-body{ overflow-y:auto; padding-bottom:18px; }
+
+/* util / controls */
+.iconbtn{ font-weight:800; border:0; cursor:pointer; }
+.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
+.qtybtn.plus{ background:#f1edff; color:var(--accent); }
+
+/* scrollbars */
+.side::-webkit-scrollbar, .main::-webkit-scrollbar, .cart-drawer-body::-webkit-scrollbar { width:8px; height:8px; }
+.side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .cart-drawer-body::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:8px; }
+
+/* responsiveness */
+@media (max-width:1100px){
+  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding:0 16px 24px; }
+}
+@media (max-width:900px){
+  .interface{ grid-template-columns: 1fr var(--sidebar-width); } /* still two columns but adjusted for narrower screens */
+}
+@media (max-width:760px){
+  .interface{ grid-template-columns: 1fr; }
+  .side{ display:none; }
+  .mobile-cart-btn{ display:grid; }
+  .main{ height: calc(100vh); overflow:auto; padding-bottom:90px; }
+  .search-row{ padding:0 12px; }
+  .category-bar{ padding:0 12px; }
+  .product-grid{ padding:0 12px 120px; }
+}
+
+/* ====== Mobile menu button: escondido por padrão, só aparece em telas pequenas ====== */
+
+/* regra base (muito específica) — garante esconder no desktop */
+.main-header .mobile-menu-btn,
+.header .mobile-menu-btn,
+.navbar .mobile-menu-btn {
+  display: none !important; /* !important só aqui para garantir que nenhuma outra regra assuma */
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+/* quando em mobile/tablet (<= 890px) mostramos o botão */
+@media (max-width: 890px) {
+  .main-header .mobile-menu-btn,
+  .header .mobile-menu-btn,
+  .navbar .mobile-menu-btn {
+    display: inline-grid !important;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    width:40px;
+    height:40px;
+    border-radius:8px;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    place-items:center;
+    cursor:pointer;
+    transition: all .12s ease;
+    font-size:18px;
+  }
+
+  /* ===== MUDANÇA PRINCIPAL: menu aparece como SIDEBAR (deslizando lateralmente) =====
+     - Por padrão o .main-nav fica posicionado fora da tela (translateX(-110%))
+     - Quando .main-header recebe a classe .nav-open, o .main-nav desliza para dentro (transform: translateX(0))
+     - Sem bordas, retângulo, ocupa altura total e largura definida por --mobile-nav-width
+  */
+
+  /* forçar nav a comportar-se como painel lateral (em mobile) */
+  .main .main-nav {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--mobile-nav-width);
+    max-width: 100%;
+    padding: 20px 16px;
+    box-sizing: border-box;
+    background: var(--card);
+    /* sem bordas e sem border-radius conforme pedido */
+    border: none;
+    border-radius: 0;
+    /* shadow sutil para destaque */
+    box-shadow: 0 18px 50px rgba(10,10,40,0.12);
+    /* inicia fora da tela (oculto) */
+    transform: translateX(-110%);
+    transition: transform .28s cubic-bezier(.2,.9,.2,1);
+    z-index: 1200; /* acima do header z-index:60 */
+    /* invisível a interações enquanto oculto */
+    visibility: hidden;
+    pointer-events: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* estilo dos links quando em modo sidebar (vertical) */
+  .main .main-nav .nav-link{
+    display:flex;
+    width:100%;
+    padding:10px 12px;
+    margin:2px 0;
+    border-radius:6px; /* pequeno rounding interno aos botões */
+    justify-content:flex-start;
+    text-align:left;
+  }
+
+  /* quando a header ganha a classe nav-open, traz o painel para dentro */
+  .main-header.nav-open .main-nav {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* remove qualquer borda que outro bloco pudesse ter introduzido */
+  .main-header.nav-open .main-nav { border: none; border-radius: 0; }
+
+  /* opcional: empurra o conteúdo principal para direita enquanto o menu está aberto?
+     Não fazemos push automático (sobrepõe), se preferires push podemos oferecer outra versão */
+}
+
+/* esconde .date-time em telas menores ou iguais a 1050px para evitar distorções */
+@media (max-width: 1050px) {
+  .date-time {
+    display: none !important;
+    visibility: hidden !important;
+    /* acessibilidade: sinaliza que está oculto */
+    aria-hidden: true;
+  }
+}
+
+/* mobile/tablet: esconder nav por padrão e mostrar hamburger */
+@media (max-width: 890px) {
+  /* não precisamos forçar display:none mais (já controlamos via transform),
+     mas garantimos que não haja conflitos com regras antigas */
+  /* caso algum outro estilo aplique display block, mantemos nossa lógica via transform */
+  .main .main-nav { /* manter, mas já configurado acima */ }
+}
