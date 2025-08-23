@@ -1,4 +1,182 @@
----------------- CSS ------------------
+html
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POS Dashboard — l</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Font Awesome Free (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p1CmVx4g...PLACEHOLDER..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+</head>
+<body>
+  <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
+  <div class="interface">
+    <!-- COLUNA 70% (MAIN / PRODUTOS) - Primeiro (à esquerda) -->
+    <main class="main col-70 products-col">
+      <!-- HEADER DENTRO DO MAIN (sticky) -->
+      <div class="main-header">
+        <div class="main-header-left">
+          <!-- brand, etc -->
+          <!-- COLE ESTE BOTÃO AO LADO DO BRAND / ANTES DA .main-nav -->
+          <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" title="Abrir menu">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+
+          <nav class="main-nav" aria-label="Menu principal do dashboard">
+            <button class="nav-link is-active" data-nav="home">Home</button>
+            <button class="nav-link" data-nav="orders">Order List</button>
+            <button class="nav-link" data-nav="history">History</button>
+            <button class="nav-link" data-nav="report">Report</button>
+            <button class="nav-link" data-nav="setting">Setting</button>
+          </nav>
+        </div>
+
+        <div class="main-header-right">
+          
+          <div class="date-time" id="dateTime"></div>
+          <div class="user">
+            <div class="avatar">AN</div>
+            <div class="user-info">
+              <strong>Anisa Nur H.</strong>
+              <span>Cashier Staff</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- FIM HEADER DO MAIN -->
+
+      <!-- SEARCH -->
+      <div class="search-row">
+        <div class="search">
+          <span class="search-icon">🔎</span>
+          <input id="searchInput" type="text" placeholder="Search menu here..." />
+          <button id="clearSearch" class="clear-btn" aria-label="Limpar busca">×</button>
+        </div>
+      </div>
+
+      <!-- CATEGORIAS -->
+      <div id="categoryBar" class="category-bar"></div>
+
+      <!-- GRID DE PRODUTOS -->
+      <div id="productGrid" class="product-grid" aria-live="polite"></div>
+    </main>
+
+    <!-- COLUNA 30% (SIDE / CARRINHO) - Segundo (à direita) -->
+    <aside class="side col-30" id="desktopCartCol" aria-hidden="false">
+      <div class="side-inner">
+        <div class="side-body">
+          <div class="cart-title">
+            <strong>Cart</strong>
+            <button id="clearCart" class="btn light" aria-label="Limpar carrinho"><i class="fa-solid fa-trash"></i></button>
+          </div>
+
+          <ul id="cartList" class="cart-list"></ul>
+
+          <div class="cart-summary">
+            <div class="row">
+              <span>Items</span>
+              <strong id="cartItemsCount">0</strong>
+            </div>
+            <div class="row">
+              <span>Subtotal</span>
+              <strong id="cartSubtotal">Kz 0,00</strong>
+            </div>
+            <div class="row">
+              <span>Tax (<span id="taxRateLabel">15%</span>)</span>
+              <strong id="cartTax">Kz 0,00</strong>
+            </div>
+            <div class="row total">
+              <span>Total</span>
+              <strong id="cartTotal">Kz 0,00</strong>
+            </div>
+
+            <div class="payment">
+              <h4>Payment</h4>
+              <div class="pmethods">
+                <button class="pm is-active">Cash</button>
+                <button class="pm">Debit</button>
+                <button class="pm">QRIS</button>
+              </div>
+            </div>
+
+            <div class="cart-actions">              
+              <button id="placeOrder" class="btn action">Place an order</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BOTÃO FLUTUANTE (mobile) para abrir carrinho -->
+  <button id="mobileCartBtn" class="mobile-cart-btn" aria-label="Abrir carrinho" title="Carrinho">
+    <span class="cart-ico">🛒</span>
+    <span id="mobileCartBadge" class="cart-badge" aria-hidden="true">0</span>
+  </button>
+
+  <!-- DRAWER / OVERLAY DO CARRINHO (mobile) -->
+  <div id="cartOverlay" class="cart-overlay" aria-hidden="true">
+    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="cart-drawer-header">
+        <h3 id="drawerTitle">Seu Carrinho</h3>
+        <button id="closeCartOverlay" class="iconbtn" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="cart-drawer-body">
+        <div class="cart" style="box-shadow:none; border-radius:12px; border:0; padding:0;">
+          <div style="padding:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+              <strong>Detail Items</strong>
+              <button id="clearCartOverlay" class="btn light" style="color:#ef4444; font-size:14px">Limpar</button>
+            </div>
+            <ul id="cartListOverlay" class="cart-list"></ul>
+
+            <div class="cart-summary">
+              <div class="row">
+                <span>Items</span>
+                <strong id="cartItemsCountOverlay">0</strong>
+              </div>
+              <div class="row">
+                <span>Subtotal</span>
+                <strong id="cartSubtotalOverlay">Kz 0,00</strong>
+              </div>
+              <div class="row">
+                <span>Tax (<span id="taxRateLabelOverlay">15%</span>)</span>
+                <strong id="cartTaxOverlay">Kz 0,00</strong>
+              </div>
+              <div class="row total">
+                <span>Total</span>
+                <strong id="cartTotalOverlay">Kz 0,00</strong>
+              </div>
+            </div>
+
+            <div class="payment" style="margin:10px 0;">
+              <h4>Payment Method</h4>
+              <div class="pmethods">
+                <button class="pm is-active">Cash</button>
+                <button class="pm">Debit</button>
+                <button class="pm">QRIS</button>
+              </div>
+            </div>
+
+            <button id="placeOrderOverlay" class="btn action" style="margin-top:10px">Place an order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
+CSS
 
 /* styles.css - CSS completo do dashboard (MAIN à esquerda, CART à direita fixa/Clamped) */
 
@@ -20,6 +198,7 @@
      - min 280px, preferred 22vw, max 360px
      Ajusta estes valores conforme preferires */
   --sidebar-width: clamp(280px, 22vw, 360px);
+  --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
 }
 
 /* reset / base */
@@ -247,7 +426,7 @@ body{
   transition: none;
 }
 
-/* quando em mobile/tablet (<= 760px) mostramos o botão */
+/* quando em mobile/tablet (<= 890px) mostramos o botão */
 @media (max-width: 890px) {
   .main-header .mobile-menu-btn,
   .header .mobile-menu-btn,
@@ -267,7 +446,69 @@ body{
     transition: all .12s ease;
     font-size:18px;
   }
+
+  /* ===== MUDANÇA PRINCIPAL: menu aparece como SIDEBAR (deslizando lateralmente) =====
+     - Por padrão o .main-nav fica posicionado fora da tela (translateX(-110%))
+     - Quando .main-header recebe a classe .nav-open, o .main-nav desliza para dentro (transform: translateX(0))
+     - Sem bordas, retângulo, ocupa altura total e largura definida por --mobile-nav-width
+  */
+
+  /* forçar nav a comportar-se como painel lateral (em mobile) */
+  .main .main-nav {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--mobile-nav-width);
+    max-width: 100%;
+    padding: 20px 16px;
+    box-sizing: border-box;
+    background: var(--card);
+    /* sem bordas e sem border-radius conforme pedido */
+    border: none;
+    border-radius: 0;
+    /* shadow sutil para destaque */
+    box-shadow: 0 18px 50px rgba(10,10,40,0.12);
+    /* inicia fora da tela (oculto) */
+    transform: translateX(-110%);
+    transition: transform .28s cubic-bezier(.2,.9,.2,1);
+    z-index: 1200; /* acima do header z-index:60 */
+    /* invisível a interações enquanto oculto */
+    visibility: hidden;
+    pointer-events: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* estilo dos links quando em modo sidebar (vertical) */
+  .main .main-nav .nav-link{
+    display:flex;
+    width:100%;
+    padding:10px 12px;
+    margin:2px 0;
+    border-radius:6px; /* pequeno rounding interno aos botões */
+    justify-content:flex-start;
+    text-align:left;
+  }
+
+  /* quando a header ganha a classe nav-open, traz o painel para dentro */
+  .main-header.nav-open .main-nav {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* remove qualquer borda que outro bloco pudesse ter introduzido */
+  .main-header.nav-open .main-nav { border: none; border-radius: 0; }
+
+  /* opcional: empurra o conteúdo principal para direita enquanto o menu está aberto?
+     Não fazemos push automático (sobrepõe), se preferires push podemos oferecer outra versão */
 }
+
 /* esconde .date-time em telas menores ou iguais a 1050px para evitar distorções */
 @media (max-width: 1050px) {
   .date-time {
@@ -280,15 +521,16 @@ body{
 
 /* mobile/tablet: esconder nav por padrão e mostrar hamburger */
 @media (max-width: 890px) {
-  /* força esconder o nav por padrão no mobile - usa !important para evitar conflitos */
-  .main .main-nav {
-    display: none !important;
+  /* não precisamos forçar display:none mais (já controlamos via transform),
+     mas garantimos que não haja conflitos com regras antigas */
+  /* caso algum outro estilo aplique display block, mantemos nossa lógica via transform */
+  .main .main-nav { /* manter, mas já configurado acima */ }
 }
 
 
 
--------------- JS -------------
 
+JS
 /* ======= MOCK DE DADOS ======= */
 const PRODUCTS = [
   {id:1,  cat:"All Menu", name:"Elegant Pan Seared Chicken Plate", price:5200, available:true,  img:""},
@@ -542,7 +784,6 @@ clearSearch.addEventListener('click', ()=>{
 });
 
 /* GLOBAL BUTTONS */
-
 document.getElementById('placeOrder')?.addEventListener('click', ()=>{
   if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
   alert('Pedido realizado! (demonstração)');
@@ -571,8 +812,6 @@ function closeCartOverlay(){
   cartOverlay.setAttribute('aria-hidden','true');
   document.body.style.overflow = '';
 }
-
-
 
 /* MAIN MENU (isolar .main nav) */
 document.querySelectorAll('.main .main-nav .nav-link').forEach(btn=>{
@@ -610,23 +849,26 @@ function init(){
   window.addEventListener('resize', updateResponsiveUI);
 }
 init();
+
 /* ===== Menu responsivo: toggle hamburger, fechar ao clicar fora, limpar no resize ===== */
 (function setupResponsiveMenu(){
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const mainHeader = document.querySelector('.main-header');
+  const mainNav = document.querySelector('.main .main-nav');
 
-  if(!mobileBtn || !mainHeader) return;
+  if(!mobileBtn || !mainHeader || !mainNav) return;
 
   function setOpenState(open){
     if(open){
       mainHeader.classList.add('nav-open');
       mobileBtn.setAttribute('aria-expanded','true');
-      // opcional: bloquear scroll do body quando o menu móvel estiver aberto
-      // document.body.style.overflow = 'hidden';
+      mainNav.style.display = 'flex'; // Força a exibição do menu
+      document.body.style.overflow = 'hidden'; // Bloqueia scroll do body
     } else {
       mainHeader.classList.remove('nav-open');
       mobileBtn.setAttribute('aria-expanded','false');
-      // document.body.style.overflow = '';
+      mainNav.style.display = ''; // Restaura o estado padrão (none em mobile)
+      document.body.style.overflow = ''; // Restaura scroll
     }
   }
 
@@ -639,7 +881,7 @@ init();
   // fechar o menu ao clicar nalguma nav-link (útil em mobile)
   document.querySelectorAll('.main .main-nav .nav-link').forEach(link=>{
     link.addEventListener('click', ()=>{
-      if(window.matchMedia && window.matchMedia('(max-width:760px)').matches){
+      if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
         setOpenState(false);
       }
     });
@@ -648,7 +890,7 @@ init();
   // fechar ao clicar fora (document)
   document.addEventListener('click', (e)=>{
     if(!mainHeader.classList.contains('nav-open')) return;
-    // se o clique não estiver dentro do header, fecha
+    // se o clique não estiver dentro do header ou no botão, fecha
     if(!mainHeader.contains(e.target) && e.target !== mobileBtn){
       setOpenState(false);
     }
@@ -656,7 +898,7 @@ init();
 
   // fechar ao redimensionar para desktop
   window.addEventListener('resize', ()=>{
-    if(!(window.matchMedia && window.matchMedia('(max-width:760px)').matches)){
+    if(!(window.matchMedia && window.matchMedia('(max-width:890px)').matches)){
       setOpenState(false);
     }
   });

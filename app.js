@@ -137,11 +137,39 @@ function renderProducts(){
     </article>
   `).join('');
 
+  // attach events and mark selected
   productGrid.querySelectorAll('.card').forEach(card=>{
     const id = +card.dataset.id;
+    // apply selected class if present in cart (qty >= 1)
+    if(cart.has(id) && cart.get(id).qty > 0){
+      card.classList.add('is-selected');
+    } else {
+      card.classList.remove('is-selected');
+    }
+
     card.addEventListener('click', ()=> addToCart(id, 1));
-    card.querySelector('.qtybtn.plus').addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); });
-    card.querySelector('.qtybtn.minus').addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); });
+    const plusBtn = card.querySelector('.qtybtn.plus');
+    const minusBtn = card.querySelector('.qtybtn.minus');
+
+    if(plusBtn){
+      plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); });
+    }
+    if(minusBtn){
+      minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); });
+    }
+  });
+}
+
+/* Atualiza a seleção visual dos cards (chamada sempre que carrinho ou produtos mudam) */
+function updateProductSelections(){
+  const cards = productGrid.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const id = +card.dataset.id;
+    if(cart.has(id) && cart.get(id).qty > 0){
+      card.classList.add('is-selected');
+    } else {
+      card.classList.remove('is-selected');
+    }
   });
 }
 
@@ -184,6 +212,7 @@ function renderCart(){
     `;
   }).join('');
 
+  // eventos dos itens (desktop cart)
   cartList.querySelectorAll('.cart-item').forEach(row=>{
     const id = +row.dataset.id;
     row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
@@ -191,6 +220,7 @@ function renderCart(){
     row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
   });
 
+  // eventos do overlay items
   cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
     const id = +row.dataset.id;
     row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
@@ -221,6 +251,9 @@ function renderCart(){
 
   mobileCartBadge.textContent = stats.items;
   mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
+
+  // atualiza a seleção visual dos cards (marca os que estão no carrinho)
+  updateProductSelections();
 }
 
 /* ======= ACTIONS ======= */
@@ -303,8 +336,17 @@ function updateResponsiveUI(){
     mobileCartBtn && (mobileCartBtn.style.display = 'none');
     closeCartOverlay();
   }
+
+  // Additional: when on tablet and below we want to hide main nav and card qty controls (CSS handles it),
+  // but we ensure any programmatic 'display' values are reset for consistent behavior.
+  if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
+    // hide main nav for tablet and below (CSS already hides; here we ensure no inline style exposing it)
+    const mainNav = document.querySelector('.main .main-nav');
+    if(mainNav) mainNav.style.display = ''; // let CSS decide
+  }
 }
 
+/* INIT */
 function init(){
   buildCategories();
   renderProducts();
@@ -329,13 +371,12 @@ init();
     if(open){
       mainHeader.classList.add('nav-open');
       mobileBtn.setAttribute('aria-expanded','true');
-      mainNav.style.display = 'flex'; // Força a exibição do menu
-      document.body.style.overflow = 'hidden'; // Bloqueia scroll do body
+      // don't force inline style; CSS handles transform/visibility with .nav-open
+      document.body.style.overflow = 'hidden';
     } else {
       mainHeader.classList.remove('nav-open');
       mobileBtn.setAttribute('aria-expanded','false');
-      mainNav.style.display = ''; // Restaura o estado padrão (none em mobile)
-      document.body.style.overflow = ''; // Restaura scroll
+      document.body.style.overflow = '';
     }
   }
 

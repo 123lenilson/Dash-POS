@@ -14,9 +14,7 @@
   --shadow-strong: 0 12px 30px rgba(10,10,40,.08);
   --radius: 16px;
 
-  /* Sidebar width: clamp(min, preferred, max)
-     - min 280px, preferred 22vw, max 360px
-     Ajusta estes valores conforme preferires */
+  /* Sidebar width: clamp(min, preferred, max) */
   --sidebar-width: clamp(280px, 22vw, 360px);
   --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
 }
@@ -37,7 +35,7 @@ body{
 /* LAYOUT: MAIN (flex) + SIDE (carrinho) com largura controlada por --sidebar-width */
 .interface{
   display:grid;
-  grid-template-columns: 1fr var(--sidebar-width); /* changed: main flexible, sidebar clamped */
+  grid-template-columns: 1fr var(--sidebar-width);
   gap:0;
   height:100vh;
 }
@@ -133,7 +131,7 @@ body{
 .product-grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding:0 20px 24px; }
 
 /* CARD */
-.card{ background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform .06s ease; }
+.card{ background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform .06s ease, box-shadow .12s ease, border-color .12s ease; }
 .card:active{ transform:scale(.995); }
 .card .thumb{ width:100%; aspect-ratio:4/3; background:#f5f6fb; display:grid; place-items:center; }
 .card .thumb img{ width:96%; height:96%; object-fit:cover; border-radius:14px; }
@@ -151,11 +149,11 @@ body{
   background:#fff;
   border-left:1px solid var(--line);
   overflow:auto;
-  padding:14px;                 /* ligeiramente reduzido para estética */
+  padding:14px;
   display:flex;
   flex-direction:column;
-  min-width: var(--sidebar-width); /* garante largura mínima respectiva */
-  max-width: var(--sidebar-width); /* trava o crescimento */
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
   box-sizing:border-box;
 }
 .side-inner{ display:flex; flex-direction:column; min-height:100%; gap:12px; }
@@ -187,7 +185,7 @@ body{
 /* Ajuste do botão de ação para ficar proporcional na sidebar menor */
 .btn.action{
   width:100%;
-  padding:12px 12px;        /* menos padding horizontal para não ficar "muito largo" */
+  padding:12px 12px;
   font-size:15px;
   border-radius:12px;
   background: linear-gradient(135deg,var(--accent),var(--accent-2));
@@ -216,7 +214,54 @@ body{
 .side::-webkit-scrollbar, .main::-webkit-scrollbar, .cart-drawer-body::-webkit-scrollbar { width:8px; height:8px; }
 .side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .cart-drawer-body::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:8px; }
 
-/* responsiveness */
+/* ====================== RESPONSIVITY: custom rules ====================== */
+
+/* 2 columns between 350px and 450px width (mobile narrow but want 2-up) */
+@media (min-width:350px) and (max-width:450px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap:12px;
+    padding:0 12px 24px;
+  }
+  .product-grid .card { margin:0; }
+}
+
+/* small phones under 350px: fallback single column */
+@media (max-width:349px) {
+  .product-grid {
+    grid-template-columns: 1fr !important;
+    padding:0 10px 24px;
+  }
+}
+
+/* tablet and below: <= 890px */
+@media (max-width:890px) {
+  /* hide menus entirely as solicitado (remove main nav links) */
+  .main .main-nav { display:none !important; }
+
+  /* hide qty controls on cards (remove +/− UI in cards) */
+  .controls { display:none !important; }
+
+  /* visual selection of cards when product present in cart:
+     highlight with border + subtle shadow */
+  .card.is-selected {
+    border: 2px solid var(--accent);
+    box-shadow: 0 12px 40px rgba(108,92,231,0.12);
+    transform: translateY(-2px);
+  }
+
+  /* ensure selected outline doesn't overflow radius */
+  .card.is-selected .body { z-index:2; }
+
+  /* hide date-time on smaller widths already configured earlier but ensure */
+  .date-time { display:none !important; }
+
+  /* ensure mobile nav button still available if you want (we hid main-nav above),
+     but if you want to hide it also, uncomment this:
+     .main-header .mobile-menu-btn { display:none !important; } */
+}
+
+/* desktop/tablet general substitutions */
 @media (max-width:1100px){
   .product-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding:0 16px 24px; }
 }
@@ -239,7 +284,7 @@ body{
 .main-header .mobile-menu-btn,
 .header .mobile-menu-btn,
 .navbar .mobile-menu-btn {
-  display: none !important; /* !important só aqui para garantir que nenhuma outra regra assuma */
+  display: none !important;
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -267,13 +312,7 @@ body{
     font-size:18px;
   }
 
-  /* ===== MUDANÇA PRINCIPAL: menu aparece como SIDEBAR (deslizando lateralmente) =====
-     - Por padrão o .main-nav fica posicionado fora da tela (translateX(-110%))
-     - Quando .main-header recebe a classe .nav-open, o .main-nav desliza para dentro (transform: translateX(0))
-     - Sem bordas, retângulo, ocupa altura total e largura definida por --mobile-nav-width
-  */
-
-  /* forçar nav a comportar-se como painel lateral (em mobile) */
+  /* Sidebar-like mobile nav (quando usado) */
   .main .main-nav {
     display: flex !important;
     flex-direction: column;
@@ -288,45 +327,33 @@ body{
     padding: 20px 16px;
     box-sizing: border-box;
     background: var(--card);
-    /* sem bordas e sem border-radius conforme pedido */
     border: none;
     border-radius: 0;
-    /* shadow sutil para destaque */
     box-shadow: 0 18px 50px rgba(10,10,40,0.12);
-    /* inicia fora da tela (oculto) */
     transform: translateX(-110%);
     transition: transform .28s cubic-bezier(.2,.9,.2,1);
-    z-index: 1200; /* acima do header z-index:60 */
-    /* invisível a interações enquanto oculto */
+    z-index: 1200;
     visibility: hidden;
     pointer-events: none;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* estilo dos links quando em modo sidebar (vertical) */
   .main .main-nav .nav-link{
     display:flex;
     width:100%;
     padding:10px 12px;
     margin:2px 0;
-    border-radius:6px; /* pequeno rounding interno aos botões */
+    border-radius:6px;
     justify-content:flex-start;
     text-align:left;
   }
 
-  /* quando a header ganha a classe nav-open, traz o painel para dentro */
   .main-header.nav-open .main-nav {
     transform: translateX(0);
     visibility: visible;
     pointer-events: auto;
   }
-
-  /* remove qualquer borda que outro bloco pudesse ter introduzido */
-  .main-header.nav-open .main-nav { border: none; border-radius: 0; }
-
-  /* opcional: empurra o conteúdo principal para direita enquanto o menu está aberto?
-     Não fazemos push automático (sobrepõe), se preferires push podemos oferecer outra versão */
 }
 
 /* esconde .date-time em telas menores ou iguais a 1050px para evitar distorções */
@@ -334,15 +361,6 @@ body{
   .date-time {
     display: none !important;
     visibility: hidden !important;
-    /* acessibilidade: sinaliza que está oculto */
     aria-hidden: true;
   }
-}
-
-/* mobile/tablet: esconder nav por padrão e mostrar hamburger */
-@media (max-width: 890px) {
-  /* não precisamos forçar display:none mais (já controlamos via transform),
-     mas garantimos que não haja conflitos com regras antigas */
-  /* caso algum outro estilo aplique display block, mantemos nossa lógica via transform */
-  .main .main-nav { /* manter, mas já configurado acima */ }
 }
