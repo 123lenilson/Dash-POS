@@ -144,6 +144,14 @@ body{
 .qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
 .qtybtn.plus{ background:#f1edff; color:var(--accent); }
 
+/* SELECTED CARD - agora aplicada globalmente (desktop e mobile) */
+.card.is-selected {
+  border: 2px solid var(--accent);
+  box-shadow: 0 12px 40px rgba(108,92,231,0.12);
+  transform: translateY(-2px);
+}
+.card.is-selected .body { z-index:2; }
+
 /* SIDE / CART */
 .side{
   background:#fff;
@@ -241,17 +249,6 @@ body{
 
   /* hide qty controls on cards (remove +/− UI in cards) */
   .controls { display:none !important; }
-
-  /* visual selection of cards when product present in cart:
-     highlight with border + subtle shadow */
-  .card.is-selected {
-    border: 2px solid var(--accent);
-    box-shadow: 0 12px 40px rgba(108,92,231,0.12);
-    transform: translateY(-2px);
-  }
-
-  /* ensure selected outline doesn't overflow radius */
-  .card.is-selected .body { z-index:2; }
 
   /* hide date-time on smaller widths already configured earlier but ensure */
   .date-time { display:none !important; }
