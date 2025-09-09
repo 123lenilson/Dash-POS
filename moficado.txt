@@ -72,64 +72,80 @@ HTML
     <!-- COLUNA 30% (SIDE / CARRINHO) - Segundo (à direita) -->
     <aside class="side col-30" id="desktopCartCol" aria-hidden="false">
       <div class="side-inner">
-        <div class="side-body">
-          <div class="cart-header">
-            <div class="cart-title">
-              <strong>Cart</strong>
-              <button id="clearCart" class="btn light" aria-label="Limpar carrinho"><i class="fa-solid fa-trash"></i></button>
+        <div class="cart-header">
+          <div class="cart-title">
+            <strong>Cart</strong>
+            <button id="clearCart" class="btn light" aria-label="Limpar carrinho"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+        
+        <!-- ÁREA EXPANDIDA PARA PRODUTOS DO CARRINHO -->
+        <div class="cart-products-area">
+          <!-- Placeholder quando carrinho vazio -->
+          <div id="cartEmptyState" class="cart-empty-state">
+            <div class="empty-icon">
+              <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <h3>Seu carrinho está vazio</h3>
+            <p>Adicione produtos do menu para começar seu pedido</p>
+            <div class="empty-decoration">
+              <div class="decoration-circle"></div>
+              <div class="decoration-circle"></div>
+              <div class="decoration-circle"></div>
             </div>
           </div>
-          <!-- Espaço em branco / área scrollável onde os itens do carrinho irão aparecer -->
-          <ul id="cartList" class="cart-list" aria-live="polite">
-            <!-- Opcional: placeholder visual inicial (será substituído pelo JS quando carrinho for renderizado) -->
-            <li class="cart-placeholder" aria-hidden="true">
-              <div class="placeholder-inner">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <p>Seu carrinho está vazio</p>
-              </div>
-            </li>
-          </ul>
-          <!-- RODAPÉ FIXO DO CARRINHO: resumo + ações -->
-          <div class="cart-footer" role="region" aria-label="Resumo do carrinho">
-            <div class="cart-summary">
-              <div class="row">
-                <span>Items</span>
-                <strong id="cartItemsCount">0</strong>
-              </div>
-              <div class="row">
-                <span>Subtotal</span>
-                <strong id="cartSubtotal">Kz 0,00</strong>
-              </div>
-              <div class="row">
-                <span>Tax (<span id="taxRateLabel">15%</span>)</span>
-                <strong id="cartTax">Kz 0,00</strong>
-              </div>
-              <div class="row total">
-                <span>Total</span>
-                <strong id="cartTotal">Kz 0,00</strong>
-              </div>
+          
+          <!-- Lista de produtos (visível quando há itens) -->
+          <ul id="cartList" class="cart-list-new" aria-live="polite"></ul>
+        </div>
+
+        <!-- RODAPÉ FIXO DO CARRINHO: resumo compacto + ações -->
+        <div class="cart-footer-fixed">
+          <div class="cart-summary-compact">
+            <div class="summary-row">
+              <span>Item</span>
+              <strong id="cartItemsCount">0 Items</strong>
             </div>
-            <div class="payment">
-              <h4>Payment</h4>
-              <div class="pmethods">
-                <button class="pm is-active">Cash</button>
-                <button class="pm">Debit</button>
-                <button class="pm">QRIS</button>
-              </div>
+            <div class="summary-row">
+              <span>Sub Total</span>
+              <strong id="cartSubtotal">Kz 0,00</strong>
             </div>
-            <div class="cart-actions">
-              <button id="placeOrder" class="btn action">Place an order</button>
+            <div class="summary-row">
+              <span>Discount</span>
+              <strong id="cartDiscount">Kz 2,12</strong>
+            </div>
+            <div class="summary-row">
+              <span>Tax</span>
+              <strong id="cartTax">Kz 0,00</strong>
+            </div>
+            <div class="summary-row total-row">
+              <span>Total</span>
+              <strong id="cartTotal">Kz 0,00</strong>
             </div>
           </div>
+          
+          <div class="payment-compact">
+            <div class="payment-methods">
+              <button class="payment-btn is-active" data-method="cash">Cash</button>
+              <button class="payment-btn" data-method="debit">Debit</button>
+              <button class="payment-btn" data-method="qris">QRIS</button>
+            </div>
+          </div>
+          
+          <button id="placeOrder" class="btn-process-transaction">
+            Process Transactions
+          </button>
         </div>
       </div>
     </aside>
   </div>
+  
   <!-- BOTÃO FLUTUANTE (mobile) para abrir carrinho -->
   <button id="mobileCartBtn" class="mobile-cart-btn" aria-label="Abrir carrinho" title="Carrinho">
     <span class="cart-ico">🛒</span>
     <span id="mobileCartBadge" class="cart-badge" aria-hidden="true">0</span>
   </button>
+  
   <!-- DRAWER / OVERLAY DO CARRINHO (mobile) -->
   <div id="cartOverlay" class="cart-overlay" aria-hidden="true">
     <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
@@ -139,46 +155,53 @@ HTML
       </div>
       <!-- corpo scrollável -->
       <div class="cart-drawer-body">
-        <div class="cart" style="box-shadow:none; border-radius:12px; border:0; padding:0;">
-          <div style="padding:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-              <strong>Detail Items</strong>
-              <button id="clearCartOverlay" class="btn light" style="color:#ef4444; font-size:14px">Limpar</button>
-            </div>
-            <!-- lista overlay (mantive o id usado pelo JS) -->
-            <ul id="cartListOverlay" class="cart-list"></ul>
+        <!-- Placeholder mobile quando carrinho vazio -->
+        <div id="cartEmptyStateMobile" class="cart-empty-state">
+          <div class="empty-icon">
+            <i class="fa-solid fa-cart-shopping"></i>
           </div>
+          <h3>Seu carrinho está vazio</h3>
+          <p>Adicione produtos do menu para começar seu pedido</p>
         </div>
+        
+        <!-- Lista produtos mobile -->
+        <ul id="cartListOverlay" class="cart-list-new"></ul>
       </div>
+      
       <!-- footer fixo do drawer (resumo + ação) -->
       <div class="cart-drawer-footer">
-        <div class="cart-summary">
-          <div class="row">
-            <span>Items</span>
-            <strong id="cartItemsCountOverlay">0</strong>
+        <div class="cart-summary-compact">
+          <div class="summary-row">
+            <span>Item</span>
+            <strong id="cartItemsCountOverlay">0 Items</strong>
           </div>
-          <div class="row">
-            <span>Subtotal</span>
+          <div class="summary-row">
+            <span>Sub Total</span>
             <strong id="cartSubtotalOverlay">Kz 0,00</strong>
           </div>
-          <div class="row">
-            <span>Tax (<span id="taxRateLabelOverlay">15%</span>)</span>
+          <div class="summary-row">
+            <span>Discount</span>
+            <strong id="cartDiscountOverlay">Kz 2,12</strong>
+          </div>
+          <div class="summary-row">
+            <span>Tax</span>
             <strong id="cartTaxOverlay">Kz 0,00</strong>
           </div>
-          <div class="row total">
+          <div class="summary-row total-row">
             <span>Total</span>
             <strong id="cartTotalOverlay">Kz 0,00</strong>
           </div>
         </div>
-        <div class="payment">
-          <h4>Payment Method</h4>
-          <div class="pmethods">
-            <button class="pm is-active">Cash</button>
-            <button class="pm">Debit</button>
-            <button class="pm">QRIS</button>
+        
+        <div class="payment-compact">
+          <div class="payment-methods">
+            <button class="payment-btn is-active" data-method="cash">Cash</button>
+            <button class="payment-btn" data-method="debit">Debit</button>
+            <button class="payment-btn" data-method="qris">QRIS</button>
           </div>
         </div>
-        <button id="placeOrderOverlay" class="btn action">Place an order</button>
+        
+        <button id="placeOrderOverlay" class="btn-process-transaction">Process Transactions</button>
       </div>
     </div>
   </div>
@@ -427,203 +450,282 @@ body{
 }
 .card.is-selected .body { z-index:2; }
 
-/* SIDE / CART */
+/* =================== NOVA ESTRUTURA DO CARRINHO =================== */
+
+/* SIDE / CART - Nova estrutura */
 .side{
   background:#fff;
   border-left:1px solid var(--line);
-  overflow:auto;
-  padding:14px;
+  overflow:hidden; /* mudamos para hidden pois o scroll será interno */
+  padding:14px 14px 0 14px; /* removemos padding-bottom */
   display:flex;
   flex-direction:column;
   min-width: var(--sidebar-width);
   max-width: var(--sidebar-width);
   box-sizing:border-box;
 }
-.side-inner{ display:flex; flex-direction:column; min-height:100%; gap:12px; }
-.side-body{ flex:1; display:flex; flex-direction:column; gap:12px; }
-.cart-title{ font-size:16px; margin-bottom:6px; color:var(--text); font-weight:700; display: flex; justify-content: space-between;}
-.cart-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; max-height:none; }
-.cart-item{ display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--line); border-radius:14px; background:#fff; }
-.cart-item .title{ font-weight:700; font-size:14px; color:var(--text); }
-.cart-item .meta{ color:var(--muted); font-size:12px; }
-.cart-item .right{ display:flex; align-items:center; gap:8px; }
-.iconbtn{ width:32px; height:32px; display:grid; place-items:center; border-radius:8px; border:0; cursor:pointer; background:#f3f4fa; font-weight:800; }
-.iconbtn.del{ background:#ffefef; color:#cc2a2a; }
 
-/* CART SUMMARY & ACTIONS */
-.cart-summary{ border-top:1px dashed var(--line); padding-top:10px; margin-top:14px; display:flex; flex-direction:column; gap:6px; }
-.cart-summary .row{ display:flex; align-items:center; justify-content:space-between; }
-.cart-summary .row.total{ font-size:18px; font-weight:800; margin-top:6px; }
-.payment{ margin:14px 0 10px; }
-.pmethods{ display:flex; gap:8px; }
-.pm{ border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; }
-.pm.is-active{ border-color:#dfd7ff; background:#f8f7ff; color:var(--accent); }
-
-/* Buttons */
-.btn{ border:0; cursor:pointer; padding:10px 14px; border-radius:12px; font-weight:600; background:#f3f4f9; color:#3b3d56; transition:.15s; }
-.btn:hover{ filter:brightness(.97); }
-.btn.purple{ background: linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 20px rgba(108,92,231,0.12); }
-.btn.light{ background:#f1f2f9; color:#666; }
-
-/* Ajuste do botão de ação para ficar proporcional na sidebar menor */
-.btn.action{
-  width:100%;
-  padding:12px 12px;
-  font-size:15px;
-  border-radius:12px;
-  background: linear-gradient(135deg,var(--accent),var(--accent-2));
-  color:#fff;
-  box-shadow: var(--shadow);
+.side-inner{ 
+  display:flex; 
+  flex-direction:column; 
+  height:100%; 
+  gap:0; /* removemos gap */
 }
 
-/* MOBILE FLOATING CART */
-.mobile-cart-btn{ display:none; position:fixed; right:18px; bottom:18px; z-index:1400; width:64px; height:64px; border-radius:999px; border:0; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 30px rgba(108,92,231,0.22); display:grid; place-items:center; cursor:pointer; font-size:22px; }
-.cart-badge{ position:absolute; right:8px; top:6px; min-width:20px; height:20px; padding:0 6px; border-radius:999px; display:inline-grid; place-items:center; background:#ef4444; color:#fff; font-weight:800; font-size:12px; line-height:1; box-shadow:0 4px 10px rgba(0,0,0,0.12); transform:translateY(-2px); }
-
-/* CART DRAWER (mobile) */
-.cart-overlay{ display:none; position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1300; transition:opacity .18s ease; opacity:0; }
-.cart-overlay.is-open{ display:block; opacity:1; }
-.cart-drawer{ position:fixed; right:0; top:0; height:100%; width:92%; max-width:420px; background:#fff; box-shadow:-16px 0 40px rgba(10,10,40,.12); transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.9,.2,1); display:flex; flex-direction:column; }
-.cart-overlay.is-open .cart-drawer{ transform: translateX(0); }
-.cart-drawer-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); }
-.cart-drawer-body{ overflow-y:auto; padding-bottom:18px; }
-
-/* util / controls */
-.iconbtn{ font-weight:800; border:0; cursor:pointer; }
-.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
-.qtybtn.plus{ background:#f1edff; color:var(--accent); }
-
-/* scrollbars gerais (onde permitimos) */
-.side::-webkit-scrollbar, .main::-webkit-scrollbar, .cart-drawer-body::-webkit-scrollbar { width:8px; height:8px; }
-.side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .cart-drawer-body::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:8px; }
-
-/* ====================== RESPONSIVO ====================== */
-
-/* 2 colunas entre 350px e 450px */
-@media (min-width:350px) and (max-width:450px) {
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap:12px;
-    padding:0 12px 24px;
-  }
-  .product-grid .card { margin:0; }
+.cart-title{ 
+  font-size:16px; 
+  margin-bottom:12px; 
+  color:var(--text); 
+  font-weight:700; 
+  display: flex; 
+  justify-content: space-between;
+  flex-shrink: 0; /* não encolhe */
 }
 
-/* phones < 350px: 1 coluna */
-@media (max-width:349px) {
-  .product-grid {
-    grid-template-columns: 1fr !important;
-    padding:0 10px 24px;
-  }
+/* ÁREA EXPANDIDA PARA PRODUTOS */
+.cart-products-area {
+  flex: 1; /* ocupa todo espaço disponível */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* permite que encolha se necessário */
+  margin-bottom: 12px;
+  position: relative;
 }
 
-/* tablet e abaixo: <= 890px */
-@media (max-width:890px) {
-  .main .main-nav { display:none !important; }
-  .controls { display:none !important; }
-  .date-time { display:none !important; }
+/* PLACEHOLDER CARRINHO VAZIO */
+.cart-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.02), rgba(155, 140, 255, 0.02));
+  border-radius: 16px;
+  border: 1px dashed #e2e8f0;
 }
 
-/* desktop/tablet ajustes */
-@media (max-width:1100px){
-  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding:0 16px 24px; }
-}
-@media (max-width:900px){
-  .interface{ grid-template-columns: 1fr var(--sidebar-width); }
-}
-@media (max-width:760px){
-  .interface{ grid-template-columns: 1fr; }
-  .side{ display:none; }
-  .mobile-cart-btn{ display:grid; }
-  .main{ height: calc(100vh); overflow:auto; padding-bottom:90px; }
-  .search-row{ padding:0 12px; }
-  .category-bar{ padding:0 12px; }
-  .product-grid{ padding:0 12px 120px; }
-
-  /* MOBILE: sem setas, desliza com o dedo */
-  .cat-arrow{ display:none !important; }
-  .cat-viewport{ overflow-x:auto; }  /* importantíssimo pro gesto */
+.cart-empty-state.hidden {
+  display: none;
 }
 
-/* ====== Botão menu mobile ====== */
-.main-header .mobile-menu-btn,
-.header .mobile-menu-btn,
-.navbar .mobile-menu-btn {
-  display: none !important;
-  visibility: hidden;
-  opacity: 0;
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(155, 140, 255, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.empty-icon i {
+  font-size: 32px;
+  color: var(--accent);
+}
+
+.cart-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cart-empty-state p {
+  margin: 0 0 24px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.empty-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
-  transition: none;
+  overflow: hidden;
+  border-radius: inherit;
 }
-@media (max-width: 890px) {
-  .main-header .mobile-menu-btn,
-  .header .mobile-menu-btn,
-  .navbar .mobile-menu-btn {
-    display: inline-grid !important;
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-    width:40px;
-    height:40px;
-    border-radius:8px;
-    border:0;
-    background:transparent;
-    color:var(--muted);
-    place-items:center;
-    cursor:pointer;
-    transition: all .12s ease;
-    font-size:18px;
-  }
 
-  .main .main-nav {
-    display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: var(--mobile-nav-width);
-    max-width: 100%;
-    padding: 20px 16px;
-    box-sizing: border-box;
-    background: var(--card);
-    border: none;
-    border-radius: 0;
-    box-shadow: 0 18px 50px rgba(10,10,40,0.12);
-    transform: translateX(-110%);
-    transition: transform .28s cubic-bezier(.2,.9,.2,1);
-    z-index: 1200;
-    visibility: hidden;
-    pointer-events: none;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.05), rgba(155, 140, 255, 0.05));
+  animation: floatCircle 6s ease-in-out infinite;
+}
 
-  .main .main-nav .nav-link{
-    display:flex;
-    width:100%;
-    padding:10px 12px;
-    margin:2px 0;
-    border-radius:6px;
-    justify-content:flex-start;
-    text-align:left;
-  }
+.decoration-circle:nth-child(1) {
+  width: 30px;
+  height: 30px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
 
-  .main-header.nav-open .main-nav {
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
+.decoration-circle:nth-child(2) {
+  width: 20px;
+  height: 20px;
+  top: 60%;
+  right: 15%;
+  animation-delay: 2s;
+}
+
+.decoration-circle:nth-child(3) {
+  width: 25px;
+  height: 25px;
+  bottom: 25%;
+  left: 20%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes floatCircle {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(-15px) scale(1.1); 
+    opacity: 0.6;
   }
 }
 
-/* esconder date-time <= 1050px */
-@media (max-width: 1050px) {
-  .date-time {
-    display: none !important;
-    visibility: hidden !important;
-  }
+/* NOVA LISTA DE CARRINHO */
+.cart-list-new {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  height: 100%;
+  padding-right: 4px; /* espaço para scrollbar */
+}
+
+.cart-list-new.hidden {
+  display: none;
+}
+
+/* Scrollbar personalizada para a lista */
+.cart-list-new::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cart-list-new::-webkit-scrollbar-track {
+  background: #f1f2f6;
+  border-radius: 2px;
+}
+
+.cart-list-new::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.cart-list-new::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ITEM DO CARRINHO - Redesenhado */
+.cart-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.cart-item:hover {
+  border-color: rgba(108, 92, 231, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.cart-item-info {
+  flex: 1;
+  min-width: 0; /* permite quebra de texto */
+}
+
+.cart-item .title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item .meta {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cart-item-qty {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* RODAPÉ FIXO COMPACTO */
+.cart-footer-fixed {
+  flex-shrink: 0;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 16px 0 16px 0; /* removemos padding lateral pois já tem no .side */
+  margin: 0 -14px 0 -14px; /* compensamos o padding do .side */
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+/* RESUMO COMPACTO */
+.cart-summary-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.summary-row span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.summary-row strong {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
 }
 |
 |

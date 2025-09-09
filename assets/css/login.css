@@ -141,3 +141,13 @@ button.google img {
     display: block;
   }
 }
+.error-message {
+  background: #fdecea;
+  color: #d93025;
+  border: 1px solid #f5c2c0;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+}

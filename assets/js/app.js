@@ -1,34 +1,19 @@
-/* ======= MOCK DE DADOS ======= */
-const PRODUCTS = [
-  {id:1,  cat:"All Menu", name:"Elegant Pan Seared Chicken Plate", price:5200, available:true,  img:""},
-  {id:2,  cat:"Appetizer", name:"Bruschetta Classic", price:1900, available:true, img:""},
-  {id:3,  cat:"Seafood", name:"Elegant Salmon Sashimi Presentation", price:8000, available:true, img:""},
-  {id:4,  cat:"Chicken", name:"Chicken Pop Matah", price:3500, available:true, img:""},
-  {id:5,  cat:"Steak", name:"Sirloin Steak 250g", price:11000, available:true, img:""},
-  {id:6,  cat:"Salad", name:"Caesar Salad Bowl", price:3700, available:true, img:""},
-  {id:7,  cat:"Spicy Food", name:"Artistic Overhead Pasta", price:4200, available:false, img:""},
-  {id:8,  cat:"Dessert", name:"Bolognese Spaghetti", price:2400, available:true, img:""},
-  {id:9,  cat:"Beverages", name:"Cinnaple Coffee", price:2120, available:true, img:""},
-  {id:10, cat:"Cocktail", name:"Mango Sunrise", price:4500, available:true, img:""},
-  {id:11, cat:"Seafood", name:"Gourmet Grilled Vegee Fish Dish", price:4000, available:true, img:""},
-  {id:12, cat:"Pasta", name:"Elegantly Plated Fettuccine Pasta", price:3800, available:true, img:""},
-  {id:13, cat:"Salad", name:"Greek Salad (Veg)", price:3300, available:true, img:""},
-  {id:14, cat:"Chicken", name:"Honey Garlic Chicken", price:4200, available:true, img:""},
-  {id:15, cat:"Beverages", name:"Iced Lemon Tea", price:1500, available:true, img:""},
-  {id:16, cat:"Dessert", name:"Chocolate Lava Cake", price:3100, available:true, img:""},
-  {id:17, cat:"Appetizer", name:"Fried Calamari", price:2700, available:true, img:""},
-  {id:18, cat:"Spicy Food", name:"Volcano Ramen", price:3900, available:true, img:""},
-  {id:19, cat:"Cocktail", name:"Berry Mojito", price:4700, available:true, img:""},
-  {id:20, cat:"Pasta", name:"Penne Alfredo", price:3600, available:true, img:""}
-];
+/* ======= MOCK DE DADOS (preenchido pela API) ======= */
+let PRODUCTS = [];
 
 const TAX_RATE = 0.15; // 15%
+const DISCOUNT = 0; // Adicione lógica de desconto se necessário; por enquanto 0
 const currency = new Intl.NumberFormat('pt-AO', { style:'currency', currency:'AOA', maximumFractionDigits:2 });
 
 /* ======= ESTADO ======= */
 let activeCategory = "All Menu";
 let searchTerm = "";
-const cart = new Map(); // id -> {product, qty}
+let modoEdicao = false;       // mantém do seu fluxo
+let estaPesquisando = false;  // mantém do seu fluxo
+const cart = new Map();       // id -> {product, qty}
+
+/* guarda a key das categorias para evitar rebuild desnecessário */
+let lastCategoriesKey = null;
 
 /* ======= DOM ======= */
 const dateTimeEl   = document.getElementById('dateTime');
@@ -40,16 +25,19 @@ const clearSearch  = document.getElementById('clearSearch');
 const cartList     = document.getElementById('cartList');
 const cartItemsCount = document.getElementById('cartItemsCount');
 const cartSubtotal = document.getElementById('cartSubtotal');
+const cartDiscount = document.getElementById('cartDiscount');
 const cartTax      = document.getElementById('cartTax');
 const cartTotal    = document.getElementById('cartTotal');
+const cartEmptyState = document.getElementById('cartEmptyState');
 
 const cartListOverlay = document.getElementById('cartListOverlay');
 const cartItemsCountOverlay = document.getElementById('cartItemsCountOverlay');
 const cartSubtotalOverlay = document.getElementById('cartSubtotalOverlay');
+const cartDiscountOverlay = document.getElementById('cartDiscountOverlay');
 const cartTaxOverlay = document.getElementById('cartTaxOverlay');
 const cartTotalOverlay = document.getElementById('cartTotalOverlay');
+const cartEmptyStateMobile = document.getElementById('cartEmptyStateMobile');
 
-const taxRateLabel = document.getElementById('taxRateLabel');
 const clearCartBtn = document.getElementById('clearCart');
 const placeOrderBtn = document.getElementById('placeOrder');
 
@@ -86,34 +74,202 @@ function isMobileView(){
   return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
 }
 
-/* ======= RENDER ======= */
-function buildCategories(){
-  const counts = {};
-  for(const p of PRODUCTS){ const c = p.cat; counts[c] = (counts[c]||0)+1; }
-  counts["All Menu"] = PRODUCTS.length;
-
-  const order = ["All Menu", ...Object.keys(counts).filter(c=>c!=="All Menu").sort()];
-  categoryBar.innerHTML = order.map(cat => `
-    <button class="category ${cat===activeCategory?'is-active':''}" data-cat="${cat}">
-      <div class="circle">🏷️</div>
-      <div class="meta">
-        <strong>${cat}</strong>
-        <small>${counts[cat]} items</small>
-      </div>
-    </button>
-  `).join('');
-
-  categoryBar.querySelectorAll('.category').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      activeCategory = btn.dataset.cat;
-      buildCategories();
-      renderProducts();
+/* ======= FETCH ======= */
+function carregarCardapios() {
+  fetch("http://localhost/Dash-POS/api/cardapio.php?acao=listar", {
+    method: "GET",
+    cache: "no-store"
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.text().then(text => {
+          throw new Error(`Erro HTTP ${response.status}: ${text || response.statusText}`);
+        });
+      }
+      return response.json();
+    })
+    .then(cardapios => {
+      atualizarCards(cardapios);
+    })
+    .catch(error => {
+      console.error("Erro no fetch:", error);
+      productGrid.innerHTML = `<div style='grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;'>Erro ao carregar os dados: ${error.message}</div>`;
     });
-  });
 }
 
+function atualizarCards(cardapios) {
+  if (!Array.isArray(cardapios)) {
+    console.error("Erro: API não retornou um array", cardapios);
+    productGrid.innerHTML = `<div style='grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;'>Erro: Dados inválidos recebidos da API</div>`;
+    return;
+  }
+
+  // popula PRODUCTS no formato esperado
+  PRODUCTS = cardapios.map(item => ({
+    id: parseInt(item.cardapio_id) || 0,
+    cat: item.categoria_nome || "All Menu",
+    name: item.cardapio_nome || "Produto sem nome",
+    price: parseFloat(item.cardapio_preco) || 0,
+    available: true,
+    img: ""
+  }));
+
+  // calcula counts e order para decidir se rebuild é necessário
+  const counts = {};
+  for (const p of PRODUCTS) { const c = p.cat; counts[c] = (counts[c] || 0) + 1; }
+  counts["All Menu"] = PRODUCTS.length;
+  const order = ["All Menu", ...Object.keys(counts).filter(c => c !== "All Menu").sort()];
+
+  const keyArr = order.map(cat => `${cat}:${counts[cat]}`);
+  const key = JSON.stringify(keyArr);
+
+  // se mudou, rebuild; se não mudou, só renderiza produtos (preserva scroll)
+  if (key !== lastCategoriesKey) {
+    lastCategoriesKey = key;
+    buildCategories(order, counts, true); // preserve scroll if possible
+  } else {
+    // atualiza highlight da categoria sem reconstruir (se existir)
+    const track = categoryBar.querySelector('.cat-track');
+    if (track) {
+      track.querySelectorAll('.category').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.cat === activeCategory);
+      });
+    }
+  }
+
+  // renderiza produtos (sempre)
+  renderProducts();
+}
+
+/* ======= CATEGORY SLIDER ======= */
+// agora buildCategories aceita order/counts opcional e preserveScroll flag
+function buildCategories(orderIn = null, countsIn = null, preserveScroll = false) {
+  // se counts/order não foram passados, calcula
+  const counts = countsIn || (() => {
+    const c = {};
+    for (const p of PRODUCTS) { c[p.cat] = (c[p.cat] || 0) + 1; }
+    c["All Menu"] = PRODUCTS.length;
+    return c;
+  })();
+
+  const order = orderIn || ["All Menu", ...Object.keys(counts).filter(c => c !== "All Menu").sort()];
+
+  // preserva scroll da viewport atual, se solicitado
+  let oldScroll = 0;
+  const oldViewport = categoryBar.querySelector('.cat-viewport');
+  if (preserveScroll && oldViewport) {
+    oldScroll = oldViewport.scrollLeft || 0;
+  }
+
+  // estrutura do slider dentro do #categoryBar
+  categoryBar.innerHTML = `
+    <div class="cat-slider">
+      <button class="cat-arrow prev" aria-label="Anterior" type="button">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div class="cat-viewport" id="catViewport">
+        <div class="cat-track" id="catTrack">
+          ${order.map(cat => `
+            <button class="category ${cat===activeCategory?'is-active':''}" data-cat="${cat}">
+              <div class="circle">🏷️</div>
+              <div class="meta">
+                <strong>${cat}</strong>
+                <small>${counts[cat] || 0} items</small>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <button class="cat-arrow next" aria-label="Próximo" type="button">
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
+  `;
+
+  // novos elementos
+  const viewport = categoryBar.querySelector('#catViewport');
+  const track    = categoryBar.querySelector('#catTrack');
+  const prevBtn  = categoryBar.querySelector('.cat-arrow.prev');
+  const nextBtn  = categoryBar.querySelector('.cat-arrow.next');
+
+  // delegação de clique para trocar categoria
+  track.addEventListener('click', (e) => {
+    const btn = e.target.closest('.category');
+    if (!btn) return;
+    activeCategory = btn.dataset.cat;
+    // atualiza .is-active sem reconstruir tudo
+    track.querySelectorAll('.category').forEach(b => b.classList.toggle('is-active', b === btn));
+    renderProducts();
+  });
+
+  // setas no desktop
+  function pageSize(){ return Math.max(viewport.clientWidth * 0.85, 180); }
+  function scrollByPage(dir){
+    viewport.scrollBy({ left: dir * pageSize(), behavior:'smooth' });
+  }
+  prevBtn.addEventListener('click', () => scrollByPage(-1));
+  nextBtn.addEventListener('click', () => scrollByPage(+1));
+
+  // bloquear scroll/roda no desktop (evitar que a rodinha do rato faça scroll)
+  function updateWheelBlock(){
+    if (!isMobileView()) {
+      if (!viewport._wheelBlocked) {
+        viewport.addEventListener('wheel', wheelBlocker, { passive: false });
+        viewport._wheelBlocked = true;
+      }
+      viewport.style.overflowX = 'hidden';
+    } else {
+      if (viewport._wheelBlocked) {
+        viewport.removeEventListener('wheel', wheelBlocker, { passive: false });
+        viewport._wheelBlocked = false;
+      }
+      viewport.style.overflowX = 'auto'; // mobile: desliza com o dedo
+    }
+  }
+  function wheelBlocker(e){ e.preventDefault(); }
+
+  // mostrar/ocultar/desabilitar setas conforme posição e breakpoint
+  function atStart(){ return viewport.scrollLeft <= 2; }
+  function atEnd(){
+    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth - 2);
+    return viewport.scrollLeft >= maxScroll;
+  }
+  function updateArrows(){
+    const mobile = isMobileView();
+    prevBtn.style.display = mobile ? 'none' : '';
+    nextBtn.style.display = mobile ? 'none' : '';
+    if (!mobile) {
+      prevBtn.disabled = atStart();
+      nextBtn.disabled = atEnd();
+      categoryBar.classList.toggle('has-left-shadow', !atStart());
+      categoryBar.classList.toggle('has-right-shadow', !atEnd());
+    } else {
+      categoryBar.classList.remove('has-left-shadow','has-right-shadow');
+    }
+  }
+
+  viewport.addEventListener('scroll', updateArrows, { passive: true });
+  window.addEventListener('resize', () => { updateWheelBlock(); updateArrows(); });
+
+  // restaurar scroll se foi preservado (clamp ao máximo)
+  if (preserveScroll && oldScroll && viewport) {
+    // aguarda próximo tick para garantir que scrollWidth/clientWidth estejam calculados
+    requestAnimationFrame(() => {
+      const max = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      viewport.scrollLeft = Math.min(oldScroll, max);
+      updateArrows();
+    });
+  } else {
+    // init
+    updateWheelBlock();
+    updateArrows();
+  }
+}
+
+/* ======= RENDER PRODUCTS ======= */
 function renderProducts(){
   const list = PRODUCTS
+    .filter(p => p.name !== undefined && p.name !== null)
     .filter(p => activeCategory==="All Menu" ? true : p.cat === activeCategory)
     .filter(p => p.name.toLowerCase().includes(searchTerm));
 
@@ -122,111 +278,117 @@ function renderProducts(){
     return;
   }
 
-  productGrid.innerHTML = list.map(p => `
-    <article class="card" data-id="${p.id}">
-      <div class="thumb"><img alt="${p.name}" src="${p.img || placeholderIMG(p.name)}"></div>
-      <div class="body">
-        <div class="title">${p.name}</div>
-        <span class="badge ${p.available? '':'na'}">${p.available? 'Available':'Not Available'}</span>
-        <div class="price">${currency.format(p.price)}</div>
-        <div class="controls" onclick="event.stopPropagation()">
-          <button class="qtybtn minus" data-action="minus" aria-label="Diminuir">−</button>
-          <button class="qtybtn plus"  data-action="plus"  aria-label="Adicionar">+</button>
+  productGrid.innerHTML = list.map(p => {
+    const imgSrc = p.img || placeholderIMG(p.name);
+    return `
+      <article class="card" data-id="${p.id}">
+        <div class="thumb"><img alt="${p.name}" src="${imgSrc}"></div>
+        <div class="body">
+          <div class="title">${p.name}</div>
+          <span class="badge ${p.available? '':'na'}">${p.available? 'Available':'Not Available'}</span>
+          <div class="price">${currency.format(p.price)}</div>
+          <div class="controls" onclick="event.stopPropagation()">
+            <button class="qtybtn minus" data-action="minus" aria-label="Diminuir">−</button>
+            <button class="qtybtn plus"  data-action="plus"  aria-label="Adicionar">+</button>
+          </div>
         </div>
-      </div>
-    </article>
-  `).join('');
+      </article>
+    `;
+  }).join('');
 
-  // attach events and mark selected
+  // events + marca selecionados
   productGrid.querySelectorAll('.card').forEach(card=>{
     const id = +card.dataset.id;
-    // apply selected class if present in cart (qty >= 1)
-    if(cart.has(id) && cart.get(id).qty > 0){
-      card.classList.add('is-selected');
-    } else {
-      card.classList.remove('is-selected');
-    }
+
+    if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
+    else { card.classList.remove('is-selected'); }
 
     card.addEventListener('click', ()=> addToCart(id, 1));
     const plusBtn = card.querySelector('.qtybtn.plus');
     const minusBtn = card.querySelector('.qtybtn.minus');
 
-    if(plusBtn){
-      plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); });
-    }
-    if(minusBtn){
-      minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); });
-    }
+    if(plusBtn){ plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); }); }
+    if(minusBtn){ minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); }); }
   });
 }
 
-/* Atualiza a seleção visual dos cards (chamada sempre que carrinho ou produtos mudam) */
+/* Atualiza a seleção visual dos cards */
 function updateProductSelections(){
   const cards = productGrid.querySelectorAll('.card');
   cards.forEach(card=>{
     const id = +card.dataset.id;
-    if(cart.has(id) && cart.get(id).qty > 0){
-      card.classList.add('is-selected');
-    } else {
-      card.classList.remove('is-selected');
-    }
+    if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
+    else { card.classList.remove('is-selected'); }
   });
 }
 
+/* ======= CART ======= */
 function renderCart(){
   const items = [...cart.values()];
 
-  cartList.innerHTML = items.map(({product, qty})=>{
-    const line = product.price * qty;
-    return `
-      <li class="cart-item" data-id="${product.id}">
-        <div>
-          <div class="title">${product.name}</div>
-          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
-        </div>
-        <div class="right">
-          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
-          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
-          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
-          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
-        </div>
-      </li>
-    `;
-  }).join('');
+  if (items.length === 0) {
+    if (cartEmptyState) cartEmptyState.style.display = 'flex';
+    if (cartList) cartList.style.display = 'none';
+    if (cartEmptyStateMobile) cartEmptyStateMobile.style.display = 'flex';
+    if (cartListOverlay) cartListOverlay.style.display = 'none';
+  } else {
+    if (cartEmptyState) cartEmptyState.style.display = 'none';
+    if (cartList) cartList.style.display = 'flex';
+    if (cartEmptyStateMobile) cartEmptyStateMobile.style.display = 'none';
+    if (cartListOverlay) cartListOverlay.style.display = 'flex';
 
-  cartListOverlay.innerHTML = items.map(({product, qty})=>{
-    const line = product.price * qty;
-    return `
-      <li class="cart-item" data-id="${product.id}">
-        <div>
-          <div class="title">${product.name}</div>
-          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
-        </div>
-        <div class="right">
-          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
-          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
-          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
-          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
-        </div>
-      </li>
-    `;
-  }).join('');
+    cartList.innerHTML = items.map(({product, qty})=>{
+      const line = product.price * qty;
+      return `
+        <li class="cart-item" data-id="${product.id}">
+          <div>
+            <div class="title">${product.name}</div>
+            <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+          </div>
+          <div class="right">
+            <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
+            <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
+            <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
+            <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
+          </div>
+        </li>
+      `;
+    }).join('');
 
-  // eventos dos itens (desktop cart)
-  cartList.querySelectorAll('.cart-item').forEach(row=>{
-    const id = +row.dataset.id;
-    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
-    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
-    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
-  });
+    cartListOverlay.innerHTML = items.map(({product, qty})=>{
+      const line = product.price * qty;
+      return `
+        <li class="cart-item" data-id="${product.id}">
+          <div>
+            <div class="title">${product.name}</div>
+            <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+          </div>
+          <div class="right">
+            <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
+            <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
+            <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
+            <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
+          </div>
+        </li>
+      `;
+    }).join('');
 
-  // eventos do overlay items
-  cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
-    const id = +row.dataset.id;
-    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
-    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
-    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
-  });
+    // eventos lista (desktop)
+    cartList.querySelectorAll('.cart-item').forEach(row=>{
+      const id = +row.dataset.id;
+      row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
+      row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
+      row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+    });
+
+    // eventos lista (overlay)
+    cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
+      const id = +row.dataset.id;
+      row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
+      row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
+      row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+    });
+  }
 
   const stats = items.reduce((acc, it)=>{
     acc.items += it.qty;
@@ -234,25 +396,25 @@ function renderCart(){
     return acc;
   }, {items:0, subtotal:0});
 
-  const tax = stats.subtotal * TAX_RATE;
-  const total = stats.subtotal + tax;
+  const discount = DISCOUNT; // Lógica de desconto aqui se necessário
+  const tax = (stats.subtotal - discount) * TAX_RATE;
+  const total = stats.subtotal - discount + tax;
 
-  cartItemsCount.textContent = stats.items;
+  cartItemsCount.textContent = `${stats.items} Items`;
   cartSubtotal.textContent = currency.format(stats.subtotal);
+  cartDiscount.textContent = currency.format(discount);
   cartTax.textContent = currency.format(tax);
   cartTotal.textContent = currency.format(total);
-  taxRateLabel.textContent = `${(TAX_RATE*100).toFixed(0)}%`;
 
-  cartItemsCountOverlay.textContent = stats.items;
+  cartItemsCountOverlay.textContent = `${stats.items} Items`;
   cartSubtotalOverlay.textContent = currency.format(stats.subtotal);
+  cartDiscountOverlay.textContent = currency.format(discount);
   cartTaxOverlay.textContent = currency.format(tax);
   cartTotalOverlay.textContent = currency.format(total);
-  document.getElementById('taxRateLabelOverlay').textContent = `${(TAX_RATE*100).toFixed(0)}%`;
 
   mobileCartBadge.textContent = stats.items;
   mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
 
-  // atualiza a seleção visual dos cards (marca os que estão no carrinho)
   updateProductSelections();
 }
 
@@ -271,19 +433,21 @@ function removeFromCart(id){
   renderCart();
 }
 
-/* SEARCH */
+/* ======= SEARCH ======= */
 searchInput.addEventListener('input', () => {
   searchTerm = searchInput.value.trim().toLowerCase();
+  estaPesquisando = searchTerm.length > 0;
   renderProducts();
 });
 clearSearch.addEventListener('click', ()=>{
   searchInput.value = "";
   searchTerm = "";
+  estaPesquisando = false;
   searchInput.focus();
   renderProducts();
 });
 
-/* GLOBAL BUTTONS */
+/* ======= GLOBAL BUTTONS ======= */
 document.getElementById('placeOrder')?.addEventListener('click', ()=>{
   if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
   alert('Pedido realizado! (demonstração)');
@@ -297,7 +461,7 @@ document.getElementById('placeOrderOverlay')?.addEventListener('click', ()=>{
 clearCartBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
 clearCartOverlayBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
 
-/* MOBILE DRAWER */
+/* ======= MOBILE DRAWER ======= */
 mobileCartBtn?.addEventListener('click', ()=> openCartOverlay());
 closeCartOverlayBtn?.addEventListener('click', ()=> closeCartOverlay());
 cartOverlay?.addEventListener('click', (e)=>{ if(e.target === cartOverlay) closeCartOverlay(); });
@@ -313,7 +477,7 @@ function closeCartOverlay(){
   document.body.style.overflow = '';
 }
 
-/* MAIN MENU (isolar .main nav) */
+/* ======= MAIN MENU (nav) ======= */
 document.querySelectorAll('.main .main-nav .nav-link').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.main .main-nav .nav-link').forEach(x=>x.classList.remove('is-active'));
@@ -321,7 +485,7 @@ document.querySelectorAll('.main .main-nav .nav-link').forEach(btn=>{
   });
 });
 
-/* DATETIME & INIT */
+/* ======= DATETIME & INIT ======= */
 function updateDateTime(){
   const dt = document.getElementById('dateTime');
   if(dt) dt.textContent = nowFancy();
@@ -337,29 +501,32 @@ function updateResponsiveUI(){
     closeCartOverlay();
   }
 
-  // Additional: when on tablet and below we want to hide main nav and card qty controls (CSS handles it),
-  // but we ensure any programmatic 'display' values are reset for consistent behavior.
   if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
-    // hide main nav for tablet and below (CSS already hides; here we ensure no inline style exposing it)
     const mainNav = document.querySelector('.main .main-nav');
-    if(mainNav) mainNav.style.display = ''; // let CSS decide
+    if(mainNav) mainNav.style.display = '';
   }
 }
 
-/* INIT */
+/* ======= INIT ======= */
 function init(){
-  buildCategories();
-  renderProducts();
+  carregarCardapios();
   renderCart();
   updateDateTime();
   setInterval(updateDateTime, 30000);
   if(+mobileCartBadge.textContent === 0) mobileCartBadge.style.display = 'none';
   updateResponsiveUI();
   window.addEventListener('resize', updateResponsiveUI);
+
+  // polling (mantido) - agora buildCategories só roda se houver mudança real nas categorias
+  setInterval(() => {
+    if (!modoEdicao && !estaPesquisando) {
+      carregarCardapios();
+    }
+  }, 500);
 }
 init();
 
-/* ===== Menu responsivo: toggle hamburger, fechar ao clicar fora, limpar no resize ===== */
+/* ===== Menu responsivo ===== */
 (function setupResponsiveMenu(){
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const mainHeader = document.querySelector('.main-header');
@@ -371,7 +538,6 @@ init();
     if(open){
       mainHeader.classList.add('nav-open');
       mobileBtn.setAttribute('aria-expanded','true');
-      // don't force inline style; CSS handles transform/visibility with .nav-open
       document.body.style.overflow = 'hidden';
     } else {
       mainHeader.classList.remove('nav-open');
@@ -386,7 +552,6 @@ init();
     setOpenState(!isOpen);
   });
 
-  // fechar o menu ao clicar nalguma nav-link (útil em mobile)
   document.querySelectorAll('.main .main-nav .nav-link').forEach(link=>{
     link.addEventListener('click', ()=>{
       if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
@@ -395,16 +560,13 @@ init();
     });
   });
 
-  // fechar ao clicar fora (document)
   document.addEventListener('click', (e)=>{
     if(!mainHeader.classList.contains('nav-open')) return;
-    // se o clique não estiver dentro do header ou no botão, fecha
     if(!mainHeader.contains(e.target) && e.target !== mobileBtn){
       setOpenState(false);
     }
   });
 
-  // fechar ao redimensionar para desktop
   window.addEventListener('resize', ()=>{
     if(!(window.matchMedia && window.matchMedia('(max-width:890px)').matches)){
       setOpenState(false);
