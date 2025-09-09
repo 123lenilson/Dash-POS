@@ -197,6 +197,51 @@
       </div>
     </div>
   </div>
+
+  <!-- Price Adjustment Modal -->
+  <div id="pm-overlay" class="pm-overlay" aria-hidden="true">
+    <div id="pm-dialog" class="pm-dialog" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+      <header class="pm-header">
+        <h3 id="pm-title">Adjust Price</h3>
+      </header>
+
+      <div class="pm-display" aria-live="polite">
+        <span class="pm-currency" id="pm-currency">Kz</span>
+        <span class="pm-amount" id="pm-amount">0.00</span>
+      </div>
+
+      <div class="pm-keypad" role="application" aria-label="Numeric keypad">
+        <button class="pm-key" data-key="7" type="button">7</button>
+        <button class="pm-key" data-key="8" type="button">8</button>
+        <button class="pm-key" data-key="9" type="button">9</button>
+
+        <button class="pm-key" data-key="4" type="button">4</button>
+        <button class="pm-key" data-key="5" type="button">5</button>
+        <button class="pm-key" data-key="6" type="button">6</button>
+
+        <button class="pm-key" data-key="1" type="button">1</button>
+        <button class="pm-key" data-key="2" type="button">2</button>
+        <button class="pm-key" data-key="3" type="button">3</button>
+
+        <button class="pm-key pm-key-clear" data-key="C" type="button">C</button>
+        <button class="pm-key" data-key="0" type="button">0</button>
+        <button class="pm-key" data-key="." type="button">.</button>
+
+        <!-- wide backspace -->
+        <button class="pm-key pm-key-back" data-key="back" type="button">
+          <i class="fa-solid fa-delete-left" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="pm-actions">
+        <button id="pm-cancel" class="btn pm-btn-cancel" type="button">Cancel</button>
+        <button id="pm-confirm" class="btn pm-btn-confirm" type="button">Confirm Price</button>
+      </div>
+
+      <button class="pm-close" id="pm-close" aria-label="Fechar">×</button>
+    </div>
+  </div>
+
   <script src="../assets/js/app.js"></script>
 </body>
 </html>

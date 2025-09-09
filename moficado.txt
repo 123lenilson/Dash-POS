@@ -1,1302 +1,359 @@
-|
-|
-|
-|
-|
-|
-HTML
-|
-|
-|
-|
-|
-|
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POS Dashboard — l</title>
-  <link rel="stylesheet" href="../assets/css/styles.css" />
-  <!-- Font Awesome Free (CDN) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p1CmVx4g...PLACEHOLDER..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body>
-  <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
-  <div class="interface">
-    <!-- COLUNA 70% (MAIN / PRODUTOS) - Primeiro (à esquerda) -->
-    <main class="main col-70 products-col">
-      <!-- HEADER DENTRO DO MAIN (sticky) -->
-      <div class="main-header">
-        <div class="main-header-left">
-          <!-- brand, etc -->
-          <!-- COLE ESTE BOTÃO AO LADO DO BRAND / ANTES DA .main-nav -->
-          <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" title="Abrir menu">
-            <i class="fa-solid fa-bars" aria-hidden="true"></i>
-          </button>
-          <nav class="main-nav" aria-label="Menu principal do dashboard">
-            <button class="nav-link is-active" data-nav="home">Home</button>
-            <button class="nav-link" data-nav="orders">Order List</button>
-            <button class="nav-link" data-nav="history">History</button>
-            <button class="nav-link" data-nav="report">Report</button>
-            <button class="nav-link" data-nav="setting">Setting</button>
-          </nav>
-        </div>
-        <div class="main-header-right">
-          <div class="date-time" id="dateTime"></div>
-          <div class="user">
-            <div class="avatar">AN</div>
-            <div class="user-info">
-              <strong>Anisa Nur H.</strong>
-              <span>Cashier Staff</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- FIM HEADER DO MAIN -->
-      <div class="sticky-section">
-        <!-- SEARCH -->
-        <div class="search-row">
-          <div class="search">
-            <span class="search-icon">🔎</span>
-            <input id="searchInput" type="text" placeholder="Search menu here..." />
-            <button id="clearSearch" class="clear-btn" aria-label="Limpar busca">×</button>
-          </div>
-        </div>
-        <!-- CATEGORIAS -->
-        <div id="categoryBar" class="category-bar"></div>
-      </div>
-      <!-- GRID DE PRODUTOS -->
-      <div id="productGrid" class="product-grid" aria-live="polite"></div>
-    </main>
-    <!-- COLUNA 30% (SIDE / CARRINHO) - Segundo (à direita) -->
-    <aside class="side col-30" id="desktopCartCol" aria-hidden="false">
-      <div class="side-inner">
-        <div class="cart-header">
-          <div class="cart-title">
-            <strong>Cart</strong>
-            <button id="clearCart" class="btn light" aria-label="Limpar carrinho"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
-        
-        <!-- ÁREA EXPANDIDA PARA PRODUTOS DO CARRINHO -->
-        <div class="cart-products-area">
-          <!-- Placeholder quando carrinho vazio -->
-          <div id="cartEmptyState" class="cart-empty-state">
-            <div class="empty-icon">
-              <i class="fa-solid fa-cart-shopping"></i>
-            </div>
-            <h3>Seu carrinho está vazio</h3>
-            <p>Adicione produtos do menu para começar seu pedido</p>
-            <div class="empty-decoration">
-              <div class="decoration-circle"></div>
-              <div class="decoration-circle"></div>
-              <div class="decoration-circle"></div>
-            </div>
-          </div>
-          
-          <!-- Lista de produtos (visível quando há itens) -->
-          <ul id="cartList" class="cart-list-new" aria-live="polite"></ul>
-        </div>
+html
 
-        <!-- RODAPÉ FIXO DO CARRINHO: resumo compacto + ações -->
-        <div class="cart-footer-fixed">
-          <div class="cart-summary-compact">
-            <div class="summary-row">
-              <span>Item</span>
-              <strong id="cartItemsCount">0 Items</strong>
-            </div>
-            <div class="summary-row">
-              <span>Sub Total</span>
-              <strong id="cartSubtotal">Kz 0,00</strong>
-            </div>
-            <div class="summary-row">
-              <span>Discount</span>
-              <strong id="cartDiscount">Kz 2,12</strong>
-            </div>
-            <div class="summary-row">
-              <span>Tax</span>
-              <strong id="cartTax">Kz 0,00</strong>
-            </div>
-            <div class="summary-row total-row">
-              <span>Total</span>
-              <strong id="cartTotal">Kz 0,00</strong>
-            </div>
-          </div>
-          
-          <div class="payment-compact">
-            <div class="payment-methods">
-              <button class="payment-btn is-active" data-method="cash">Cash</button>
-              <button class="payment-btn" data-method="debit">Debit</button>
-              <button class="payment-btn" data-method="qris">QRIS</button>
-            </div>
-          </div>
-          
-          <button id="placeOrder" class="btn-process-transaction">
-            Process Transactions
-          </button>
-        </div>
-      </div>
-    </aside>
-  </div>
-  
-  <!-- BOTÃO FLUTUANTE (mobile) para abrir carrinho -->
-  <button id="mobileCartBtn" class="mobile-cart-btn" aria-label="Abrir carrinho" title="Carrinho">
-    <span class="cart-ico">🛒</span>
-    <span id="mobileCartBadge" class="cart-badge" aria-hidden="true">0</span>
-  </button>
-  
-  <!-- DRAWER / OVERLAY DO CARRINHO (mobile) -->
-  <div id="cartOverlay" class="cart-overlay" aria-hidden="true">
-    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
-      <div class="cart-drawer-header">
-        <h3 id="drawerTitle">Seu Carrinho</h3>
-        <button id="closeCartOverlay" class="iconbtn" aria-label="Fechar">×</button>
-      </div>
-      <!-- corpo scrollável -->
-      <div class="cart-drawer-body">
-        <!-- Placeholder mobile quando carrinho vazio -->
-        <div id="cartEmptyStateMobile" class="cart-empty-state">
-          <div class="empty-icon">
-            <i class="fa-solid fa-cart-shopping"></i>
-          </div>
-          <h3>Seu carrinho está vazio</h3>
-          <p>Adicione produtos do menu para começar seu pedido</p>
-        </div>
-        
-        <!-- Lista produtos mobile -->
-        <ul id="cartListOverlay" class="cart-list-new"></ul>
-      </div>
-      
-      <!-- footer fixo do drawer (resumo + ação) -->
-      <div class="cart-drawer-footer">
-        <div class="cart-summary-compact">
-          <div class="summary-row">
-            <span>Item</span>
-            <strong id="cartItemsCountOverlay">0 Items</strong>
-          </div>
-          <div class="summary-row">
-            <span>Sub Total</span>
-            <strong id="cartSubtotalOverlay">Kz 0,00</strong>
-          </div>
-          <div class="summary-row">
-            <span>Discount</span>
-            <strong id="cartDiscountOverlay">Kz 2,12</strong>
-          </div>
-          <div class="summary-row">
-            <span>Tax</span>
-            <strong id="cartTaxOverlay">Kz 0,00</strong>
-          </div>
-          <div class="summary-row total-row">
-            <span>Total</span>
-            <strong id="cartTotalOverlay">Kz 0,00</strong>
-          </div>
-        </div>
-        
-        <div class="payment-compact">
-          <div class="payment-methods">
-            <button class="payment-btn is-active" data-method="cash">Cash</button>
-            <button class="payment-btn" data-method="debit">Debit</button>
-            <button class="payment-btn" data-method="qris">QRIS</button>
-          </div>
-        </div>
-        
-        <button id="placeOrderOverlay" class="btn-process-transaction">Process Transactions</button>
-      </div>
+
+<!-- Price Adjustment Modal -->
+<div id="pm-overlay" class="pm-overlay" aria-hidden="true">
+  <div id="pm-dialog" class="pm-dialog" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+    <header class="pm-header">
+      <h3 id="pm-title">Adjust Price</h3>
+    </header>
+
+    <div class="pm-display" aria-live="polite">
+      <span class="pm-currency" id="pm-currency">$</span>
+      <span class="pm-amount" id="pm-amount">0.00</span>
     </div>
+
+    <div class="pm-keypad" role="application" aria-label="Numeric keypad">
+      <button class="pm-key" data-key="7" type="button">7</button>
+      <button class="pm-key" data-key="8" type="button">8</button>
+      <button class="pm-key" data-key="9" type="button">9</button>
+
+      <button class="pm-key" data-key="4" type="button">4</button>
+      <button class="pm-key" data-key="5" type="button">5</button>
+      <button class="pm-key" data-key="6" type="button">6</button>
+
+      <button class="pm-key" data-key="1" type="button">1</button>
+      <button class="pm-key" data-key="2" type="button">2</button>
+      <button class="pm-key" data-key="3" type="button">3</button>
+
+      <button class="pm-key pm-key-clear" data-key="C" type="button">C</button>
+      <button class="pm-key" data-key="0" type="button">0</button>
+      <button class="pm-key" data-key="." type="button">.</button>
+
+      <!-- wide backspace -->
+      <button class="pm-key pm-key-back" data-key="back" type="button">
+        <i class="fa-solid fa-delete-left" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="pm-actions">
+      <button id="pm-cancel" class="btn pm-btn-cancel" type="button">Cancel</button>
+      <button id="pm-confirm" class="btn pm-btn-confirm" type="button">Confirm Price</button>
+    </div>
+
+    <button class="pm-close" id="pm-close" aria-label="Fechar">×</button>
   </div>
-  <script src="../assets/js/app.js"></script>
-</body>
-</html>
-|
-|
-|
-|
-|
-|
-CSS
-|
-|
-|
-|
-|
-|
-/* styles.css - CSS completo do dashboard (MAIN à esquerda, CART à direita fixa/Clamped) */
+</div>
 
-:root{
-  --bg:#f6f7fb;
-  --card:#ffffff;
-  --muted:#8b8fa3;
-  --text:#23243a;
-  --accent:#6c5ce7;
-  --accent-2:#9b8cff;
-  --ok:#22c55e;
-  --warn:#ef4444;
-  --line:#ececf3;
-  --shadow: 0 6px 20px rgba(10,10,40,.06);
-  --shadow-strong: 0 12px 30px rgba(10,10,40,.08);
-  --radius: 16px;
 
-  /* Sidebar width: clamp(min, preferred, max) */
-  --sidebar-width: clamp(280px, 22vw, 360px);
-  --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
-}
 
-/* reset / base */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font:14px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
-  color:var(--text);
-  background:var(--bg);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  overflow:hidden;
-}
 
-/* LAYOUT: MAIN + SIDE */
-.interface{
-  display:grid;
-  grid-template-columns: 1fr var(--sidebar-width);
-  gap:0;
-  height:100vh;
-}
 
-/* MAIN (esquerda) */
-.main{
-  background:transparent;
-  overflow:auto;
-  padding:0;
-  margin:0;
-  position:relative;
-  -webkit-overflow-scrolling:touch;
-}
 
-/* main-header (sticky) */
-.main-header{
-  position:sticky;
-  top:0;
-  left:0;
-  right:0;
-  width:100%;
-  z-index:60;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:12px 20px;
-  border-radius:0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(235,232,255,0.6);
-}
-.main-header-left{ display:flex; gap:12px; align-items:center; }
-.main-header-right{ display:flex; gap:12px; align-items:center; }
 
-/* main nav */
-.main .main-nav{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-.main .main-nav .nav-link{
-  border:0;
-  background:transparent;
-  padding:10px 14px;
-  border-radius:12px;
-  color:var(--muted);
-  cursor:pointer;
-  font-weight:700;
-  transition: all .12s ease;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-}
-.main .main-nav .nav-link:hover{
-  background:#f6f5ff;
-  color:var(--accent);
-  transform:translateY(-1px);
-  box-shadow: var(--shadow-strong);
-}
-.main .main-nav .nav-link.is-active{
-  color:#fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 8px 20px rgba(108,92,231,0.18);
-}
+css
 
-/* buttons / user */
-#newOrderBtn{ padding:10px 14px; border-radius:12px; font-weight:700; box-shadow: 0 8px 24px rgba(108,92,231,0.12); border:0; cursor:pointer; }
-.date-time{ color:var(--muted); font-size:13px; white-space:nowrap; min-width:120px; text-align:right; }
-.user{ display:flex; align-items:center; gap:10px; }
-.avatar{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:#f0f1f6; color:#5b5e72; font-weight:700; }
-.user-info{ display:flex; flex-direction:column; line-height:1; }
-.user-info span{ font-size:11px; color:var(--muted); }
 
-/* SEARCH ROW */
-.search-row{ margin:12px 0; padding:0 20px; }
-.search{ position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:8px 44px 8px 40px; box-shadow: var(--shadow); margin-bottom:0; }
-.search-icon{ position:absolute; left:12px; top:50%; transform:translateY(-50%); }
-.search input{ width:100%; border:0; outline:0; font-size:15px; background:transparent; color:var(--text); }
-.clear-btn{ position:absolute; right:6px; top:50%; transform:translateY(-50%); border:0; background:transparent; font-size:22px; color:#9aa0b4; cursor:pointer; padding:6px 10px; line-height:1; }
 
-/* =================== CATEGORY BAR -> SLIDER =================== */
-.category-bar{
-  margin:14px 0 18px;
-  padding:0 20px;
-  position:relative;
-}
 
-.cat-slider{
-  position:relative;
-}
 
-.cat-viewport{
-  overflow-x:hidden;               /* desktop: sem scroll visível */
-  overflow-y:visible;
-  -ms-overflow-style: none;        /* IE/Edge */
-  scrollbar-width: none;           /* Firefox */
-  scroll-behavior:smooth;
-  scroll-snap-type: x proximity;   /* mobile terá snapping leve */
-}
-.cat-viewport::-webkit-scrollbar{ display:none; } /* Chrome/Safari/Android */
 
-.cat-track{
-  display:flex;
-  flex-wrap:nowrap;                /* não quebrar linha */
-  gap:12px;
-  padding:0;                       /* o padding externo fica na .category-bar */
-}
 
-/* cada categoria é um "card" que não encolhe */
-.category{
-  flex:0 0 auto;                   /* importante pro slider */
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 14px;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:16px;
-  box-shadow:var(--shadow);
-  cursor:pointer;
-  transition:.15s;
-  scroll-snap-align: start;        /* bom no mobile */
-}
-.category.is-active{ outline:2px solid #e8e4ff; background:#fbfaff; }
-.category .circle{ width:34px; height:34px; border-radius:12px; display:grid; place-items:center; background:#f3f0ff; color:var(--accent); }
-.category .meta{ display:flex; flex-direction:column; line-height:1.05; }
-.category .meta small{ color:var(--muted); font-size:11px; }
-
-/* setas (desktop) */
-.cat-arrow{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  width:36px;
-  height:36px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:#fff;
-  box-shadow: var(--shadow);
-  display:grid;
-  place-items:center;
-  cursor:pointer;
-  z-index:2;
-  user-select:none;
-}
-.cat-arrow.prev{ left:10px; }
-.cat-arrow.next{ right:10px; }
-.cat-arrow[disabled]{ opacity:.35; pointer-events:none; }
-
-/* sombreado de borda quando há mais conteúdo */
-.category-bar.has-left-shadow .cat-viewport{
-  mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0, rgba(0,0,0,1) 22px);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0, rgba(0,0,0,1) 22px);
-}
-.category-bar.has-right-shadow .cat-viewport{
-  mask-image: linear-gradient(270deg, rgba(0,0,0,0) 0, rgba(0,0,0,1) 22px);
-  -webkit-mask-image: linear-gradient(270deg, rgba(0,0,0,0) 0, rgba(0,0,0,1) 22px);
-}
-.category-bar.has-left-shadow.has-right-shadow .cat-viewport{
-  mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 40px calc(100% - 40px), rgba(0,0,0,0) calc(100% - 20px) 100%);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 40px calc(100% - 40px), rgba(0,0,0,0) calc(100% - 20px) 100%);
-}
-
-/* =================== PRODUCT GRID =================== */
-.product-grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding:0 20px 24px; }
-
-/* CARD */
-.card{ background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform .06s ease, box-shadow .12s ease, border-color .12s ease; }
-.card:active{ transform:scale(.995); }
-.card .thumb{ width:100%; aspect-ratio:4/3; background:#f5f6fb; display:grid; place-items:center; }
-.card .thumb img{ width:96%; height:96%; object-fit:cover; border-radius:14px; }
-.card .body{ padding:12px 14px 10px; }
-.card .title{ font-weight:700; margin:6px 0 2px; font-size:15px; color:var(--text); }
-.badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#eafaf0; color:var(--ok); margin:6px 0; }
-.badge.na{ background:#fdecec; color:var(--warn); }
-.price{ margin-top:8px; font-weight:800; font-size:16px; color:var(--text); }
-.controls{ margin-top:8px; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
-.qtybtn{ width:34px; height:34px; border-radius:10px; border:0; background:#f3f4fa; cursor:pointer; font-size:18px; font-weight:800; }
-.qtybtn.plus{ background:#f1edff; color:var(--accent); }
-
-/* SELECTED CARD */
-.card.is-selected {
-  border: 2px solid var(--accent);
-  box-shadow: 0 12px 40px rgba(108,92,231,0.12);
-  transform: translateY(-2px);
-}
-.card.is-selected .body { z-index:2; }
-
-/* =================== NOVA ESTRUTURA DO CARRINHO =================== */
-
-/* SIDE / CART - Nova estrutura */
-.side{
-  background:#fff;
-  border-left:1px solid var(--line);
-  overflow:hidden; /* mudamos para hidden pois o scroll será interno */
-  padding:14px 14px 0 14px; /* removemos padding-bottom */
-  display:flex;
-  flex-direction:column;
-  min-width: var(--sidebar-width);
-  max-width: var(--sidebar-width);
-  box-sizing:border-box;
-}
-
-.side-inner{ 
-  display:flex; 
-  flex-direction:column; 
-  height:100%; 
-  gap:0; /* removemos gap */
-}
-
-.cart-title{ 
-  font-size:16px; 
-  margin-bottom:12px; 
-  color:var(--text); 
-  font-weight:700; 
-  display: flex; 
-  justify-content: space-between;
-  flex-shrink: 0; /* não encolhe */
-}
-
-/* ÁREA EXPANDIDA PARA PRODUTOS */
-.cart-products-area {
-  flex: 1; /* ocupa todo espaço disponível */
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* permite que encolha se necessário */
-  margin-bottom: 12px;
-  position: relative;
-}
-
-/* PLACEHOLDER CARRINHO VAZIO */
-.cart-empty-state {
-  display: flex;
-  flex-direction: column;
+/* Price Modal Styles (prefixo pm-) */
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;               /* toggle via JS */
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 40px 20px;
-  height: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 1400;
+  padding: 20px;
+}
+
+.pm-overlay.is-open { display: flex; }
+
+.pm-dialog {
+  width: 420px;
+  max-width: calc(100% - 40px);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
   position: relative;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.02), rgba(155, 140, 255, 0.02));
-  border-radius: 16px;
-  border: 1px dashed #e2e8f0;
-}
-
-.cart-empty-state.hidden {
-  display: none;
-}
-
-.empty-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(155, 140, 255, 0.1));
+  padding: 18px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-  animation: float 3s ease-in-out infinite;
+  flex-direction: column;
+  gap: 12px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
 }
 
-.empty-icon i {
-  font-size: 32px;
-  color: var(--accent);
-}
-
-.cart-empty-state h3 {
-  margin: 0 0 8px 0;
+/* header */
+.pm-header h3 {
+  margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: var(--text);
+  color: #111827;
 }
 
-.cart-empty-state p {
-  margin: 0 0 24px 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+/* display */
+.pm-display {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border: 2px solid #e8eefb;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+  font-size: 22px;
+}
+.pm-currency { color:#374151; font-weight:700; opacity:0.9; }
+.pm-amount {
+  color:#6b7280;
+  font-weight:700;
+  font-size: 28px;
+  letter-spacing: 0.5px;
 }
 
-.empty-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
-.decoration-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.05), rgba(155, 140, 255, 0.05));
-  animation: floatCircle 6s ease-in-out infinite;
-}
-
-.decoration-circle:nth-child(1) {
-  width: 30px;
-  height: 30px;
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.decoration-circle:nth-child(2) {
-  width: 20px;
-  height: 20px;
-  top: 60%;
-  right: 15%;
-  animation-delay: 2s;
-}
-
-.decoration-circle:nth-child(3) {
-  width: 25px;
-  height: 25px;
-  bottom: 25%;
-  left: 20%;
-  animation-delay: 4s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes floatCircle {
-  0%, 100% { 
-    transform: translateY(0px) scale(1); 
-    opacity: 0.3;
-  }
-  50% { 
-    transform: translateY(-15px) scale(1.1); 
-    opacity: 0.6;
-  }
-}
-
-/* NOVA LISTA DE CARRINHO */
-.cart-list-new {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+/* keypad grid */
+.pm-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  overflow-y: auto;
-  height: 100%;
-  padding-right: 4px; /* espaço para scrollbar */
 }
 
-.cart-list-new.hidden {
-  display: none;
+.pm-key {
+  background: #f8fafc;
+  border: 1px solid #e6edf6;
+  border-radius: 10px;
+  padding: 14px 10px;
+  font-size: 18px;
+  font-weight:700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(10,10,30,0.03);
+  transition: transform .06s ease, background .08s;
 }
+.pm-key:active { transform: translateY(1px); }
+.pm-key:hover { background: #f1f7ff; }
 
-/* Scrollbar personalizada para a lista */
-.cart-list-new::-webkit-scrollbar {
-  width: 4px;
+.pm-key-clear {
+  background: #fff0f0;
+  color: #c53030;
+  border-color: #f6d6d6;
 }
-
-.cart-list-new::-webkit-scrollbar-track {
-  background: #f1f2f6;
-  border-radius: 2px;
-}
-
-.cart-list-new::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 2px;
-}
-
-.cart-list-new::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* ITEM DO CARRINHO - Redesenhado */
-.cart-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+.pm-key-back {
+  grid-column: 1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  background: #f3f4f6;
 }
 
-.cart-item:hover {
-  border-color: rgba(108, 92, 231, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+/* actions */
+.pm-actions {
+  display:flex;
+  gap: 10px;
+  margin-top: 6px;
 }
-
-.cart-item-info {
+.pm-btn-cancel {
   flex: 1;
-  min-width: 0; /* permite quebra de texto */
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
 }
-
-.cart-item .title {
+.pm-btn-confirm {
+  flex: 1;
+  background: linear-gradient(135deg,#f97316,#fb923c);
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: 700;
-  font-size: 14px;
-  color: var(--text);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.cart-item .meta {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
+/* close icon top-right */
+.pm-close {
+  position:absolute;
+  right: 10px;
+  top: 8px;
+  border:0;
+  background:transparent;
+  font-size:22px;
+  cursor:pointer;
+  color:#6b7280;
 }
 
-.cart-item-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+/* disabled confirm */
+.pm-btn-confirm[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
-.cart-item-qty {
-  min-width: 28px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--text);
+/* responsive */
+@media (max-width:420px){
+  .pm-dialog { width: 100%; padding: 14px; }
+  .pm-amount { font-size: 22px; }
+  .pm-key { padding: 12px; font-size: 16px; }
 }
 
-/* RODAPÉ FIXO COMPACTO */
-.cart-footer-fixed {
-  flex-shrink: 0;
-  background: #fff;
-  border-top: 1px solid var(--line);
-  padding: 16px 0 16px 0; /* removemos padding lateral pois já tem no .side */
-  margin: 0 -14px 0 -14px; /* compensamos o padding do .side */
-  padding-left: 14px;
-  padding-right: 14px;
-}
 
-/* RESUMO COMPACTO */
-.cart-summary-compact {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
 
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-}
+js
 
-.summary-row span {
-  color: var(--muted);
-  font-weight: 400;
-}
 
-.summary-row strong {
-  color: var(--text);
-  font-weight: 600;
-  font-size: 13px;
-}
-|
-|
-|
-|
-|
-|
-JS
-|
-|
-|
-|
-|
-|
-/* ======= MOCK DE DADOS (preenchido pela API) ======= */
-let PRODUCTS = [];
 
-const TAX_RATE = 0.15; // 15%
-const currency = new Intl.NumberFormat('pt-AO', { style:'currency', currency:'AOA', maximumFractionDigits:2 });
 
-/* ======= ESTADO ======= */
-let activeCategory = "All Menu";
-let searchTerm = "";
-let modoEdicao = false;       // mantém do seu fluxo
-let estaPesquisando = false;  // mantém do seu fluxo
-const cart = new Map();       // id -> {product, qty}
 
-/* guarda a key das categorias para evitar rebuild desnecessário */
-let lastCategoriesKey = null;
 
-/* ======= DOM ======= */
-const dateTimeEl   = document.getElementById('dateTime');
-const categoryBar  = document.getElementById('categoryBar');
-const productGrid  = document.getElementById('productGrid');
-const searchInput  = document.getElementById('searchInput');
-const clearSearch  = document.getElementById('clearSearch');
 
-const cartList     = document.getElementById('cartList');
-const cartItemsCount = document.getElementById('cartItemsCount');
-const cartSubtotal = document.getElementById('cartSubtotal');
-const cartTax      = document.getElementById('cartTax');
-const cartTotal    = document.getElementById('cartTotal');
+/* Price Modal - API: showPriceModal({ initial, currency, decimals }) -> Promise<number|null> */
+(function(){
+  const overlay = document.getElementById('pm-overlay');
+  const dialog = document.getElementById('pm-dialog');
+  const elCurrency = document.getElementById('pm-currency');
+  const elAmount = document.getElementById('pm-amount');
+  const keys = Array.from(document.querySelectorAll('.pm-key'));
+  const btnCancel = document.getElementById('pm-cancel');
+  const btnConfirm = document.getElementById('pm-confirm');
+  const btnClose = document.getElementById('pm-close');
 
-const cartListOverlay = document.getElementById('cartListOverlay');
-const cartItemsCountOverlay = document.getElementById('cartItemsCountOverlay');
-const cartSubtotalOverlay = document.getElementById('cartSubtotalOverlay');
-const cartTaxOverlay = document.getElementById('cartTaxOverlay');
-const cartTotalOverlay = document.getElementById('cartTotalOverlay');
+  let resolvePromise = null;
+  let currentStr = '0';   // store user input as string, e.g. "12.34"
+  let decimals = 2;
+  let currencySymbol = '$';
 
-const taxRateLabel = document.getElementById('taxRateLabel');
-const clearCartBtn = document.getElementById('clearCart');
-const placeOrderBtn = document.getElementById('placeOrder');
-
-const clearCartOverlayBtn = document.getElementById('clearCartOverlay');
-const placeOrderOverlayBtn = document.getElementById('placeOrderOverlay');
-
-const mobileCartBtn = document.getElementById('mobileCartBtn');
-const mobileCartBadge = document.getElementById('mobileCartBadge');
-const cartOverlay = document.getElementById('cartOverlay');
-const closeCartOverlayBtn = document.getElementById('closeCartOverlay');
-
-/* ======= UTIL ======= */
-function nowFancy(){
-  const d = new Date();
-  return d.toLocaleDateString('pt-PT', { weekday:'short', day:'2-digit', month:'short', year:'numeric'}) +
-         " • " + d.toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
-}
-function placeholderIMG(name){
-  const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-  const hue = (name.length*37) % 360;
-  const svg = `
-  <svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'>
-    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='hsl(${hue},74%,92%)' />
-      <stop offset='100%' stop-color='hsl(${(hue+40)%360},74%,85%)' />
-    </linearGradient></defs>
-    <rect width='100%' height='100%' fill='url(#g)'/>
-    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, -apple-system, Segoe UI, Roboto' font-weight='700' font-size='64' fill='hsl(${hue},35%,28%)'>${initials}</text>
-  </svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-}
-
-function isMobileView(){
-  return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
-}
-
-/* ======= FETCH ======= */
-function carregarCardapios() {
-  fetch("http://localhost/Dash-POS/api/cardapio.php?acao=listar", {
-    method: "GET",
-    cache: "no-store"
-  })
-    .then(response => {
-      if (!response.ok) {
-        return response.text().then(text => {
-          throw new Error(`Erro HTTP ${response.status}: ${text || response.statusText}`);
-        });
-      }
-      return response.json();
-    })
-    .then(cardapios => {
-      atualizarCards(cardapios);
-    })
-    .catch(error => {
-      console.error("Erro no fetch:", error);
-      productGrid.innerHTML = `<div style='grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;'>Erro ao carregar os dados: ${error.message}</div>`;
-    });
-}
-
-function atualizarCards(cardapios) {
-  if (!Array.isArray(cardapios)) {
-    console.error("Erro: API não retornou um array", cardapios);
-    productGrid.innerHTML = `<div style='grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;'>Erro: Dados inválidos recebidos da API</div>`;
-    return;
-  }
-
-  // popula PRODUCTS no formato esperado
-  PRODUCTS = cardapios.map(item => ({
-    id: parseInt(item.cardapio_id) || 0,
-    cat: item.categoria_nome || "All Menu",
-    name: item.cardapio_nome || "Produto sem nome",
-    price: parseFloat(item.cardapio_preco) || 0,
-    available: true,
-    img: ""
-  }));
-
-  // calcula counts e order para decidir se rebuild é necessário
-  const counts = {};
-  for (const p of PRODUCTS) { const c = p.cat; counts[c] = (counts[c] || 0) + 1; }
-  counts["All Menu"] = PRODUCTS.length;
-  const order = ["All Menu", ...Object.keys(counts).filter(c => c !== "All Menu").sort()];
-
-  const keyArr = order.map(cat => `${cat}:${counts[cat]}`);
-  const key = JSON.stringify(keyArr);
-
-  // se mudou, rebuild; se não mudou, só renderiza produtos (preserva scroll)
-  if (key !== lastCategoriesKey) {
-    lastCategoriesKey = key;
-    buildCategories(order, counts, true); // preserve scroll if possible
-  } else {
-    // atualiza highlight da categoria sem reconstruir (se existir)
-    const track = categoryBar.querySelector('.cat-track');
-    if (track) {
-      track.querySelectorAll('.category').forEach(btn => {
-        btn.classList.toggle('is-active', btn.dataset.cat === activeCategory);
-      });
+  function formatDisplay(str){
+    // Normalize empty -> "0"
+    if(!str || str === '') str = '0';
+    // Ensure there is a decimal point if decimals > 0
+    if(decimals > 0 && !str.includes('.')) {
+      // append fraction zeros for display only
+      const padded = Number(str).toFixed(decimals);
+      return padded;
     }
+    // If has dot, format integer part with grouping but keep decimals count
+    if(str.includes('.')){
+      const [intPart, frac] = str.split('.');
+      const intNum = Number(intPart || '0').toLocaleString();
+      const truncatedFrac = (frac || '').slice(0, decimals).padEnd(decimals, '0');
+      return `${intNum}.${truncatedFrac}`;
+    }
+    return Number(str).toLocaleString();
   }
 
-  // renderiza produtos (sempre)
-  renderProducts();
-}
-
-/* ======= CATEGORY SLIDER ======= */
-// agora buildCategories aceita order/counts opcional e preserveScroll flag
-function buildCategories(orderIn = null, countsIn = null, preserveScroll = false) {
-  // se counts/order não foram passados, calcula
-  const counts = countsIn || (() => {
-    const c = {};
-    for (const p of PRODUCTS) { c[p.cat] = (c[p.cat] || 0) + 1; }
-    c["All Menu"] = PRODUCTS.length;
-    return c;
-  })();
-
-  const order = orderIn || ["All Menu", ...Object.keys(counts).filter(c => c !== "All Menu").sort()];
-
-  // preserva scroll da viewport atual, se solicitado
-  let oldScroll = 0;
-  const oldViewport = categoryBar.querySelector('.cat-viewport');
-  if (preserveScroll && oldViewport) {
-    oldScroll = oldViewport.scrollLeft || 0;
+  function updateUI(){
+    elAmount.textContent = formatDisplay(currentStr);
+    btnConfirm.disabled = false; // you can add logic to disable if 0 or unchanged
   }
 
-  // estrutura do slider dentro do #categoryBar
-  categoryBar.innerHTML = `
-    <div class="cat-slider">
-      <button class="cat-arrow prev" aria-label="Anterior" type="button">
-        <span aria-hidden="true">‹</span>
-      </button>
-      <div class="cat-viewport" id="catViewport">
-        <div class="cat-track" id="catTrack">
-          ${order.map(cat => `
-            <button class="category ${cat===activeCategory?'is-active':''}" data-cat="${cat}">
-              <div class="circle">🏷️</div>
-              <div class="meta">
-                <strong>${cat}</strong>
-                <small>${counts[cat] || 0} items</small>
-              </div>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-      <button class="cat-arrow next" aria-label="Próximo" type="button">
-        <span aria-hidden="true">›</span>
-      </button>
-    </div>
-  `;
-
-  // novos elementos
-  const viewport = categoryBar.querySelector('#catViewport');
-  const track    = categoryBar.querySelector('#catTrack');
-  const prevBtn  = categoryBar.querySelector('.cat-arrow.prev');
-  const nextBtn  = categoryBar.querySelector('.cat-arrow.next');
-
-  // delegação de clique para trocar categoria
-  track.addEventListener('click', (e) => {
-    const btn = e.target.closest('.category');
-    if (!btn) return;
-    activeCategory = btn.dataset.cat;
-    // atualiza .is-active sem reconstruir tudo
-    track.querySelectorAll('.category').forEach(b => b.classList.toggle('is-active', b === btn));
-    renderProducts();
-  });
-
-  // setas no desktop
-  function pageSize(){ return Math.max(viewport.clientWidth * 0.85, 180); }
-  function scrollByPage(dir){
-    viewport.scrollBy({ left: dir * pageSize(), behavior:'smooth' });
+  function openModal(opts = {}){
+    currentStr = (typeof opts.initial === 'number') ? String(opts.initial.toFixed(opts.decimals ?? decimals)) : (opts.initial ?? '0');
+    decimals = (typeof opts.decimals === 'number') ? opts.decimals : decimals;
+    currencySymbol = opts.currency ?? currencySymbol;
+    elCurrency.textContent = currencySymbol;
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden','false');
+    updateUI();
+    // trap focus to the dialog (simple)
+    setTimeout(()=>{ dialog.querySelector('.pm-key')?.focus(); }, 50);
   }
-  prevBtn.addEventListener('click', () => scrollByPage(-1));
-  nextBtn.addEventListener('click', () => scrollByPage(+1));
 
-  // bloquear scroll/roda no desktop (evitar que a rodinha do rato faça scroll)
-  function updateWheelBlock(){
-    if (!isMobileView()) {
-      if (!viewport._wheelBlocked) {
-        viewport.addEventListener('wheel', wheelBlocker, { passive: false });
-        viewport._wheelBlocked = true;
-      }
-      viewport.style.overflowX = 'hidden';
+  function closeModal(){
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  function clearAll(){ currentStr = '0'; updateUI(); }
+
+  function pressDigit(d){
+    // d is '0'..'9' or '.'
+    if(d === '.'){
+      if(decimals === 0) return;
+      if(currentStr.includes('.')) return;
+      currentStr += '.';
     } else {
-      if (viewport._wheelBlocked) {
-        viewport.removeEventListener('wheel', wheelBlocker, { passive: false });
-        viewport._wheelBlocked = false;
+      // append digit with guard for decimals length
+      if(currentStr === '0') {
+        currentStr = d;
+      } else if(currentStr.includes('.')){
+        const [, frac] = currentStr.split('.');
+        if(frac.length >= decimals) return; // prevent more decimals
+        currentStr += d;
+      } else {
+        // avoid overflow long integer part (optional)
+        if(currentStr.length >= 12) return;
+        currentStr += d;
       }
-      viewport.style.overflowX = 'auto'; // mobile: desliza com o dedo
     }
+    updateUI();
   }
-  function wheelBlocker(e){ e.preventDefault(); }
 
-  // mostrar/ocultar/desabilitar setas conforme posição e breakpoint
-  function atStart(){ return viewport.scrollLeft <= 2; }
-  function atEnd(){
-    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth - 2);
-    return viewport.scrollLeft >= maxScroll;
-  }
-  function updateArrows(){
-    const mobile = isMobileView();
-    prevBtn.style.display = mobile ? 'none' : '';
-    nextBtn.style.display = mobile ? 'none' : '';
-    if (!mobile) {
-      prevBtn.disabled = atStart();
-      nextBtn.disabled = atEnd();
-      categoryBar.classList.toggle('has-left-shadow', !atStart());
-      categoryBar.classList.toggle('has-right-shadow', !atEnd());
+  function pressBack(){
+    if(currentStr.length <= 1){
+      currentStr = '0';
     } else {
-      categoryBar.classList.remove('has-left-shadow','has-right-shadow');
+      currentStr = currentStr.slice(0, -1);
+      if(currentStr === '-' || currentStr === '') currentStr = '0';
     }
+    // if ends with '.' remove trailing dot case (we allow)
+    updateUI();
   }
 
-  viewport.addEventListener('scroll', updateArrows, { passive: true });
-  window.addEventListener('resize', () => { updateWheelBlock(); updateArrows(); });
-
-  // restaurar scroll se foi preservado (clamp ao máximo)
-  if (preserveScroll && oldScroll && viewport) {
-    // aguarda próximo tick para garantir que scrollWidth/clientWidth estejam calculados
-    requestAnimationFrame(() => {
-      const max = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-      viewport.scrollLeft = Math.min(oldScroll, max);
-      updateArrows();
-    });
-  } else {
-    // init
-    updateWheelBlock();
-    updateArrows();
-  }
-}
-
-/* ======= RENDER PRODUCTS ======= */
-function renderProducts(){
-  const list = PRODUCTS
-    .filter(p => p.name !== undefined && p.name !== null)
-    .filter(p => activeCategory==="All Menu" ? true : p.cat === activeCategory)
-    .filter(p => p.name.toLowerCase().includes(searchTerm));
-
-  if(list.length === 0){
-    productGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;">Nenhum produto encontrado.</div>`;
-    return;
-  }
-
-  productGrid.innerHTML = list.map(p => {
-    const imgSrc = p.img || placeholderIMG(p.name);
-    return `
-      <article class="card" data-id="${p.id}">
-        <div class="thumb"><img alt="${p.name}" src="${imgSrc}"></div>
-        <div class="body">
-          <div class="title">${p.name}</div>
-          <span class="badge ${p.available? '':'na'}">${p.available? 'Available':'Not Available'}</span>
-          <div class="price">${currency.format(p.price)}</div>
-          <div class="controls" onclick="event.stopPropagation()">
-            <button class="qtybtn minus" data-action="minus" aria-label="Diminuir">−</button>
-            <button class="qtybtn plus"  data-action="plus"  aria-label="Adicionar">+</button>
-          </div>
-        </div>
-      </article>
-    `;
-  }).join('');
-
-  // events + marca selecionados
-  productGrid.querySelectorAll('.card').forEach(card=>{
-    const id = +card.dataset.id;
-
-    if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
-    else { card.classList.remove('is-selected'); }
-
-    card.addEventListener('click', ()=> addToCart(id, 1));
-    const plusBtn = card.querySelector('.qtybtn.plus');
-    const minusBtn = card.querySelector('.qtybtn.minus');
-
-    if(plusBtn){ plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); }); }
-    if(minusBtn){ minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); }); }
-  });
-}
-
-/* Atualiza a seleção visual dos cards */
-function updateProductSelections(){
-  const cards = productGrid.querySelectorAll('.card');
-  cards.forEach(card=>{
-    const id = +card.dataset.id;
-    if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
-    else { card.classList.remove('is-selected'); }
-  });
-}
-
-/* ======= CART ======= */
-function renderCart(){
-  const items = [...cart.values()];
-
-  cartList.innerHTML = items.map(({product, qty})=>{
-    const line = product.price * qty;
-    return `
-      <li class="cart-item" data-id="${product.id}">
-        <div>
-          <div class="title">${product.name}</div>
-          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
-        </div>
-        <div class="right">
-          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
-          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
-          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
-          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
-        </div>
-      </li>
-    `;
-  }).join('');
-
-  cartListOverlay.innerHTML = items.map(({product, qty})=>{
-    const line = product.price * qty;
-    return `
-      <li class="cart-item" data-id="${product.id}">
-        <div>
-          <div class="title">${product.name}</div>
-          <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
-        </div>
-        <div class="right">
-          <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
-          <div style="min-width:24px; text-align:center; font-weight:700">${qty}</div>
-          <button class="iconbtn" data-act="plus" aria-label="Adicionar">+</button>
-          <button class="iconbtn del" data-act="del" aria-label="Excluir">×</button>
-        </div>
-      </li>
-    `;
-  }).join('');
-
-  // eventos lista (desktop)
-  cartList.querySelectorAll('.cart-item').forEach(row=>{
-    const id = +row.dataset.id;
-    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
-    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
-    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
-  });
-
-  // eventos lista (overlay)
-  cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
-    const id = +row.dataset.id;
-    row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
-    row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
-    row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
-  });
-
-  const stats = items.reduce((acc, it)=>{
-    acc.items += it.qty;
-    acc.subtotal += it.product.price * it.qty;
-    return acc;
-  }, {items:0, subtotal:0});
-
-  const tax = stats.subtotal * TAX_RATE;
-  const total = stats.subtotal + tax;
-
-  cartItemsCount.textContent = stats.items;
-  cartSubtotal.textContent = currency.format(stats.subtotal);
-  cartTax.textContent = currency.format(tax);
-  cartTotal.textContent = currency.format(total);
-  taxRateLabel.textContent = `${(TAX_RATE*100).toFixed(0)}%`;
-
-  cartItemsCountOverlay.textContent = stats.items;
-  cartSubtotalOverlay.textContent = currency.format(stats.subtotal);
-  cartTaxOverlay.textContent = currency.format(tax);
-  cartTotalOverlay.textContent = currency.format(total);
-  document.getElementById('taxRateLabelOverlay').textContent = `${(TAX_RATE*100).toFixed(0)}%`;
-
-  mobileCartBadge.textContent = stats.items;
-  mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
-
-  updateProductSelections();
-}
-
-/* ======= ACTIONS ======= */
-function addToCart(id, delta){
-  const product = PRODUCTS.find(p=>p.id===id);
-  if(!product) return;
-  const entry = cart.get(id) || {product, qty:0};
-  entry.qty += delta;
-  if(entry.qty <= 0) cart.delete(id);
-  else cart.set(id, entry);
-  renderCart();
-}
-function removeFromCart(id){
-  cart.delete(id);
-  renderCart();
-}
-
-/* ======= SEARCH ======= */
-searchInput.addEventListener('input', () => {
-  searchTerm = searchInput.value.trim().toLowerCase();
-  estaPesquisando = searchTerm.length > 0;
-  renderProducts();
-});
-clearSearch.addEventListener('click', ()=>{
-  searchInput.value = "";
-  searchTerm = "";
-  estaPesquisando = false;
-  searchInput.focus();
-  renderProducts();
-});
-
-/* ======= GLOBAL BUTTONS ======= */
-document.getElementById('placeOrder')?.addEventListener('click', ()=>{
-  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
-  alert('Pedido realizado! (demonstração)');
-  cart.clear(); renderCart();
-});
-document.getElementById('placeOrderOverlay')?.addEventListener('click', ()=>{
-  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
-  alert('Pedido realizado! (demonstração)');
-  cart.clear(); renderCart();
-});
-clearCartBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
-clearCartOverlayBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
-
-/* ======= MOBILE DRAWER ======= */
-mobileCartBtn?.addEventListener('click', ()=> openCartOverlay());
-closeCartOverlayBtn?.addEventListener('click', ()=> closeCartOverlay());
-cartOverlay?.addEventListener('click', (e)=>{ if(e.target === cartOverlay) closeCartOverlay(); });
-
-function openCartOverlay(){
-  cartOverlay.classList.add('is-open');
-  cartOverlay.setAttribute('aria-hidden','false');
-  document.body.style.overflow = 'hidden';
-}
-function closeCartOverlay(){
-  cartOverlay.classList.remove('is-open');
-  cartOverlay.setAttribute('aria-hidden','true');
-  document.body.style.overflow = '';
-}
-
-/* ======= MAIN MENU (nav) ======= */
-document.querySelectorAll('.main .main-nav .nav-link').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.main .main-nav .nav-link').forEach(x=>x.classList.remove('is-active'));
-    btn.classList.add('is-active');
-  });
-});
-
-/* ======= DATETIME & INIT ======= */
-function updateDateTime(){
-  const dt = document.getElementById('dateTime');
-  if(dt) dt.textContent = nowFancy();
-}
-
-function updateResponsiveUI(){
-  if(isMobileView()){
-    document.querySelector('.side') && (document.querySelector('.side').style.display = 'none');
-    mobileCartBtn && (mobileCartBtn.style.display = 'grid');
-  } else {
-    document.querySelector('.side') && (document.querySelector('.side').style.display = '');
-    mobileCartBtn && (mobileCartBtn.style.display = 'none');
-    closeCartOverlay();
-  }
-
-  if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
-    const mainNav = document.querySelector('.main .main-nav');
-    if(mainNav) mainNav.style.display = '';
-  }
-}
-
-/* ======= INIT ======= */
-function init(){
-  carregarCardapios();
-  renderCart();
-  updateDateTime();
-  setInterval(updateDateTime, 30000);
-  if(+mobileCartBadge.textContent === 0) mobileCartBadge.style.display = 'none';
-  updateResponsiveUI();
-  window.addEventListener('resize', updateResponsiveUI);
-
-  // polling (mantido) - agora buildCategories só roda se houver mudança real nas categorias
-  setInterval(() => {
-    if (!modoEdicao && !estaPesquisando) {
-      carregarCardapios();
-    }
-  }, 500);
-}
-init();
-
-/* ===== Menu responsivo ===== */
-(function setupResponsiveMenu(){
-  const mobileBtn = document.getElementById('mobileMenuBtn');
-  const mainHeader = document.querySelector('.main-header');
-  const mainNav = document.querySelector('.main .main-nav');
-
-  if(!mobileBtn || !mainHeader || !mainNav) return;
-
-  function setOpenState(open){
-    if(open){
-      mainHeader.classList.add('nav-open');
-      mobileBtn.setAttribute('aria-expanded','true');
-      document.body.style.overflow = 'hidden';
-    } else {
-      mainHeader.classList.remove('nav-open');
-      mobileBtn.setAttribute('aria-expanded','false');
-      document.body.style.overflow = '';
-    }
-  }
-
-  mobileBtn.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    const isOpen = mainHeader.classList.contains('nav-open');
-    setOpenState(!isOpen);
-  });
-
-  document.querySelectorAll('.main .main-nav .nav-link').forEach(link=>{
-    link.addEventListener('click', ()=>{
-      if(window.matchMedia && window.matchMedia('(max-width:890px)').matches){
-        setOpenState(false);
-      }
+  // hookup buttons
+  keys.forEach(k => {
+    k.addEventListener('click', (e) => {
+      const key = k.dataset.key;
+      if(!key) return;
+      if(key === 'C') clearAll();
+      else if(key === 'back') pressBack();
+      else if(key === '.') pressDigit('.');
+      else if(/^\d$/.test(key)) pressDigit(key);
     });
   });
 
-  document.addEventListener('click', (e)=>{
-    if(!mainHeader.classList.contains('nav-open')) return;
-    if(!mainHeader.contains(e.target) && e.target !== mobileBtn){
-      setOpenState(false);
-    }
+  // click outside to close? we will not close to avoid losing input; keep Cancel button as close action
+  btnCancel.addEventListener('click', () => {
+    closeModal();
+    if(resolvePromise) { resolvePromise(null); resolvePromise = null; }
+  });
+  btnClose.addEventListener('click', () => {
+    closeModal();
+    if(resolvePromise) { resolvePromise(null); resolvePromise = null; }
   });
 
-  window.addEventListener('resize', ()=>{
-    if(!(window.matchMedia && window.matchMedia('(max-width:890px)').matches)){
-      setOpenState(false);
-    }
+  // confirm
+  btnConfirm.addEventListener('click', () => {
+    // parse number safely
+    let value = parseFloat(currentStr.replace(/,/g, ''));
+    if(Number.isNaN(value)) value = 0;
+    // round to decimals
+    const factor = Math.pow(10, decimals);
+    value = Math.round(value * factor) / factor;
+    closeModal();
+    if(resolvePromise) { resolvePromise(value); resolvePromise = null; }
   });
+
+  // keyboard support
+  document.addEventListener('keydown', (e) => {
+    if(!overlay.classList.contains('is-open')) return;
+    if(e.key >= '0' && e.key <= '9'){ e.preventDefault(); pressDigit(e.key); }
+    else if(e.key === '.' || e.key === ','){ e.preventDefault(); pressDigit('.'); }
+    else if(e.key === 'Backspace'){ e.preventDefault(); pressBack(); }
+    else if(e.key === 'Escape'){ e.preventDefault(); btnCancel.click(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); btnConfirm.click(); }
+  });
+
+  // expose API
+  window.showPriceModal = function(opts = {}){
+    return new Promise((resolve) => {
+      resolvePromise = resolve;
+      openModal(opts);
+    });
+  };
+
 })();
-
-

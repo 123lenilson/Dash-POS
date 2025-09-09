@@ -10,7 +10,7 @@ let activeCategory = "All Menu";
 let searchTerm = "";
 let modoEdicao = false;       // mantém do seu fluxo
 let estaPesquisando = false;  // mantém do seu fluxo
-const cart = new Map();       // id -> {product, qty}
+const cart = new Map();       // id -> {product, qty, customPrice}
 
 /* guarda a key das categorias para evitar rebuild desnecessário */
 let lastCategoriesKey = null;
@@ -142,9 +142,7 @@ function atualizarCards(cardapios) {
 }
 
 /* ======= CATEGORY SLIDER ======= */
-// agora buildCategories aceita order/counts opcional e preserveScroll flag
 function buildCategories(orderIn = null, countsIn = null, preserveScroll = false) {
-  // se counts/order não foram passados, calcula
   const counts = countsIn || (() => {
     const c = {};
     for (const p of PRODUCTS) { c[p.cat] = (c[p.cat] || 0) + 1; }
@@ -154,14 +152,12 @@ function buildCategories(orderIn = null, countsIn = null, preserveScroll = false
 
   const order = orderIn || ["All Menu", ...Object.keys(counts).filter(c => c !== "All Menu").sort()];
 
-  // preserva scroll da viewport atual, se solicitado
   let oldScroll = 0;
   const oldViewport = categoryBar.querySelector('.cat-viewport');
   if (preserveScroll && oldViewport) {
     oldScroll = oldViewport.scrollLeft || 0;
   }
 
-  // estrutura do slider dentro do #categoryBar
   categoryBar.innerHTML = `
     <div class="cat-slider">
       <button class="cat-arrow prev" aria-label="Anterior" type="button">
@@ -186,23 +182,19 @@ function buildCategories(orderIn = null, countsIn = null, preserveScroll = false
     </div>
   `;
 
-  // novos elementos
   const viewport = categoryBar.querySelector('#catViewport');
   const track    = categoryBar.querySelector('#catTrack');
   const prevBtn  = categoryBar.querySelector('.cat-arrow.prev');
   const nextBtn  = categoryBar.querySelector('.cat-arrow.next');
 
-  // delegação de clique para trocar categoria
   track.addEventListener('click', (e) => {
     const btn = e.target.closest('.category');
     if (!btn) return;
     activeCategory = btn.dataset.cat;
-    // atualiza .is-active sem reconstruir tudo
     track.querySelectorAll('.category').forEach(b => b.classList.toggle('is-active', b === btn));
     renderProducts();
   });
 
-  // setas no desktop
   function pageSize(){ return Math.max(viewport.clientWidth * 0.85, 180); }
   function scrollByPage(dir){
     viewport.scrollBy({ left: dir * pageSize(), behavior:'smooth' });
@@ -210,7 +202,6 @@ function buildCategories(orderIn = null, countsIn = null, preserveScroll = false
   prevBtn.addEventListener('click', () => scrollByPage(-1));
   nextBtn.addEventListener('click', () => scrollByPage(+1));
 
-  // bloquear scroll/roda no desktop (evitar que a rodinha do rato faça scroll)
   function updateWheelBlock(){
     if (!isMobileView()) {
       if (!viewport._wheelBlocked) {
@@ -223,12 +214,11 @@ function buildCategories(orderIn = null, countsIn = null, preserveScroll = false
         viewport.removeEventListener('wheel', wheelBlocker, { passive: false });
         viewport._wheelBlocked = false;
       }
-      viewport.style.overflowX = 'auto'; // mobile: desliza com o dedo
+      viewport.style.overflowX = 'auto';
     }
   }
   function wheelBlocker(e){ e.preventDefault(); }
 
-  // mostrar/ocultar/desabilitar setas conforme posição e breakpoint
   function atStart(){ return viewport.scrollLeft <= 2; }
   function atEnd(){
     const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth - 2);
@@ -251,16 +241,13 @@ function buildCategories(orderIn = null, countsIn = null, preserveScroll = false
   viewport.addEventListener('scroll', updateArrows, { passive: true });
   window.addEventListener('resize', () => { updateWheelBlock(); updateArrows(); });
 
-  // restaurar scroll se foi preservado (clamp ao máximo)
   if (preserveScroll && oldScroll && viewport) {
-    // aguarda próximo tick para garantir que scrollWidth/clientWidth estejam calculados
     requestAnimationFrame(() => {
       const max = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
       viewport.scrollLeft = Math.min(oldScroll, max);
       updateArrows();
     });
   } else {
-    // init
     updateWheelBlock();
     updateArrows();
   }
@@ -296,17 +283,13 @@ function renderProducts(){
     `;
   }).join('');
 
-  // events + marca selecionados
   productGrid.querySelectorAll('.card').forEach(card=>{
     const id = +card.dataset.id;
-
     if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
     else { card.classList.remove('is-selected'); }
-
     card.addEventListener('click', ()=> addToCart(id, 1));
     const plusBtn = card.querySelector('.qtybtn.plus');
     const minusBtn = card.querySelector('.qtybtn.minus');
-
     if(plusBtn){ plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); }); }
     if(minusBtn){ minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); }); }
   });
@@ -337,13 +320,13 @@ function renderCart(){
     if (cartEmptyStateMobile) cartEmptyStateMobile.style.display = 'none';
     if (cartListOverlay) cartListOverlay.style.display = 'flex';
 
-    cartList.innerHTML = items.map(({product, qty})=>{
-      const line = product.price * qty;
+    cartList.innerHTML = items.map(({product, qty, customPrice = product.price})=>{
+      const line = customPrice * qty;
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title">${product.name}</div>
-            <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
             <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
@@ -355,13 +338,13 @@ function renderCart(){
       `;
     }).join('');
 
-    cartListOverlay.innerHTML = items.map(({product, qty})=>{
-      const line = product.price * qty;
+    cartListOverlay.innerHTML = items.map(({product, qty, customPrice = product.price})=>{
+      const line = customPrice * qty;
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title">${product.name}</div>
-            <div class="meta">${currency.format(product.price)} × ${qty} = <strong>${currency.format(line)}</strong></div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
             <button class="iconbtn" data-act="minus" aria-label="Diminuir">−</button>
@@ -373,7 +356,6 @@ function renderCart(){
       `;
     }).join('');
 
-    // eventos lista (desktop)
     cartList.querySelectorAll('.cart-item').forEach(row=>{
       const id = +row.dataset.id;
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
@@ -381,7 +363,6 @@ function renderCart(){
       row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
     });
 
-    // eventos lista (overlay)
     cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
       const id = +row.dataset.id;
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
@@ -392,11 +373,11 @@ function renderCart(){
 
   const stats = items.reduce((acc, it)=>{
     acc.items += it.qty;
-    acc.subtotal += it.product.price * it.qty;
+    acc.subtotal += (it.customPrice || it.product.price) * it.qty;
     return acc;
   }, {items:0, subtotal:0});
 
-  const discount = DISCOUNT; // Lógica de desconto aqui se necessário
+  const discount = DISCOUNT;
   const tax = (stats.subtotal - discount) * TAX_RATE;
   const total = stats.subtotal - discount + tax;
 
@@ -422,7 +403,7 @@ function renderCart(){
 function addToCart(id, delta){
   const product = PRODUCTS.find(p=>p.id===id);
   if(!product) return;
-  const entry = cart.get(id) || {product, qty:0};
+  const entry = cart.get(id) || {product, qty:0, customPrice: product.price};
   entry.qty += delta;
   if(entry.qty <= 0) cart.delete(id);
   else cart.set(id, entry);
@@ -517,7 +498,6 @@ function init(){
   updateResponsiveUI();
   window.addEventListener('resize', updateResponsiveUI);
 
-  // polling (mantido) - agora buildCategories só roda se houver mudança real nas categorias
   setInterval(() => {
     if (!modoEdicao && !estaPesquisando) {
       carregarCardapios();
@@ -573,3 +553,21 @@ init();
     }
   });
 })();
+
+// Função para abrir a modal de ajuste de preço
+async function openPriceModal(productId) {
+  const entry = cart.get(productId);
+  if (!entry) return;
+
+  const currentPrice = entry.customPrice || entry.product.price;
+  const newPrice = await showPriceModal({
+    initial: currentPrice,
+    currency: 'Kz',
+    decimals: 2
+  });
+
+  if (newPrice !== null && newPrice !== currentPrice) {
+    entry.customPrice = newPrice;
+    renderCart(); // Re-renderiza o carrinho para atualizar preços
+  }
+}
