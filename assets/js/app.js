@@ -14,7 +14,7 @@ const cart = new Map();       // id -> {product, qty, customPrice}
 
 let currentEditingId = null;  // ID do produto sendo editado na modal
 let currentInput = '';        // String para construir o input do preço na modal
-let replaceOnNextDigit = false; // Novo: Flag para substituir o input ao primeiro dígito
+let replaceOnNextDigit = false; // Flag para substituir o input ao primeiro dígito
 
 /* guarda a key das categorias para evitar rebuild desnecessário */
 let lastCategoriesKey = null;
@@ -589,31 +589,7 @@ function setupPriceModalListeners() {
   pmKeys.forEach(key => {
     key.addEventListener('click', () => {
       const value = key.dataset.key;
-      if (value === 'C') {
-        currentInput = '';
-        replaceOnNextDigit = false;
-      } else if (value === 'back') {
-        currentInput = currentInput.slice(0, -1);
-        if (currentInput === '') replaceOnNextDigit = false;
-      } else if (/\d/.test(value)) {  // Para dígitos 0-9
-        if (replaceOnNextDigit) {
-          currentInput = value;
-          replaceOnNextDigit = false;
-        } else {
-          if (currentInput.includes('.') && currentInput.split('.')[1].length >= 2) return;
-          currentInput += value;
-        }
-      } else if (value === '.') {
-        if (!currentInput.includes('.')) {
-          if (replaceOnNextDigit) {
-            currentInput = '0.';
-            replaceOnNextDigit = false;
-          } else {
-            currentInput += '.';
-          }
-        }
-      }
-      updatePriceDisplay();
+      handleKeyInput(value);
     });
   });
 
@@ -635,12 +611,62 @@ function setupPriceModalListeners() {
   pmClose.addEventListener('click', closePriceModal);
 }
 
+// Nova função para processar input (de botões ou teclado)
+function handleKeyInput(value) {
+  if (value === 'C') {
+    currentInput = '';
+    replaceOnNextDigit = false;
+  } else if (value === 'back') {
+    currentInput = currentInput.slice(0, -1);
+    if (currentInput === '') replaceOnNextDigit = false;
+  } else if (/\d/.test(value)) {  // Para dígitos 0-9
+    if (replaceOnNextDigit) {
+      currentInput = value;
+      replaceOnNextDigit = false;
+    } else {
+      if (currentInput.includes('.') && currentInput.split('.')[1].length >= 2) return;
+      currentInput += value;
+    }
+  } else if (value === '.') {
+    if (!currentInput.includes('.')) {
+      if (replaceOnNextDigit) {
+        currentInput = '0.';
+        replaceOnNextDigit = false;
+      } else {
+        currentInput += '.';
+      }
+    }
+  }
+  updatePriceDisplay();
+}
+
 // Atualizar o display da modal
 function updatePriceDisplay() {
   // Mostrar com 2 decimais sempre, ou o input atual
   const displayValue = currentInput ? parseFloat(currentInput).toFixed(2) : '0.00';
   pmAmount.textContent = displayValue;
   pmConfirm.disabled = !currentInput;
+}
+
+// Função para lidar com keydown do teclado
+function handleKeyboardInput(e) {
+  const key = e.key;
+  if (/\d/.test(key)) {
+    handleKeyInput(key);
+  } else if (key === '.') {
+    handleKeyInput('.');
+  } else if (key === 'Backspace') {
+    handleKeyInput('back');
+  } else if (key === 'Delete') {
+    handleKeyInput('C');
+  } else if (key === 'Enter') {
+    pmConfirm.click();
+  } else if (key === 'Escape') {
+    closePriceModal();
+  } else {
+    return;
+  }
+  e.preventDefault(); // Prevenir comportamentos padrão como scroll
 }
 
 // Abrir a modal de preço
@@ -657,6 +683,11 @@ function openPriceModal(productId) {
   pmOverlay.classList.add('is-open');
   pmOverlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Adicionar listener de teclado se não for mobile
+  if (!isMobileView()) {
+    document.addEventListener('keydown', handleKeyboardInput);
+  }
 }
 
 // Fechar a modal de preço
@@ -667,4 +698,7 @@ function closePriceModal() {
   currentInput = '';
   currentEditingId = null;
   replaceOnNextDigit = false;
+
+  // Remover listener de teclado
+  document.removeEventListener('keydown', handleKeyboardInput);
 }

@@ -6,7 +6,7 @@
   <title>POS Dashboard — l</title>
   <link rel="stylesheet" href="../assets/css/styles.css" />
   <!-- Font Awesome Free (CDN) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p1CmVx4g...PLACEHOLDER..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
   <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
@@ -16,8 +16,6 @@
       <!-- HEADER DENTRO DO MAIN (sticky) -->
       <div class="main-header">
         <div class="main-header-left">
-          <!-- brand, etc -->
-          <!-- COLE ESTE BOTÃO AO LADO DO BRAND / ANTES DA .main-nav -->
           <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" title="Abrir menu">
             <i class="fa-solid fa-bars" aria-hidden="true"></i>
           </button>
@@ -56,6 +54,7 @@
       <!-- GRID DE PRODUTOS -->
       <div id="productGrid" class="product-grid" aria-live="polite"></div>
     </main>
+
     <!-- COLUNA 30% (SIDE / CARRINHO) - Segundo (à direita) -->
     <aside class="side col-30" id="desktopCartCol" aria-hidden="false">
       <div class="side-inner">
@@ -110,7 +109,24 @@
               <strong id="cartTotal">Kz 0,00</strong>
             </div>
           </div>
-          
+
+          <!-- LINHA CINZA / separador visual (onde os botões ficarão "junto" a essa linha, por fora do resumo) -->
+          <div class="cart-separator" aria-hidden="true"></div>
+
+          <!-- === NOVOS BOTÕES (ocupando 100% do width; cada um 50%) === -->
+          <div class="cart-extra-actions" role="group" aria-label="Ações extras do carrinho">
+            <button id="btnAddDiscount" class="extra-btn extra-btn-discount" type="button">
+              <span class="extra-icon"><i class="fa-solid fa-tag" aria-hidden="true"></i></span>
+              <span class="extra-text">Add Desconto</span>
+            </button>
+
+            <button id="btnAddPaid" class="extra-btn extra-btn-paid" type="button">
+              <span class="extra-icon"><i class="fa-solid fa-th" aria-hidden="true"></i></span>
+              <span class="extra-text">Add Valor Pago</span>
+            </button>
+          </div>
+          <!-- === fim novos botões === -->
+
           <div class="payment-compact">
             <div class="payment-methods">
               <button class="payment-btn is-active" data-method="cash">Cash</button>
@@ -198,7 +214,7 @@
     </div>
   </div>
 
-  <!-- Price Adjustment Modal -->
+  <!-- Price Adjustment Modal (mantive para compatibilidade) -->
   <div id="pm-overlay" class="pm-overlay" aria-hidden="true">
     <div id="pm-dialog" class="pm-dialog" role="dialog" aria-modal="true" aria-labelledby="pm-title">
       <header class="pm-header">
