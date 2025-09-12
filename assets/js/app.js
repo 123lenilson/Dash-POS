@@ -12,6 +12,10 @@ let modoEdicao = false;       // mantém do seu fluxo
 let estaPesquisando = false;  // mantém do seu fluxo
 const cart = new Map();       // id -> {product, qty, customPrice}
 
+let currentEditingId = null;  // ID do produto sendo editado na modal
+let currentInput = '';        // String para construir o input do preço na modal
+let replaceOnNextDigit = false; // Novo: Flag para substituir o input ao primeiro dígito
+
 /* guarda a key das categorias para evitar rebuild desnecessário */
 let lastCategoriesKey = null;
 
@@ -48,6 +52,14 @@ const mobileCartBtn = document.getElementById('mobileCartBtn');
 const mobileCartBadge = document.getElementById('mobileCartBadge');
 const cartOverlay = document.getElementById('cartOverlay');
 const closeCartOverlayBtn = document.getElementById('closeCartOverlay');
+
+// Novo: Elementos da modal de preço
+const pmOverlay = document.getElementById('pm-overlay');
+const pmAmount = document.getElementById('pm-amount');
+const pmConfirm = document.getElementById('pm-confirm');
+const pmCancel = document.getElementById('pm-cancel');
+const pmClose = document.getElementById('pm-close');
+const pmKeys = document.querySelectorAll('.pm-key');
 
 /* ======= UTIL ======= */
 function nowFancy(){
@@ -325,7 +337,7 @@ function renderCart(){
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;">${product.name}</div>
             <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
@@ -343,7 +355,7 @@ function renderCart(){
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;">${product.name}</div>
             <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
@@ -361,6 +373,13 @@ function renderCart(){
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
       row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
       row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+
+      // Listener para abrir modal ao clicar no item, exceto na área dos botões
+      row.addEventListener('click', (e) => {
+        if (!e.target.closest('.right')) {
+          openPriceModal(id);
+        }
+      });
     });
 
     cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
@@ -368,6 +387,13 @@ function renderCart(){
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
       row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
       row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+
+      // Listener para abrir modal ao clicar no item, exceto na área dos botões
+      row.addEventListener('click', (e) => {
+        if (!e.target.closest('.right')) {
+          openPriceModal(id);
+        }
+      });
     });
   }
 
@@ -503,6 +529,9 @@ function init(){
       carregarCardapios();
     }
   }, 500);
+
+  // Adicionar event listeners para a modal de preço (uma vez só)
+  setupPriceModalListeners();
 }
 init();
 
@@ -554,20 +583,88 @@ init();
   });
 })();
 
-// Função para abrir a modal de ajuste de preço
-async function openPriceModal(productId) {
+// Função para configurar listeners da modal (chamada no init)
+function setupPriceModalListeners() {
+  // Listeners para os botões do keypad
+  pmKeys.forEach(key => {
+    key.addEventListener('click', () => {
+      const value = key.dataset.key;
+      if (value === 'C') {
+        currentInput = '';
+        replaceOnNextDigit = false;
+      } else if (value === 'back') {
+        currentInput = currentInput.slice(0, -1);
+        if (currentInput === '') replaceOnNextDigit = false;
+      } else if (/\d/.test(value)) {  // Para dígitos 0-9
+        if (replaceOnNextDigit) {
+          currentInput = value;
+          replaceOnNextDigit = false;
+        } else {
+          if (currentInput.includes('.') && currentInput.split('.')[1].length >= 2) return;
+          currentInput += value;
+        }
+      } else if (value === '.') {
+        if (!currentInput.includes('.')) {
+          if (replaceOnNextDigit) {
+            currentInput = '0.';
+            replaceOnNextDigit = false;
+          } else {
+            currentInput += '.';
+          }
+        }
+      }
+      updatePriceDisplay();
+    });
+  });
+
+  // Confirmar
+  pmConfirm.addEventListener('click', () => {
+    const newPrice = parseFloat(currentInput) || 0;
+    if (currentEditingId && cart.has(currentEditingId)) {
+      const entry = cart.get(currentEditingId);
+      if (newPrice !== entry.customPrice) {
+        entry.customPrice = newPrice;
+        renderCart();
+      }
+    }
+    closePriceModal();
+  });
+
+  // Cancelar ou fechar
+  pmCancel.addEventListener('click', closePriceModal);
+  pmClose.addEventListener('click', closePriceModal);
+}
+
+// Atualizar o display da modal
+function updatePriceDisplay() {
+  // Mostrar com 2 decimais sempre, ou o input atual
+  const displayValue = currentInput ? parseFloat(currentInput).toFixed(2) : '0.00';
+  pmAmount.textContent = displayValue;
+  pmConfirm.disabled = !currentInput;
+}
+
+// Abrir a modal de preço
+function openPriceModal(productId) {
   const entry = cart.get(productId);
   if (!entry) return;
 
-  const currentPrice = entry.customPrice || entry.product.price;
-  const newPrice = await showPriceModal({
-    initial: currentPrice,
-    currency: 'Kz',
-    decimals: 2
-  });
+  currentEditingId = productId;
+  const initialPrice = entry.customPrice || entry.product.price;
+  currentInput = initialPrice.toString();  // Manter como string sem .00 forçado aqui
+  replaceOnNextDigit = true;  // Ativar substituição ao primeiro dígito
 
-  if (newPrice !== null && newPrice !== currentPrice) {
-    entry.customPrice = newPrice;
-    renderCart(); // Re-renderiza o carrinho para atualizar preços
-  }
+  updatePriceDisplay();
+  pmOverlay.classList.add('is-open');
+  pmOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+// Fechar a modal de preço
+function closePriceModal() {
+  pmOverlay.classList.remove('is-open');
+  pmOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  currentInput = '';
+  currentEditingId = null;
+  replaceOnNextDigit = false;
 }
