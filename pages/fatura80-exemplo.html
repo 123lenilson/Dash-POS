@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fatura Térmica 80mm - Exemplo</title>
+  <!-- Inclui o CSS da fatura80 -->
+  <link rel="stylesheet" href="../assets/css/fatura80.css">
+</head>
+<body>
+  <!-- Container onde a fatura será renderizada -->
+  <div id="fatura80-container-inv80" class="recibo-inv80"></div>
+
+  <!-- Inclui a biblioteca QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- Inclui o JavaScript da fatura80 -->
+  <script src="../assets/js/fatura80.js"></script>
+  
+  <script>
+    // Exemplo de como usar o fatura80.js
+    document.addEventListener('DOMContentLoaded', function() {
+      // Dados de exemplo para a fatura
+      const dadosExemplo = {
+        numeroFatura: "FR 2025/001",
+        data: "2025-11-04",
+        hora: "14:30:25",
+        empresa: {
+          nome: "Hélio Trading, LDA",
+          nif: "5417048720",
+          endereco: "Av. Fidel de Castro",
+          localidade: "Benfica-Luanda-Angola"
+        },
+        cliente: {
+          nome: "João Silva",
+          nif: "123456789",
+          telefone: "923 456 789",
+          endereco: "Rua Central, Nº 123"
+        },
+        produtos: [
+          {
+            designacao: "Produto Exemplo 1",
+            quantidade: "2,00",
+            precoUnitario: 150000,
+            desconto: 0,
+            taxa: "14,0",
+            total: 300000
+          },
+          {
+            designacao: "Produto Exemplo 2",
+            quantidade: "1,00",
+            precoUnitario: 75000,
+            desconto: 0,
+            taxa: "0,00",
+            total: 75000
+          }
+        ],
+        totais: {
+          subtotal: 375000,
+          desconto: 0,
+          imposto: 42000,
+          total: 417000,
+          pago: 417000,
+          troco: 0
+        },
+        impostos: [
+          {
+            taxa: "14,00",
+            incidencia: 300000,
+            imposto: 42000
+          },
+          {
+            taxa: "0,00",
+            incidencia: 75000,
+            imposto: 0
+          }
+        ],
+        formasPagamento: [
+          {
+            metodo: "NUMERÁRIO",
+            valor: 417000
+          }
+        ],
+        observacao: "Obrigado pela preferência!",
+        operador: "Operador 1",
+        infoSoftware: "Ck34 -Processado por programa validado nº 466/AGT/2024 Kamba SGF"
+      };
+      
+      // Renderiza a fatura com os dados de exemplo
+      renderizarFatura80(dadosExemplo);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l:*)",
+      "Bash(awk:*)",
+      "Bash(dir \"-/Dash-POS\")",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(dir \"C:\\\\wamp64\\\\www\\\\Dash-POS\" /b)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

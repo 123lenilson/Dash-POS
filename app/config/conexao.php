@@ -3,7 +3,7 @@ class Conexao {
     private static $host = "localhost";   // ou 127.0.0.1
     private static $user = "root";        // usuário do MySQL
     private static $pass = "";            // senha do MySQL
-    private static $db   = "restaurante";   // nome do banco de dados
+    private static $db   = "wenkamba";   // nome do banco de dados
     private static $conn = null;
 
     public static function getConexao() {

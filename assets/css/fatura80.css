@@ -1,0 +1,329 @@
+/* ========= CORREÇÃO CRÍTICA PARA RENDERING DE FONTES 80MM ========= */
+.recibo-inv80,
+.recibo-inv80 * {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-variant: normal !important;
+    font-feature-settings: normal !important;
+    letter-spacing: 0 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* ========= FORÇA FONT-WEIGHT EXPLÍCITO ========= */
+.recibo-inv80 {
+    font-weight: 400; /* Normal weight explícito */
+}
+
+.recibo-inv80 .label-inv80,
+.recibo-inv80 strong,
+.recibo-inv80 b {
+    font-weight: 700 !important; /* Bold explícito */
+}
+
+.recibo-inv80 {
+  width: 80mm;
+  background: white;
+  padding: 4px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  font-size: 8px;
+  line-height: 1.1;
+}
+
+.logo-inv80 {
+  text-align: center;
+  margin-bottom: 3px;
+}
+
+.logo-icon-inv80 {
+  font-size: 24px;
+  font-weight: bold;
+  transform: skewX(-15deg);
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+/* Logo da empresa (imagem) */
+.logo-img-inv80 {
+  max-width: 50mm;        /* Tamanho ideal para folha de 80mm */
+  max-height: 20mm;       /* Altura máxima para não ocupar muito espaço */
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto 3px;     /* Centraliza e adiciona margem inferior */
+  object-fit: contain;    /* Mantém proporção da imagem */
+}
+
+.empresa-inv80 {
+  text-align: center;
+  margin-bottom: 3px;
+  font-weight: bold;
+  font-size: 9px;
+}
+
+.empresa-info-inv80 {
+  text-align: center;
+  font-size: 7px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.separador-inv80 {
+  border-top: 1px dashed #000;
+  margin: 4px 0;
+}
+
+.box-cliente-inv80 {
+  border: 1px solid #000;
+  padding: 3px;
+  margin-bottom: 4px;
+  font-size: 7px;
+}
+
+.cliente-row-inv80 {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1px;
+}
+
+.label-inv80 {
+  font-weight: bold;
+}
+
+.box-fatura-inv80 {
+  border: 1px solid #000;
+  padding: 3px;
+  margin-bottom: 4px;
+  font-size: 7px;
+  text-align: right;
+}
+
+.original-inv80 {
+  float: right;
+  font-size: 7px;
+  font-weight: bold;
+  margin-top: -2px;
+}
+
+
+
+.table-inv80 {
+    width: 100% !important;
+    border-collapse: collapse;
+    margin: 3px 0;
+    font-size: 7px;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+    letter-spacing: 0 !important; /* ✅ ADICIONAR */
+}
+
+.table-inv80 th {
+    border-bottom: 1px solid #000;
+    padding: 2px 1px;
+    text-align: left;
+    font-weight: 700; /* ✅ MUDAR de 'bold' para '700' */
+    font-size: 6px;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+}
+
+.table-inv80 td {
+    padding: 2px 1px;
+    border-bottom: 1px dashed #ccc;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+    font-weight: 400; /* ✅ ADICIONAR */
+    letter-spacing: 0 !important; /* ✅ ADICIONAR */
+}
+.table-inv80 th:nth-child(1),
+.table-inv80 td:nth-child(1) {
+    width: 50%;
+    text-align: left;
+}
+
+.table-inv80 th:nth-child(2),
+.table-inv80 td:nth-child(2) {
+    width: 10%;
+    text-align: left;
+}
+
+.table-inv80 th:nth-child(3),
+.table-inv80 td:nth-child(3) {
+    width: 20%;
+    text-align: left;
+}
+
+.table-inv80 th:nth-child(4),
+.table-inv80 td:nth-child(4) {
+    width: 10%;
+    text-align: left;
+}
+
+.table-inv80 th:nth-child(5),
+.table-inv80 td:nth-child(5) {
+    width: 10%;
+    text-align: left;
+}
+.table-inv80 th:nth-child(6),
+.table-inv80 td:nth-child(6) {
+    width: 10%;
+    text-align: right;
+}
+
+.totais-inv80 {
+  margin: 3px 0;
+  font-size: 8px;
+}
+
+.total-row-inv80 {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+
+.total-row-inv80.destaque-inv80 {
+  font-weight: bold;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  padding: 2px 0;
+  margin: 2px 0;
+}
+
+.pagamento-inv80 {
+  margin: 3px 0;
+  font-size: 7px;
+}
+
+.resumo-impostos-inv80 {
+  margin: 3px 0;
+}
+
+.resumo-impostos-inv80 h4 {
+  font-size: 7px;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+/* Specific styles for tax summary table */
+.resumo-impostos-inv80 .table-inv80.tax-summary-table {
+  width: 100% !important;
+}
+
+.resumo-impostos-inv80 .table-inv80.tax-summary-table th:nth-child(1),
+.resumo-impostos-inv80 .table-inv80.tax-summary-table td:nth-child(1),
+.resumo-impostos-inv80 .table-inv80.tax-summary-table th:nth-child(2),
+.resumo-impostos-inv80 .table-inv80.tax-summary-table td:nth-child(2),
+.resumo-impostos-inv80 .table-inv80.tax-summary-table th:nth-child(3),
+.resumo-impostos-inv80 .table-inv80.tax-summary-table td:nth-child(3) {
+  width: 33.33% !important;
+}
+
+.rodape-inv80 {
+  text-align: center;
+  font-size: 6px;
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px dashed #000;
+}
+
+.rodape-inv80 p {
+  margin: 1px 0;
+}
+
+.agradecimento-inv80 {
+  text-align: center;
+  font-style: italic;
+  margin-top: 3px;
+  font-size: 8px;
+}
+
+.qrcode-container-inv80 {
+  text-align: center;
+  margin-top: 5px;
+  padding: 5px 0;
+}
+
+#qrcode-inv80 {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+#qrcode-inv80 img {
+  border: 1px solid #000;
+  padding: 2px;
+}
+
+.qrcode-text-inv80 {
+  font-size: 7px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+/* ========= MEDIA QUERY PARA IMPRESSÃO ========= */
+@media print {
+    /* Remove cabeçalhos e rodapés padrão do navegador */
+    @page {
+        margin: 0 !important;
+        size: 80mm auto; /* ✅ Largura fixa 80mm, altura automática */
+    }
+
+    /* Remove margens do body/html na impressão */
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 80mm !important;
+        height: auto !important;
+    }
+
+    /* Esconde todo o conteúdo exceto a fatura */
+    body * {
+        visibility: hidden;
+    }
+
+    /* ✅ TORNA O CONTAINER 80MM VISÍVEL NA IMPRESSÃO */
+    #fatura80-container-inv80,
+    #fatura80-container-inv80 * {
+        visibility: visible !important;
+    }
+
+    #fatura80-container-inv80 {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        height: auto !important;
+        padding: 0 !important;
+        background: white !important;
+        z-index: 9999 !important;
+    }
+
+    /* Remove espaços extras */
+    .recibo-inv80 {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 4px !important;
+        page-break-after: auto !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Garante que elementos não quebrem */
+    .logo-inv80,
+    .empresa-inv80,
+    .box-cliente-inv80,
+    .box-fatura-inv80,
+    .totais-inv80,
+    .pagamento-inv80,
+    .resumo-impostos-inv80,
+    .rodape-inv80 {
+        page-break-inside: avoid !important;
+    }
+}
+
+/* ========= ESTILOS PARA TELA (preview) ========= */
+@media screen {
+    #fatura80-container-inv80 {
+        position: fixed !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        z-index: -1 !important;
+    }
+}

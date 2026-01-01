@@ -1,0 +1,638 @@
+/* ============================================
+   MODAL DE CHECKOUT - Animações Suaves
+   ============================================ */
+
+/* Overlay da Modal */
+#checkoutModalOverlay {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(0px);
+  z-index: 99999 !important; /* Increased from 99999 to ensure it's above cart drawer */
+}
+
+#checkoutModalOverlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  display: flex !important;
+  backdrop-filter: blur(4px);
+  animation: fadeInBackdrop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animação do Backdrop */
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Conteúdo da Modal - Animação de Entrada */
+#checkoutModalOverlay .modal-content {
+  transform: scale(0.95) translateY(20px);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#checkoutModalOverlay.active .modal-content {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animação de entrada com "bounce" suave */
+@keyframes modalSlideIn {
+  0% {
+    transform: scale(0.9) translateY(30px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.02) translateY(-5px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animação de saída da modal */
+#checkoutModalOverlay:not(.active) .modal-content {
+  animation: modalSlideOut 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes modalSlideOut {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   STEPS - Transições suaves entre etapas
+   ============================================ */
+
+.checkout-step-content {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.checkout-step-content.active {
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  animation: stepFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes stepFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Progress Bar Animation */
+[id^="checkoutProgress"] {
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Step Indicators */
+.step-indicator div {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-indicator .step-number,
+.step-indicator .step-check {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.step-indicator .step-check {
+  animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   PAYMENT TABS
+   ============================================ */
+
+.checkout-payment-tab {
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.checkout-payment-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.checkout-payment-tab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-payment-tab:hover::before {
+  left: 100%;
+}
+
+.checkout-payment-tab.active {
+  background-color: #4F46E5 !important;
+  color: white !important;
+  border-color: #4F46E5 !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+}
+
+.checkout-payment-tab:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
+   KEYPAD BUTTONS
+   ============================================ */
+
+.checkout-keypad-button {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-height: 44px; /* Altura mínima para acessibilidade */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkout-keypad-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.checkout-keypad-button:active::after {
+  width: 100%;
+  height: 100%;
+}
+
+.checkout-keypad-button:hover {
+  background-color: #E5E7EB;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-keypad-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid mais compacto para os botões menores */
+.grid.grid-cols-3.gap-2 {
+  gap: 0.5rem !important; /* Reduzido de gap-3 (0.75rem) para gap-2 (0.5rem) */
+}
+
+/* Ajustes responsivos para telas menores */
+@media (max-width: 768px) {
+  .checkout-keypad-button {
+    min-height: 40px;
+    font-size: 0.875rem; /* text-sm em mobile */
+  }
+  
+  .grid.grid-cols-3.gap-2 {
+    gap: 0.375rem !important;
+  }
+}
+
+/* Botão Clear menor */
+.checkout-keypad-button.py-2.px-6 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  font-size: 0.875rem !important; /* text-sm */
+}
+
+/* ============================================
+   PAYMENT INTERFACES
+   ============================================ */
+
+.checkout-payment-interface {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.checkout-payment-interface.active {
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: interfaceFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes interfaceFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   CASH DISPLAY
+   ============================================ */
+
+#checkoutCashDisplay {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#checkoutCashDisplay:not(:empty) {
+  animation: numberPulse 0.3s ease;
+}
+
+@keyframes numberPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+   SUCCESS CHECKMARK ANIMATION
+   ============================================ */
+
+#checkoutStepContent3 .w-24 {
+  animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   BUTTONS - Hover e Active States
+   ============================================ */
+
+button[onclick*="checkout"]:not(.checkout-keypad-button):not(.checkout-payment-tab) {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+button[onclick*="checkout"]:not(.checkout-keypad-button):not(.checkout-payment-tab):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+button[onclick*="checkout"]:not(.checkout-keypad-button):not(.checkout-payment-tab):active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   FORM INPUTS - Focus States
+   ============================================ */
+
+#checkoutModalOverlay input:focus,
+#checkoutModalOverlay select:focus {
+  outline: none;
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   SCROLL BEHAVIOR
+   ============================================ */
+
+#checkoutModalOverlay .modal-content {
+  scroll-behavior: smooth;
+}
+
+#checkoutModalOverlay .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+#checkoutModalOverlay .modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+#checkoutModalOverlay .modal-content::-webkit-scrollbar-thumb {
+  background: #4F46E5;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+#checkoutModalOverlay .modal-content::-webkit-scrollbar-thumb:hover {
+  background: #4338CA;
+}
+
+/* ============================================
+   RESPONSIVE ANIMATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  #checkoutModalOverlay.active .modal-content {
+    animation: modalSlideInMobile 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  @keyframes modalSlideInMobile {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .checkout-step-content.active,
+  .checkout-payment-interface.active {
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================
+   TABELA DE CLIENTES
+   ============================================ */
+
+#customerTableListContainer {
+  overflow-y: visible !important; /* impede scroll vertical interno */
+  overflow-x: auto;               /* permite scroll horizontal se for necessário */
+}
+
+/* tabela fixa e compacta */
+#customerTableList {
+  width: 100%;
+  table-layout: fixed;    /* evita colunas a expandirem sem controle */
+  border-collapse: collapse;
+  font-size: 0.85rem;     /* mais compacto */
+}
+
+/* células compactas e truncamento */
+#customerTableList th,
+#customerTableList td {
+  padding: 0.45rem 0.6rem;
+  white-space: nowrap;     /* previne quebra de linha dentro da célula */
+  overflow: hidden;
+  text-overflow: ellipsis; /* mostra "..." em vez de expandir */
+  vertical-align: middle;
+}
+
+/* pequenas proporções por coluna — ajuste conforme necessidade */
+#customerTableList th:nth-child(1) { width: 35%; } /* nome */
+#customerTableList th:nth-child(2) { width: 20%; } /* telefone */
+#customerTableList th:nth-child(3) { width: 30%; } /* endereço */
+#customerTableList th:nth-child(4) { width: 15%; } /* date */
+
+/* compacta ainda mais em telas pequenas */
+@media (max-width: 1024px) {
+  #customerTableList { font-size: 0.8rem; }
+  #customerTableList th, #customerTableList td { padding: 0.35rem 0.45rem; }
+}
+
+/* ============================================
+   CARDS DE PAGAMENTO
+   ============================================ */
+
+.checkout-payment-card {
+    flex: 1 1 calc(33.33% - 1rem);
+    min-width: 150px;
+    max-width: 200px;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    font-size: 0.875rem; /* text-sm */
+}
+
+.valor-restante {
+    font-size: 0.75rem; /* Mais pequeno pros valores */
+    font-weight: bold;
+}
+
+/* ============================================
+   CAMPO EXPANDÍVEL DE OBSERVAÇÃO
+   ============================================ */
+
+.expandable-field {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+/* Header clicável */
+.expandable-header {
+  width: 100%;
+  background: #f8f9fa;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.3s ease;
+}
+
+.expandable-header:hover {
+  background: #eef2f5;
+}
+
+.expandable-header .arrow {
+  transition: transform 0.3s ease;
+}
+
+/* Área expandível */
+.expandable-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  background: #fff;
+  padding: 0 16px;
+}
+
+/* Textarea estilizado */
+.expandable-content textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #333;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.expandable-content textarea:focus {
+  border-color: #3b82f6; /* azul moderno */
+}
+
+/* Quando expandido */
+.expandable-field.active .expandable-content {
+  padding: 16px;
+  max-height: 200px; /* ajusta conforme quiser */
+}
+
+.expandable-field.active .arrow {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   OVERLAY - Impedir fechamento ao clicar fora
+   ============================================ */
+
+#checkoutModalOverlay {
+  /* Mantém todas as propriedades existentes */
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(0px);
+  z-index: 99 !important;
+  
+  /* ✅ GARANTE que o overlay não fecha ao clicar nele */
+  cursor: default;
+}
+
+#checkoutModalOverlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  display: flex !important;
+  backdrop-filter: blur(4px);
+  animation: fadeInBackdrop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✅ Garante que o cabeçalho da modal mantenha sua estrutura */
+#checkoutModalOverlay .modal-content > div:first-child {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+/* ✅ Garante que o cabeçalho da modal esteja sempre visível */
+#checkoutModalOverlay .modal-content > div:first-child.sticky {
+  display: flex !important;
+}
+
+/* ✅ Garante que o título da modal esteja à esquerda */
+#checkoutModalOverlay .modal-content > div:first-child h2 {
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ✅ Garante que o botão de fechar da modal esteja à direita */
+#checkoutModalOverlay .modal-content > div:first-child button {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1.5rem !important;
+  z-index: 100 !important;
+  display: block !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+}
+
+/* ✅ PERMITE clicar apenas no botão de fechar */
+#checkoutModalOverlay .modal-content > div:first-child button {
+  cursor: pointer;
+  z-index: 9999; /* ✅ Garante que o botão de fechar esteja sempre visível */
+  position: relative; /* ✅ Garante posicionamento correto */
+  display: block !important; /* ✅ Garante que o botão seja exibido */
+}
+
+/* ✅ O resto do conteúdo da modal mantém cursor normal */
+#checkoutModalOverlay .modal-content {
+  cursor: default;
+}

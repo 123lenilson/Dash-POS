@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fatura Térmica 80mm</title>
+  <!-- Inclui o CSS da fatura80 -->
+  <link rel="stylesheet" href="../assets/css/fatura80.css">
+</head>
+<body>
+  <div class="recibo-inv80">
+    <!-- Logo -->
+    <div class="logo-inv80">
+      <div class="logo-icon-inv80">⚡</div>
+    </div>
+
+    <!-- Empresa -->
+    <div class="empresa-inv80">
+      Hélio Trading, LDA
+    </div>
+    <div class="empresa-info-inv80">
+      NIF:5417048720<br>
+      Endereço<br>
+      Benfica-Luanda-Angola
+    </div>
+
+    <div class="separador-inv80"></div>
+
+    <!-- Cliente -->
+    <div class="box-cliente-inv80">
+      <div class="cliente-row-inv80">
+        <span><span class="label-inv80">Exmo sr(a):</span></span>
+        <span><span class="label-inv80">Data de emissão:</span></span>
+      </div>
+      <div class="cliente-row-inv80">
+        <span>Consumidor Final</span>
+        <span>2025-10-23 13:56:32</span>
+      </div>
+      <div class="cliente-row-inv80" style="margin-top: 3px;">
+        <span><span class="label-inv80">NIF:</span></span>
+        <span><span class="label-inv80">Factura Recibo</span></span>
+      </div>
+      <div class="cliente-row-inv80">
+        <span>Consumidor Final</span>
+        <span>FR LP2025/5</span>
+      </div>
+      <div class="cliente-row-inv80" style="margin-top: 3px;">
+        <span><span class="label-inv80">Contacto:</span></span>
+        <span class="original-inv80">ORIGINAL</span>
+      </div>
+    </div>
+
+    <!-- Tabela de Produtos -->
+    <table class="table-inv80">
+      <thead>
+        <tr>
+          <th>Descr</th>
+          <th class="align-center-inv80">Qtd</th>
+          <th class="align-right-inv80">Preço Uni.</th>
+          <th class="align-right-inv80">Desc.</th>
+          <th class="align-right-inv80">Taxa(%)</th>
+          <th class="align-right-inv80">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Peteson</td>
+          <td class="align-center-inv80">1,00</td>
+          <td class="align-right-inv80">228.000,00</td>
+          <td class="align-right-inv80">0,00</td>
+          <td class="align-right-inv80">14,0</td>
+          <td class="align-right-inv80">228.000,0</td>
+        </tr>
+        <tr>
+          <td>Sem iva</td>
+          <td class="align-center-inv80">1,00</td>
+          <td class="align-right-inv80">30.000,00</td>
+          <td class="align-right-inv80">0,00</td>
+          <td class="align-right-inv80">0,00</td>
+          <td class="align-right-inv80">30.000,00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="separador-inv80"></div>
+
+    <!-- Totais -->
+    <div class="totais-inv80">
+      <div class="total-row-inv80 destaque-inv80">
+        <span>Total a pagar:</span>
+        <span>258.000,00</span>
+      </div>
+      <div class="total-row-inv80">
+        <span>Valor Pago:</span>
+        <span>258.000,00</span>
+      </div>
+      <div class="total-row-inv80">
+        <span>Troco:</span>
+        <span>0,00</span>
+      </div>
+    </div>
+
+    <div class="separador-inv80"></div>
+
+    <!-- Meio de Pagamento -->
+    <div class="pagamento-inv80">
+      <div class="total-row-inv80">
+        <span class="label-inv80">Meio de Pagamento</span>
+        <span class="label-inv80">Valor</span>
+      </div>
+      <div class="total-row-inv80">
+        <span>TPA</span>
+        <span></span>
+      </div>
+    </div>
+
+    <div class="separador-inv80"></div>
+
+    <!-- Software -->
+    <div class="rodape-inv80">
+      <p>Ck34 -Processado por programa validado nº 466/AGT/2024 Kamba SGF</p>
+    </div>
+
+    <!-- Resumo de Imposto -->
+    <div class="resumo-impostos-inv80">
+      <h4>Resumo de imposto</h4>
+      <table class="table-inv80">
+        <thead>
+          <tr>
+            <th>Taxa</th>
+            <th class="align-right-inv80">Incidência</th>
+            <th class="align-right-inv80">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0,00</td>
+            <td class="align-right-inv80">30.000,00</td>
+            <td class="align-right-inv80">0,00</td>
+          </tr>
+          <tr>
+            <td>14,00</td>
+            <td class="align-right-inv80">200.000,00</td>
+            <td class="align-right-inv80">28.000,00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="separador-inv80"></div>
+
+    <!-- Rodapé Legal -->
+    <div class="rodape-inv80">
+      <p>Os bens e serviços foram colocados à disposição do adquirente na data e local do documento</p>
+      <p style="margin-top: 5px;">Operador: 1</p>
+    </div>
+
+    <!-- Agradecimento -->
+    <div class="agradecimento-inv80">
+      Obrigado Volte sempre...
+    </div>
+
+    <!-- QR Code -->
+    <div class="qrcode-container-inv80">
+      <div id="qrcode-inv80"></div>
+      <div class="qrcode-text-inv80" id="qrcode-inv80-numero"></div>
+    </div>
+  </div>
+
+  <!-- Inclui a biblioteca QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- Inclui o JavaScript da fatura80 -->
+  <script src="../assets/js/fatura80.js"></script>
+  
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const numeroFatura = "FR LP2025/5";
+      
+      // Atualiza o texto do QR Code
+      document.getElementById("qrcode-inv80-numero").textContent = numeroFatura;
+      
+      // Gera o QR Code
+      new QRCode(document.getElementById("qrcode-inv80"), {
+        text: numeroFatura,
+        width: 35,
+        height: 35,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    });
+  </script>
+</body>
+</html>

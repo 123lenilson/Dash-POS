@@ -1,4 +1,6 @@
-HTML
+----------------------------------------------------------------------------------
+----------------------------------------HTML--------------------------------------
+----------------------------------------------------------------------------------
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +9,7 @@ HTML
   <title>POS Dashboard — l</title>
   <link rel="stylesheet" href="../assets/css/styles.css" />
   <!-- Font Awesome Free (CDN) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p1CmVx4g...PLACEHOLDER..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
   <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
@@ -17,8 +19,6 @@ HTML
       <!-- HEADER DENTRO DO MAIN (sticky) -->
       <div class="main-header">
         <div class="main-header-left">
-          <!-- brand, etc -->
-          <!-- COLE ESTE BOTÃO AO LADO DO BRAND / ANTES DA .main-nav -->
           <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" title="Abrir menu">
             <i class="fa-solid fa-bars" aria-hidden="true"></i>
           </button>
@@ -57,6 +57,7 @@ HTML
       <!-- GRID DE PRODUTOS -->
       <div id="productGrid" class="product-grid" aria-live="polite"></div>
     </main>
+
     <!-- COLUNA 30% (SIDE / CARRINHO) - Segundo (à direita) -->
     <aside class="side col-30" id="desktopCartCol" aria-hidden="false">
       <div class="side-inner">
@@ -91,37 +92,26 @@ HTML
         <div class="cart-footer-fixed">
           <div class="cart-summary-compact">
             <div class="summary-row">
-              <span>Item</span>
-              <strong id="cartItemsCount">0 Items</strong>
+              <span>Itens</span>
+              <strong id="cartItemsCount">0</strong>
             </div>
             <div class="summary-row">
               <span>Sub Total</span>
               <strong id="cartSubtotal">Kz 0,00</strong>
             </div>
             <div class="summary-row">
-              <span>Discount</span>
+              <span>Desconto</span>
               <strong id="cartDiscount">Kz 0,00</strong>
             </div>
             <div class="summary-row">
-              <span>Tax</span>
+              <span>Taxa</span>
               <strong id="cartTax">Kz 0,00</strong>
             </div>
-            <div class="summary-row total-row">
-              <span>Total</span>
-              <strong id="cartTotal">Kz 0,00</strong>
-            </div>
           </div>
-          
-          <div class="payment-compact">
-            <div class="payment-methods">
-              <button class="payment-btn is-active" data-method="cash">Cash</button>
-              <button class="payment-btn" data-method="debit">Debit</button>
-              <button class="payment-btn" data-method="qris">QRIS</button>
-            </div>
-          </div>
-          
-          <button id="placeOrder" class="btn-process-transaction">
-            Process Transactions
+          <!-- Botão com total -->
+          <button id="placeOrder" class="btn-checkout">
+            <span id="cartTotalBtn">Kz 0,00</span>
+            <span class="btn-label">Continuar <i class="fa-solid fa-arrow-right"></i></span>
           </button>
         </div>
       </div>
@@ -165,24 +155,20 @@ HTML
       <div class="cart-drawer-footer">
         <div class="cart-summary-compact">
           <div class="summary-row">
-            <span>Item</span>
-            <strong id="cartItemsCountOverlay">0 Items</strong>
+            <span>Itens</span>
+            <strong id="cartItemsCountOverlay">0</strong>
           </div>
           <div class="summary-row">
             <span>Sub Total</span>
             <strong id="cartSubtotalOverlay">Kz 0,00</strong>
           </div>
           <div class="summary-row">
-            <span>Discount</span>
+            <span>Desconto</span>
             <strong id="cartDiscountOverlay">Kz 0,00</strong>
           </div>
           <div class="summary-row">
-            <span>Tax</span>
+            <span>Taxa</span>
             <strong id="cartTaxOverlay">Kz 0,00</strong>
-          </div>
-          <div class="summary-row total-row">
-            <span>Total</span>
-            <strong id="cartTotalOverlay">Kz 0,00</strong>
           </div>
         </div>
         
@@ -194,16 +180,19 @@ HTML
           </div>
         </div>
         
-        <button id="placeOrderOverlay" class="btn-process-transaction">Process Transactions</button>
+        <button id="placeOrderOverlay" class="btn-checkout">
+          <span id="cartTotalBtnOverlay">Kz 0,00</span>
+          <span class="btn-label">Continuar <i class="fa-solid fa-arrow-right"></i></span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Price Adjustment Modal -->
+  <!-- Price Adjustment Modal (mantida para compatibilidade) -->
   <div id="pm-overlay" class="pm-overlay" aria-hidden="true">
     <div id="pm-dialog" class="pm-dialog" role="dialog" aria-modal="true" aria-labelledby="pm-title">
       <header class="pm-header">
-        <h3 id="pm-title">Adjust Price</h3>
+        <h3 id="pm-title">Ajustar Preço</h3>
       </header>
 
       <div class="pm-display" aria-live="polite">
@@ -236,10 +225,127 @@ HTML
 
       <div class="pm-actions">
         <button id="pm-cancel" class="btn pm-btn-cancel" type="button">Cancel</button>
-        <button id="pm-confirm" class="btn pm-btn-confirm" type="button">Confirm Price</button>
+        <button id="pm-confirm" class="btn pm-btn-confirm" type="button">Confirma Preço</button>
       </div>
 
       <button class="pm-close" id="pm-close" aria-label="Fechar">×</button>
+    </div>
+  </div>
+    <!-- Modal duplicada para adicionar quantidade -->
+    <div id="qty-overlay" class="pm-overlay" aria-hidden="true">
+      <div id="qty-dialog" class="pm-dialog" role="dialog" aria-modal="true" aria-labelledby="qty-title">
+        <header class="pm-header">
+          <h3 id="qty-title">Adicionar quantidade</h3>
+        </header>
+
+        <div class="pm-display" aria-live="polite">
+          <span class="pm-currency" id="qty-currency">Kz</span>
+          <span class="pm-amount" id="qty-amount">0.00</span>
+        </div>
+
+        <div class="pm-keypad" role="application" aria-label="Numeric keypad">
+          <button class="pm-key" data-key="7" type="button">7</button>
+          <button class="pm-key" data-key="8" type="button">8</button>
+          <button class="pm-key" data-key="9" type="button">9</button>
+
+          <button class="pm-key" data-key="4" type="button">4</button>
+          <button class="pm-key" data-key="5" type="button">5</button>
+          <button class="pm-key" data-key="6" type="button">6</button>
+
+          <button class="pm-key" data-key="1" type="button">1</button>
+          <button class="pm-key" data-key="2" type="button">2</button>
+          <button class="pm-key" data-key="3" type="button">3</button>
+
+          <button class="pm-key pm-key-clear" data-key="C" type="button">C</button>
+          <button class="pm-key" data-key="0" type="button">0</button>
+
+          <!-- wide backspace -->
+          <button class="pm-key pm-key-back" data-key="back" type="button">
+            <i class="fa-solid fa-delete-left" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="pm-actions">
+          <button id="qty-cancel" class="btn pm-btn-cancel" type="button">Cancel</button>
+          <button id="qty-confirm" class="btn pm-btn-confirm" type="button">Add quantidade</button>
+        </div>
+
+        <button class="pm-close" id="qty-close" aria-label="Fechar">×</button>
+      </div>
+    </div>
+
+  <!-- Payment Modal (integrada) -->
+  <div class="pay-overlay" id="payModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+    <div class="pay-dialog">
+      <!-- HEADER -->
+      <div class="pay-header">
+        <h3 id="pay-title">Pagamento</h3>
+        <button class="pay-close" id="closePay" aria-label="Fechar modal de pagamento">&times;</button>
+      </div>
+      <div class="pay-body">
+        <!-- LEFT COLUMN -->
+        <div class="pay-left">
+          <div class="customer-info">
+            <div class="avatar">B3</div>
+            <div class="meta">
+              <strong>Eve</strong>
+              <small>Order# DI104 / Dine In</small>
+              <small>17 Set 2025 • 01:07</small>
+            </div>
+          </div>
+          <div class="points">
+            <input type="text" placeholder="Código de Membro" aria-label="Inserir código de membro">
+            <button class="btn-search">Buscar</button>
+            <div class="use-points">
+              <label for="usePoints">Usar Pontos?</label>
+              <input type="checkbox" id="usePoints">
+            </div>
+          </div>
+          <div class="order-details">
+            <h4>Detalhes do Pedido</h4>
+            <ul id="payOrderList"></ul>
+            <div class="summary">
+              <div><span>Sub Total</span><span id="paySubtotal">Kz 0,00</span></div>
+              <div><span>Taxa 15%</span><span id="payTax">Kz 0,00</span></div>
+              <div><span>Total</span><strong id="payTotal">Kz 0,00</strong></div>
+            </div>
+          </div>
+        </div>
+        <!-- RIGHT COLUMN -->
+        <div class="pay-right">
+          <!-- Tabs -->
+          <div class="pay-tabs">
+            <button class="tab is-active" data-tab="cash" aria-controls="tab-cash" aria-selected="true">Dinheiro</button>
+            <button class="tab" data-tab="card" aria-controls="tab-card" aria-selected="false">Cartão</button>
+          </div>
+          <!-- CASH TAB -->
+          <div class="tab-content" id="tab-cash" role="region" aria-labelledby="cash-tab">
+            <p class="label">Valor Recebido</p>
+            <div class="cash-display" aria-live="polite">Kz 0,00</div>
+            <div class="quick-buttons">
+              <button data-amount="5000">Kz 5.000</button>
+              <button data-amount="10000">Kz 10.000</button>
+              <button data-amount="20000">Kz 20.000</button>
+              <button data-amount="50000">Kz 50.000</button>
+            </div>
+            <div class="numpad" role="application" aria-label="Teclado numérico">
+              <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+              <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+              <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+              <button data-key="0">0</button><button data-key=".">.</button><button data-key="back">&larr;</button>
+            </div>
+            <button class="btn-confirm" id="payConfirmCash" disabled>Confirmar Pagamento</button>
+          </div>
+          <!-- CARD TAB -->
+          <div class="tab-content hidden" id="tab-card" role="region" aria-labelledby="card-tab">
+            <p class="countdown">Completar pagamento em <span id="countdown">00h 24m 54s</span></p>
+            <div class="total-box">
+              <span>Total do Pagamento</span><strong id="cardTotal">Kz 0,00</strong>
+            </div>
+            <button class="btn-confirm" id="payConfirmCard">Confirmar Pagamento</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -249,11 +355,10 @@ HTML
 
 
 
+----------------------------------------------------------------------------------
+----------------------------------------CSS--------------------------------------
+----------------------------------------------------------------------------------
 
-
-
-
-CSS
 /* styles.css - CSS completo do dashboard (MAIN à esquerda, CART à direita fixa/Clamped) */
 
 :root{
@@ -533,17 +638,55 @@ body{
 .iconbtn.del{ background:#ffefef; color:#cc2a2a; }
 
 /* CART FOOTER FIXED */
-.cart-footer-fixed{ position:sticky; bottom:0; background:var(--card); padding:10px 12px; border-top:1px solid var(--line); z-index:10; }
-.cart-summary-compact{ display:flex; flex-direction:column; gap:3px; font-size: 11px; }
-.summary-row{ display:flex; justify-content:space-between; align-items:center; }
-.total-row{ font-size: 12px; font-weight:600; margin-top:3px; }
-.payment-compact{ margin:10px 0 6px; }
-.payment-methods{ display:flex; gap:6px; }
-.payment-btn{ padding:5px 10px; border:1px solid var(--line); background:var(--card); border-radius:6px; cursor:pointer; font-size: 11px; transition:.15s; }
-.payment-btn:hover{ background:#f8f7ff; }
-.payment-btn.is-active{ border-color:var(--accent); background:#f8f7ff; color:var(--accent); }
-.btn-process-transaction{ width:100%; padding:8px; border-radius:10px; background:#ff9500; color:#fff; font-weight:600; font-size: 12px; border:0; cursor:pointer; transition:.15s; box-shadow: 0 4px 12px rgba(255,149,0,0.2); }
-.btn-process-transaction:hover{ filter:brightness(1.05); }
+.cart-footer-fixed{ 
+  position:sticky; 
+  bottom:0; 
+  background:var(--card); 
+  padding:12px 14px; 
+  border-top:1px solid var(--line); 
+  z-index:10; 
+}
+.cart-summary-compact{ 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px; /* Aumentado de 3px para 8px para mais espaçamento entre linhas */
+  font-size: 11px; 
+  margin-bottom: 12px; /* Adicionado margem inferior para separar do botão */
+}
+.summary-row{ 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+}
+.btn-checkout {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--accent); /* azul como na imagem */
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,102,255,0.25);
+  transition: background .15s ease;
+}
+.btn-checkout:hover {
+  background: var(--accent-2);
+}
+.btn-checkout .btn-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.btn-checkout #cartTotalBtn {
+  font-size: 15px;
+  font-weight: 700;
+}
 
 /* MOBILE FLOATING CART */
 .mobile-cart-btn{ display:none; position:fixed; right:18px; bottom:18px; z-index:1400; width:56px; height:56px; border-radius:999px; border:0; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow: 0 8px 30px rgba(108,92,231,0.22); display:grid; place-items:center; cursor:pointer; font-size:18px; }
@@ -556,7 +699,17 @@ body{
 .cart-overlay.is-open .cart-drawer{ transform: translateX(0); }
 .cart-drawer-header{ display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--line); }
 .cart-drawer-body{ flex:1; overflow-y:auto; padding:10px 14px; -webkit-overflow-scrolling:touch; }
-.cart-drawer-footer{ position:sticky; bottom:0; background:#fff; padding:10px 14px; border-top:1px solid var(--line); }
+.cart-drawer-footer{ 
+  position:sticky; 
+  bottom:0; 
+  background:#fff; 
+  padding:12px 14px; /* Ajustado para consistência com cart-footer-fixed */
+  border-top:1px solid var(--line); 
+}
+.cart-drawer-footer .cart-summary-compact { 
+  gap:8px; /* Aumentado para consistência com cart-footer-fixed */
+  margin-bottom: 12px; /* Adicionado margem inferior para separar do botão */
+}
 
 /* util / controls */
 .iconbtn{ font-weight:600; border:0; cursor:pointer; }
@@ -805,7 +958,7 @@ body{
 }
 .pm-btn-confirm {
   flex: 1;
-  background: linear-gradient(135deg,#f97316,#fb923c);
+  background: var(--accent);
   color: #fff;
   border: none;
   padding: 12px;
@@ -839,11 +992,405 @@ body{
   .pm-key { padding: 12px; font-size: 16px; }
 }
 
+/* Estilização do botão clearCart */
+#clearCart.btn.light {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4fa;
+  color: var(--warn);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s ease;
+  box-shadow: var(--shadow);
+}
+
+#clearCart.btn.light:hover {
+  background: #ffefef;
+  color: #cc2a2a;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
+#clearCart.btn.light:active {
+  transform: translateY(0);
+}
+
+/* Payment Modal Styles (prefixo pay-) */
+.pay-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 1500;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+.pay-overlay.is-open {
+  display: flex;
+  opacity: 1;
+}
+
+.pay-dialog {
+  width: 90%;
+  max-width: 900px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-strong);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-10px) scale(0.98);
+  transition: transform .25s ease, opacity .25s ease;
+}
+
+.pay-overlay.is-open .pay-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.pay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pay-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pay-close {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color .15s ease;
+}
+
+.pay-close:hover {
+  color: var(--warn);
+}
+
+/* BODY SPLIT */
+.pay-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 18px;
+}
+
+/* LEFT */
+.customer-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.customer-info .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.meta small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.points {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.points input {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--card);
+}
+
+.btn-search {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background .15s ease;
+}
+
+.btn-search:hover {
+  background: var(--accent-2);
+}
+
+.use-points {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.order-details h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.order-details ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.order-details li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  color: var(--text);
+}
+
+.summary {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.summary div {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+
+.summary strong {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* RIGHT */
+.pay-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  transition: all .15s ease;
+}
+
+.tab.is-active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.tab-content.hidden {
+  display: none;
+}
+
+.cash-display {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  border: 2px solid var(--line);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  background: var(--card);
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.quick-buttons button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  transition: background .15s ease;
+}
+
+.quick-buttons button:hover {
+  background: var(--accent-2);
+  color: #fff;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.numpad button {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  transition: background .15s ease;
+}
+
+.numpad button:hover {
+  background: var(--accent-2);
+  color: #fff;
+}
+
+.numpad button[data-key="back"] {
+  background: var(--bg);
+  color: var(--warn);
+}
+
+.total-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.countdown {
+  color: var(--warn);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.btn-confirm {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background .15s ease;
+}
+
+.btn-confirm:hover {
+  background: var(--accent-2);
+}
+
+.btn-confirm[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* RESPONSIVE */
+@media (max-width: 760px) {
+  .pay-overlay {
+    align-items: flex-end;
+  }
+  .pay-dialog {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow-y: auto;
+    transform: translateY(100%);
+  }
+  .pay-overlay.is-open .pay-dialog {
+    transform: translateY(0);
+  }
+  .pay-body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+  .pay-left, .pay-right {
+    min-width: 0;
+  }
+  .cash-display {
+    font-size: 24px;
+  }
+  .numpad button {
+    padding: 12px;
+    font-size: 13px;
+  }
+  .btn-confirm {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pay-dialog {
+    padding: 12px;
+  }
+  .pay-header {
+    padding: 12px 14px;
+  }
+  .cash-display {
+    font-size: 20px;
+  }
+  .numpad button {
+    padding: 10px;
+    font-size: 12px;
+  }
+}
 
 
 
 
-JS
+
+
+
+
+
+----------------------------------------------------------------------------------
+----------------------------------------JS--------------------------------------
+----------------------------------------------------------------------------------
+
 /* ======= MOCK DE DADOS (preenchido pela API) ======= */
 let PRODUCTS = [];
 
@@ -857,6 +1404,10 @@ let searchTerm = "";
 let modoEdicao = false;       // mantém do seu fluxo
 let estaPesquisando = false;  // mantém do seu fluxo
 const cart = new Map();       // id -> {product, qty, customPrice}
+
+let currentEditingId = null;  // ID do produto sendo editado na modal
+let currentInput = '';        // String para construir o input do preço na modal
+let replaceOnNextDigit = false; // Flag para substituir o input ao primeiro dígito
 
 /* guarda a key das categorias para evitar rebuild desnecessário */
 let lastCategoriesKey = null;
@@ -873,7 +1424,7 @@ const cartItemsCount = document.getElementById('cartItemsCount');
 const cartSubtotal = document.getElementById('cartSubtotal');
 const cartDiscount = document.getElementById('cartDiscount');
 const cartTax      = document.getElementById('cartTax');
-const cartTotal    = document.getElementById('cartTotal');
+const cartTotalBtn = document.getElementById('cartTotalBtn');
 const cartEmptyState = document.getElementById('cartEmptyState');
 
 const cartListOverlay = document.getElementById('cartListOverlay');
@@ -881,7 +1432,7 @@ const cartItemsCountOverlay = document.getElementById('cartItemsCountOverlay');
 const cartSubtotalOverlay = document.getElementById('cartSubtotalOverlay');
 const cartDiscountOverlay = document.getElementById('cartDiscountOverlay');
 const cartTaxOverlay = document.getElementById('cartTaxOverlay');
-const cartTotalOverlay = document.getElementById('cartTotalOverlay');
+const cartTotalBtnOverlay = document.getElementById('cartTotalBtnOverlay');
 const cartEmptyStateMobile = document.getElementById('cartEmptyStateMobile');
 
 const clearCartBtn = document.getElementById('clearCart');
@@ -894,6 +1445,14 @@ const mobileCartBtn = document.getElementById('mobileCartBtn');
 const mobileCartBadge = document.getElementById('mobileCartBadge');
 const cartOverlay = document.getElementById('cartOverlay');
 const closeCartOverlayBtn = document.getElementById('closeCartOverlay');
+
+// Novo: Elementos da modal de preço
+const pmOverlay = document.getElementById('pm-overlay');
+const pmAmount = document.getElementById('pm-amount');
+const pmConfirm = document.getElementById('pm-confirm');
+const pmCancel = document.getElementById('pm-cancel');
+const pmClose = document.getElementById('pm-close');
+const pmKeys = document.querySelectorAll('.pm-key');
 
 /* ======= UTIL ======= */
 function nowFancy(){
@@ -1134,11 +1693,107 @@ function renderProducts(){
     if(cart.has(id) && cart.get(id).qty > 0){ card.classList.add('is-selected'); }
     else { card.classList.remove('is-selected'); }
     card.addEventListener('click', ()=> addToCart(id, 1));
+    card.addEventListener('dblclick', ()=> openQtyModal(id));
     const plusBtn = card.querySelector('.qtybtn.plus');
     const minusBtn = card.querySelector('.qtybtn.minus');
     if(plusBtn){ plusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,1); }); }
     if(minusBtn){ minusBtn.addEventListener('click', e=>{ e.stopPropagation(); addToCart(id,-1); }); }
   });
+// Função para abrir a modal de adicionar quantidade
+function openQtyModal(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  // Estado para edição de quantidade
+  window.qtyEditingId = productId;
+  window.qtyInput = '';
+  updateQtyDisplay();
+
+  const qtyOverlay = document.getElementById('qty-overlay');
+  qtyOverlay.classList.add('is-open');
+  qtyOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+
+  // Adicionar listeners do teclado se não for mobile
+  if (!isMobileView()) {
+    document.addEventListener('keydown', handleQtyKeyboardInput);
+  }
+  setupQtyModalListeners();
+}
+
+// Atualiza o display da modal de quantidade
+function updateQtyDisplay() {
+  const qtyAmount = document.getElementById('qty-amount');
+  const displayValue = window.qtyInput ? parseInt(window.qtyInput) : '0';
+  qtyAmount.textContent = displayValue;
+  const qtyConfirm = document.getElementById('qty-confirm');
+  qtyConfirm.disabled = !window.qtyInput || parseInt(window.qtyInput) <= 0;
+}
+
+// Listeners para a modal de quantidade
+function setupQtyModalListeners() {
+  const qtyKeys = document.querySelectorAll('#qty-dialog .pm-key');
+  qtyKeys.forEach(key => {
+    key.onclick = () => {
+      const value = key.dataset.key;
+      handleQtyKeyInput(value);
+    };
+  });
+
+  document.getElementById('qty-confirm').onclick = () => {
+    const qty = parseInt(window.qtyInput) || 0;
+    if (window.qtyEditingId && qty > 0) {
+      const product = PRODUCTS.find(p => p.id === window.qtyEditingId);
+      if (product) {
+        cart.set(product.id, { product, qty, customPrice: product.price });
+        renderCart();
+      }
+    }
+    closeQtyModal();
+  };
+  document.getElementById('qty-cancel').onclick = closeQtyModal;
+  document.getElementById('qty-close').onclick = closeQtyModal;
+}
+
+function handleQtyKeyInput(value) {
+  if (value === 'C') {
+    window.qtyInput = '';
+  } else if (value === 'back') {
+    window.qtyInput = window.qtyInput.slice(0, -1);
+  } else if (/\d/.test(value)) {
+    if (window.qtyInput === '0') window.qtyInput = value;
+    else window.qtyInput += value;
+  }
+  updateQtyDisplay();
+}
+
+function handleQtyKeyboardInput(e) {
+  const key = e.key;
+  if (/\d/.test(key)) {
+    handleQtyKeyInput(key);
+  } else if (key === 'Backspace') {
+    handleQtyKeyInput('back');
+  } else if (key === 'Delete') {
+    handleQtyKeyInput('C');
+  } else if (key === 'Enter') {
+    document.getElementById('qty-confirm').click();
+  } else if (key === 'Escape') {
+    closeQtyModal();
+  } else {
+    return;
+  }
+  e.preventDefault();
+}
+
+function closeQtyModal() {
+  const qtyOverlay = document.getElementById('qty-overlay');
+  qtyOverlay.classList.remove('is-open');
+  qtyOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  window.qtyInput = '';
+  window.qtyEditingId = null;
+  document.removeEventListener('keydown', handleQtyKeyboardInput);
+}
 }
 
 /* Atualiza a seleção visual dos cards */
@@ -1171,7 +1826,7 @@ function renderCart(){
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;">${product.name}</div>
             <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
@@ -1189,7 +1844,7 @@ function renderCart(){
       return `
         <li class="cart-item" data-id="${product.id}">
           <div>
-            <div class="title" style="cursor: pointer; padding: 2px 0;" onclick="openPriceModal(${product.id})">${product.name}</div>
+            <div class="title" style="cursor: pointer; padding: 2px 0;">${product.name}</div>
             <div class="meta">${currency.format(customPrice)} × ${qty} = <strong>${currency.format(line)}</strong></div>
           </div>
           <div class="right">
@@ -1207,6 +1862,13 @@ function renderCart(){
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
       row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
       row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+
+      // Listener para abrir modal ao clicar no item, exceto na área dos botões
+      row.addEventListener('click', (e) => {
+        if (!e.target.closest('.right')) {
+          openPriceModal(id);
+        }
+      });
     });
 
     cartListOverlay.querySelectorAll('.cart-item').forEach(row=>{
@@ -1214,6 +1876,13 @@ function renderCart(){
       row.querySelector('[data-act="minus"]').addEventListener('click', ()=> addToCart(id, -1));
       row.querySelector('[data-act="plus"]').addEventListener('click',  ()=> addToCart(id, +1));
       row.querySelector('[data-act="del"]').addEventListener('click',   ()=> removeFromCart(id));
+
+      // Listener para abrir modal ao clicar no item, exceto na área dos botões
+      row.addEventListener('click', (e) => {
+        if (!e.target.closest('.right')) {
+          openPriceModal(id);
+        }
+      });
     });
   }
 
@@ -1227,17 +1896,17 @@ function renderCart(){
   const tax = (stats.subtotal - discount) * TAX_RATE;
   const total = stats.subtotal - discount + tax;
 
-  cartItemsCount.textContent = `${stats.items} Items`;
+  cartItemsCount.textContent = `${stats.items}`;
   cartSubtotal.textContent = currency.format(stats.subtotal);
   cartDiscount.textContent = currency.format(discount);
   cartTax.textContent = currency.format(tax);
-  cartTotal.textContent = currency.format(total);
+  cartTotalBtn.textContent = currency.format(total);
 
-  cartItemsCountOverlay.textContent = `${stats.items} Items`;
+  cartItemsCountOverlay.textContent = `${stats.items}`;
   cartSubtotalOverlay.textContent = currency.format(stats.subtotal);
   cartDiscountOverlay.textContent = currency.format(discount);
   cartTaxOverlay.textContent = currency.format(tax);
-  cartTotalOverlay.textContent = currency.format(total);
+  cartTotalBtnOverlay.textContent = currency.format(total);
 
   mobileCartBadge.textContent = stats.items;
   mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
@@ -1275,16 +1944,17 @@ clearSearch.addEventListener('click', ()=>{
 });
 
 /* ======= GLOBAL BUTTONS ======= */
-document.getElementById('placeOrder')?.addEventListener('click', ()=>{
-  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
-  alert('Pedido realizado! (demonstração)');
-  cart.clear(); renderCart();
-});
-document.getElementById('placeOrderOverlay')?.addEventListener('click', ()=>{
-  if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
-  alert('Pedido realizado! (demonstração)');
-  cart.clear(); renderCart();
-});
+// Comentado/removido o listener original do placeOrder, pois agora a modal cuida disso
+// document.getElementById('placeOrder')?.addEventListener('click', ()=>{
+//   if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
+//   alert('Pedido realizado! (demonstração)');
+//   cart.clear(); renderCart();
+// });
+// document.getElementById('placeOrderOverlay')?.addEventListener('click', ()=>{
+//   if(cart.size===0){ alert('Seu carrinho está vazio.'); return; }
+//   alert('Pedido realizado! (demonstração)');
+//   cart.clear(); renderCart();
+// });
 clearCartBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
 clearCartOverlayBtn?.addEventListener('click', ()=>{ cart.clear(); renderCart(); });
 
@@ -1349,6 +2019,9 @@ function init(){
       carregarCardapios();
     }
   }, 500);
+
+  // Adicionar event listeners para a modal de preço (uma vez só)
+  setupPriceModalListeners();
 }
 init();
 
@@ -1400,19 +2073,360 @@ init();
   });
 })();
 
-// Função para abrir a modal de ajuste de preço
-async function openPriceModal(productId) {
-  const entry = cart.get(productId);
-  if (!entry) return;
-  
-  const newPrice = await showPriceModal({
-    initial: currentPrice,
-    currency: 'Kz',
-    decimals: 2
+// Função para configurar listeners da modal (chamada no init)
+function setupPriceModalListeners() {
+  // Listeners para os botões do keypad
+  pmKeys.forEach(key => {
+    key.addEventListener('click', () => {
+      const value = key.dataset.key;
+      handleKeyInput(value);
+    });
   });
 
-  if (newPrice !== null && newPrice !== currentPrice) {
-    entry.customPrice = newPrice;
-    renderCart(); // Re-renderiza o carrinho para atualizar preços
+  // Confirmar
+  pmConfirm.addEventListener('click', () => {
+    const newPrice = parseFloat(currentInput) || 0;
+    if (currentEditingId && cart.has(currentEditingId)) {
+      const entry = cart.get(currentEditingId);
+      if (newPrice !== entry.customPrice) {
+        entry.customPrice = newPrice;
+        renderCart();
+      }
+    }
+    closePriceModal();
+  });
+
+  // Cancelar ou fechar
+  pmCancel.addEventListener('click', closePriceModal);
+  pmClose.addEventListener('click', closePriceModal);
+}
+
+// Nova função para processar input (de botões ou teclado)
+function handleKeyInput(value) {
+  if (value === 'C') {
+    currentInput = '';
+    replaceOnNextDigit = false;
+  } else if (value === 'back') {
+    currentInput = currentInput.slice(0, -1);
+    if (currentInput === '') replaceOnNextDigit = false;
+  } else if (/\d/.test(value)) {  // Para dígitos 0-9
+    if (replaceOnNextDigit) {
+      currentInput = value;
+      replaceOnNextDigit = false;
+    } else {
+      if (currentInput.includes('.') && currentInput.split('.')[1].length >= 2) return;
+      currentInput += value;
+    }
+  } else if (value === '.') {
+    if (!currentInput.includes('.')) {
+      if (replaceOnNextDigit) {
+        currentInput = '0.';
+        replaceOnNextDigit = false;
+      } else {
+        currentInput += '.';
+      }
+    }
+  }
+  updatePriceDisplay();
+}
+
+// Atualizar o display da modal
+function updatePriceDisplay() {
+  // Mostrar com 2 decimais sempre, ou o input atual
+  const displayValue = currentInput ? parseFloat(currentInput).toFixed(2) : '0.00';
+  pmAmount.textContent = displayValue;
+  pmConfirm.disabled = !currentInput;
+}
+
+// Função para lidar com keydown do teclado
+function handleKeyboardInput(e) {
+  const key = e.key;
+  if (/\d/.test(key)) {
+    handleKeyInput(key);
+  } else if (key === '.') {
+    handleKeyInput('.');
+  } else if (key === 'Backspace') {
+    handleKeyInput('back');
+  } else if (key === 'Delete') {
+    handleKeyInput('C');
+  } else if (key === 'Enter') {
+    pmConfirm.click();
+  } else if (key === 'Escape') {
+    closePriceModal();
+  } else {
+    return;
+  }
+  e.preventDefault(); // Prevenir comportamentos padrão como scroll
+}
+
+// Abrir a modal de preço
+function openPriceModal(productId) {
+  const entry = cart.get(productId);
+  if (!entry) return;
+
+  currentEditingId = productId;
+  const initialPrice = entry.customPrice || entry.product.price;
+  currentInput = initialPrice.toString();  // Manter como string sem .00 forçado aqui
+  replaceOnNextDigit = true;  // Ativar substituição ao primeiro dígito
+
+  updatePriceDisplay();
+  pmOverlay.classList.add('is-open');
+  pmOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+
+  // Adicionar listener de teclado se não for mobile
+  if (!isMobileView()) {
+    document.addEventListener('keydown', handleKeyboardInput);
   }
 }
+
+// Fechar a modal de preço
+function closePriceModal() {
+  pmOverlay.classList.remove('is-open');
+  pmOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  currentInput = '';
+  currentEditingId = null;
+  replaceOnNextDigit = false;
+
+  // Remover listener de teclado
+  document.removeEventListener('keydown', handleKeyboardInput);
+}
+
+(function() {
+  // DOM Elements
+  const payModal = document.getElementById('payModal');
+  const closePay = document.getElementById('closePay');
+  const placeOrder = document.getElementById('placeOrder');
+  const placeOrderOverlay = document.getElementById('placeOrderOverlay');
+  const payOrderList = document.getElementById('payOrderList');
+  const paySubtotal = document.getElementById('paySubtotal');
+  const payTax = document.getElementById('payTax');
+  const payTotal = document.getElementById('payTotal');
+  const cardTotal = document.getElementById('cardTotal');
+  const cashDisplay = document.querySelector('.cash-display');
+  const payConfirmCash = document.getElementById('payConfirmCash');
+  const payConfirmCard = document.getElementById('payConfirmCard');
+  const tabs = document.querySelectorAll('.pay-tabs .tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const quickButtons = document.querySelectorAll('.quick-buttons button');
+  const numpadButtons = document.querySelectorAll('.numpad button');
+
+  // State
+  let cashInput = '';
+  let lastFocusedButton = null;
+
+  // Functions
+  function openPayModal() {
+    if (!payModal || cart.size === 0) {
+      alert('Seu carrinho está vazio.');
+      return;
+    }
+
+    // Update order details
+    const items = [...cart.values()];
+    payOrderList.innerHTML = items.map(({product, qty, customPrice = product.price}) => {
+      const line = customPrice * qty;
+      return `<li><span>${product.name} ×${qty}</span><span>${currency.format(line)}</span></li>`;
+    }).join('');
+
+    const stats = items.reduce((acc, it) => {
+      acc.subtotal += (it.customPrice || it.product.price) * it.qty;
+      return acc;
+    }, {subtotal: 0});
+
+    const tax = stats.subtotal * TAX_RATE;
+    const total = stats.subtotal + tax;
+
+    paySubtotal.textContent = currency.format(stats.subtotal);
+    payTax.textContent = currency.format(tax);
+    payTotal.textContent = currency.format(total);
+    cardTotal.textContent = currency.format(total);
+    cashDisplay.textContent = currency.format(0);
+
+    // Reset state
+    cashInput = '';
+    payConfirmCash.disabled = true;
+    tabs[0].focus(); // Focus on first tab
+
+    // Open modal
+    payModal.classList.add('is-open');
+    payModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    // Trap focus
+    trapFocus();
+  }
+
+  function closePayModal() {
+    if (!payModal) return;
+    payModal.classList.remove('is-open');
+    payModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    cashInput = '';
+    payConfirmCash.disabled = true;
+    document.removeEventListener('keydown', handleKeyInput);
+    // Return focus to the button that opened the modal
+    if (lastFocusedButton) lastFocusedButton.focus();
+  }
+
+  function trapFocus() {
+    const focusableElements = payModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    payModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable.focus();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable.focus();
+          }
+        }
+      } else if (e.key === 'Escape') {
+        closePayModal();
+      }
+    });
+  }
+
+  function updateCashDisplay() {
+    const value = parseFloat(cashInput) || 0;
+    cashDisplay.textContent = currency.format(value);
+    payConfirmCash.disabled = value < parseFloat(payTotal.textContent.replace('Kz ', '').replace(',', '.'));
+  }
+
+  function handleKeyInput(e) {
+    const key = e.key || e.target.dataset.key;
+    if (/\d/.test(key)) {
+      cashInput += key;
+    } else if (key === '.') {
+      if (!cashInput.includes('.')) cashInput += '.';
+    } else if (key === 'back') {
+      cashInput = cashInput.slice(0, -1);
+    } else if (key === 'Enter' && !payConfirmCash.disabled) {
+      payConfirmCash.click();
+    } else if (key === 'Escape') {
+      closePayModal();
+    } else {
+      return;
+    }
+    updateCashDisplay();
+    e.preventDefault();
+  }
+
+  // Event Listeners
+  if (placeOrder) {
+    placeOrder.addEventListener('click', () => {
+      lastFocusedButton = placeOrder;
+      openPayModal();
+    });
+  }
+
+  if (placeOrderOverlay) {
+    placeOrderOverlay.addEventListener('click', () => {
+      lastFocusedButton = placeOrderOverlay;
+      openPayModal();
+    });
+  }
+
+  if (closePay) {
+    closePay.addEventListener('click', closePayModal);
+  }
+
+  if (payModal) {
+    payModal.addEventListener('click', (e) => {
+      if (e.target === payModal) closePayModal();
+    });
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('is-active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('is-active');
+      tab.setAttribute('aria-selected', 'true');
+      tabContents.forEach(c => c.classList.add('hidden'));
+      document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
+    });
+  });
+
+  quickButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      cashInput = button.dataset.amount;
+      updateCashDisplay();
+    });
+  });
+
+  numpadButtons.forEach(button => {
+    button.addEventListener('click', handleKeyInput);
+  });
+
+  if (!isMobileView()) {
+    document.addEventListener('keydown', handleKeyInput);
+  }
+
+  if (payConfirmCash) {
+    payConfirmCash.addEventListener('click', () => {
+      alert('Pagamento em dinheiro confirmado! (demonstração)');
+      cart.clear();
+      renderCart();
+      closePayModal();
+    });
+  }
+
+  if (payConfirmCard) {
+    payConfirmCard.addEventListener('click', () => {
+      alert('Pagamento com cartão confirmado! (demonstração)');
+      cart.clear();
+      renderCart();
+      closePayModal();
+    });
+  }
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
