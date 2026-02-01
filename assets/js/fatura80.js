@@ -6,6 +6,48 @@ if (window.FATURA80_JS_LOADED) {
 } else {
     window.FATURA80_JS_LOADED = true;
     
+    // ✅ CRITICAL: Garantir que container existe ANTES de tudo
+    function ensureContainer80mm() {
+        let container = document.getElementById('fatura80-container-inv80');
+        
+        if (!container) {
+            console.log('📦 [FATURA80] Criando container...');
+            container = document.createElement('div');
+            container.id = 'fatura80-container-inv80';
+            container.className = 'recibo-inv80';
+            
+            // ✅ CRITICAL: Container VISÍVEL mas fora da viewport
+            container.style.cssText = `
+                position: absolute;
+                left: -9999px;
+                top: 0;
+                width: 80mm;
+                background: white;
+                visibility: visible;
+                opacity: 1;
+                z-index: 9999;
+            `;
+            
+            document.body.appendChild(container);
+            console.log('✅ [FATURA80] Container criado e anexado ao DOM');
+        }
+        
+        return container;
+    }
+    
+    // ✅ Cria container imediatamente ao carregar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureContainer80mm);
+    } else {
+        ensureContainer80mm();
+    }
+    
+    // Log de confirmação de carregamento
+    console.log('🔧 [FATURA80] Script iniciado');
+    
+    // Expõe função globalmente imediatamente
+    window.FATURA80_LOADING = true;
+    
 function formatarMoeda(valor) {
     return new Intl.NumberFormat('pt-AO', {
         minimumFractionDigits: 2,
@@ -198,45 +240,45 @@ function gerarHTMLFatura80(dadosFatura) {
 }
 
 function renderizarFatura80(dadosFatura) {
-    console.log('📄 Renderizando fatura 80mm');
-    console.log('📦 Dados da fatura:', dadosFatura);
+    console.log('📄 [FATURA80] Renderizando fatura 80mm');
+    console.log('📦 [FATURA80] Dados da fatura:', dadosFatura);
     
-    // Verifica se o container principal existe, senão cria
-    let container = document.getElementById('fatura80-container-inv80');
+    // ✅ CRITICAL: Garante que container existe
+    let container = ensureContainer80mm();
+    
     if (!container) {
-        container = document.createElement('div');
-        container.id = 'fatura80-container-inv80';
-        container.className = 'recibo-inv80';
-        document.body.appendChild(container);
+        console.error('❌ [FATURA80] Impossível criar container!');
+        throw new Error('Container 80mm não pôde ser criado');
     }
     
     // Gera o HTML da fatura
     const htmlFatura = gerarHTMLFatura80(dadosFatura);
     
+    if (!htmlFatura || htmlFatura.trim().length === 0) {
+        console.error('❌ [FATURA80] HTML gerado está vazio!');
+        throw new Error('Falha ao gerar HTML da fatura');
+    }
+    
     // Insere o HTML no container
     container.innerHTML = htmlFatura;
     
-    // Gera o QR Code após um pequeno delay para garantir que o DOM foi atualizado
-    setTimeout(() => {
-        if (typeof QRCode !== 'undefined' && dadosFatura.numeroFatura) {
-            // Limpa qualquer QR Code existente
-            const qrcodeContainer = document.getElementById('qrcode-inv80');
-            if (qrcodeContainer) {
-                qrcodeContainer.innerHTML = '';
-                
-                new QRCode(qrcodeContainer, {
-                    text: dadosFatura.numeroFatura,
-                    width: 35,
-                    height: 35,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            }
-        }
-    }, 100);
+    console.log('✅ [FATURA80] HTML inserido no container');
+    console.log('📊 [FATURA80] Container possui', container.children.length, 'elementos filho');
     
-    console.log('✅ Fatura 80mm renderizada com sucesso!');
+    // ✅ CRITICAL: Aguarda DOM ser atualizado antes de gerar QR Code
+    return new Promise((resolve) => {
+        // Usa requestAnimationFrame para garantir que o DOM foi pintado
+        requestAnimationFrame(() => {
+            // Aguarda mais um frame para garantir
+            requestAnimationFrame(() => {
+                // Gera o QR Code
+                gerarQRCode80mm(dadosFatura);
+                
+                console.log('✅ [FATURA80] Fatura renderizada com sucesso!');
+                resolve(container);
+            });
+        });
+    });
 }
 
 // Função para preparar os dados da fatura a partir do carrinho e dados do cliente
@@ -328,11 +370,10 @@ function prepararDadosFatura80(cart, checkoutCustomerData, checkoutPaymentData) 
     };
 }
 
-// ✅ NOVA FUNÇÃO: Renderizar fatura80 com dados vindos do backend
-function renderizarFatura80ComDadosBackend(dadosBackend) {
+async function renderizarFatura80ComDadosBackend(dadosBackend) {
     console.log('📥 [FATURA80] Recebendo dados do backend:', dadosBackend);
     
-    // ✅ TRANSFORMAR dados do backend no formato esperado pelo renderizador
+    // ✅ TRANSFORMAR dados do backend no formato esperado
     const dadosFatura = {
         numeroFatura: dadosBackend.codigo_documento || 'FR 001',
         data: dadosBackend.data_emissao || new Date().toLocaleDateString('pt-PT'),
@@ -362,8 +403,8 @@ function renderizarFatura80ComDadosBackend(dadosBackend) {
             subtotal: dadosBackend.total_iliquido || 0,
             desconto: dadosBackend.total_desconto || 0,
             imposto: dadosBackend.total_imposto || 0,
-            valorAPagar: dadosBackend.valor_a_pagar || 0,  // 🔥 NOVO: Valor que o cliente DEVE pagar
-            pago: dadosBackend.total_pago || 0,            // 💰 Valor efetivamente pago
+            valorAPagar: dadosBackend.valor_a_pagar || 0,
+            pago: dadosBackend.total_pago || 0,
             troco: dadosBackend.troco || 0
         },
         impostos: (dadosBackend.resumo_impostos || []).map(imp => ({
@@ -382,10 +423,56 @@ function renderizarFatura80ComDadosBackend(dadosBackend) {
     
     console.log('📦 [FATURA80] Dados transformados:', dadosFatura);
     
-    // ✅ CHAMAR a função de renderização
-    renderizarFatura80(dadosFatura);
+    // ✅ CRITICAL: Aguarda renderização completa
+    try {
+        await renderizarFatura80(dadosFatura);
+        console.log('✅ [FATURA80] Renderização concluída com sucesso!');
+        return true;
+    } catch (error) {
+        console.error('❌ [FATURA80] Erro na renderização:', error);
+        throw error;
+    }
+}
+
+// ✅ Adiciona função para gerar QR Code separadamente
+function gerarQRCode80mm(dadosFatura) {
+    console.log('🔲 [FATURA80] Gerando QR Code...');
     
-    console.log('✅ [FATURA80] Renderização com dados do backend concluída!');
+    // Verifica se QRCode library está disponível
+    if (typeof QRCode === 'undefined') {
+        console.warn('⚠️ [FATURA80] QRCode library não disponível');
+        return;
+    }
+    
+    if (!dadosFatura.numeroFatura) {
+        console.warn('⚠️ [FATURA80] Número da fatura não disponível');
+        return;
+    }
+    
+    const qrcodeContainer = document.getElementById('qrcode-inv80');
+    
+    if (!qrcodeContainer) {
+        console.warn('⚠️ [FATURA80] Container do QR Code não encontrado');
+        return;
+    }
+    
+    // Limpa qualquer QR Code existente
+    qrcodeContainer.innerHTML = '';
+    
+    try {
+        new QRCode(qrcodeContainer, {
+            text: dadosFatura.numeroFatura,
+            width: 35,
+            height: 35,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log('✅ [FATURA80] QR Code gerado com sucesso');
+    } catch (error) {
+        console.error('❌ [FATURA80] Erro ao gerar QR Code:', error);
+    }
 }
 
 // Exportar as funções
@@ -394,6 +481,14 @@ window.prepararDadosFatura80 = prepararDadosFatura80;
 window.renderizarFatura80ComDadosBackend = renderizarFatura80ComDadosBackend;
 window.populateInvoice80 = renderizarFatura80ComDadosBackend;  // ✅ Alias para compatibilidade
 window.formatarMoeda = formatarMoeda;
+window.gerarQRCode80mm = gerarQRCode80mm;  // ✅ Nova função exportada
+window.ensureContainer80mm = ensureContainer80mm;  // ✅ Nova função exportada
+
+// No FINAL do arquivo, após todas as exportações:
+window.FATURA80_LOADING = false;
+window.FATURA80_READY = true;
+console.log('✅ [FATURA80] Script pronto - Função disponível:', 
+    typeof window.renderizarFatura80ComDadosBackend === 'function');
 
 console.log('✅ fatura80.js carregado');
 

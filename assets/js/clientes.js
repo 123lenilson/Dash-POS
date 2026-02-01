@@ -201,6 +201,18 @@ class ClientManager {
                 closeClientPanel();
             }
 
+            // ✅ CHAMAR FUNÇÃO DO NOVO SISTEMA DE CHECKOUT INTEGRADO
+            if (typeof window.handleClientSelection === 'function') {
+                window.handleClientSelection(client.idcliente, client.nome, {
+                    id: client.idcliente,
+                    nome: client.nome,
+                    telefone: client.telefone || 'N/A',
+                    email: client.email || '',
+                    endereco: client.morada || 'N/A',
+                    nif: client.nif || null
+                });
+            }
+
             // Emitir evento para outros componentes
             document.dispatchEvent(new CustomEvent('clientSelected', {
                 detail: { client }

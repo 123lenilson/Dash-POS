@@ -24,8 +24,14 @@ let checkoutPaymentData = {
 let valoresPorMetodo = {}; // ✅ MUDANÇA: de const para let
 
 // Função para obter o formato de fatura selecionado
+// ✅ ATUALIZADO: Usa a função centralizada de app.js
 function getInvoiceFormat() {
-    // Verificar primeiro os radio buttons ativos
+    // ✅ Usa a variável global de app.js
+    if (typeof window.formatoFaturaAtual !== 'undefined') {
+        return window.formatoFaturaAtual;
+    }
+    
+    // Fallback para compatibilidade
     const selectedRadio = document.querySelector('input[name="invoiceFormat"]:checked');
     if (selectedRadio) {
         return selectedRadio.value;

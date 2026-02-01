@@ -39,6 +39,22 @@
   --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
 }
 
+/* Enhanced loading dots styling */
+.keypad-pay-btn {
+  letter-spacing: 0.15em; /* Adds spacing between characters */
+  font-size: 1.1em; /* Slightly larger for better visibility */
+}
+
+/* Optional: Pulse animation for dots */
+.keypad-pay-btn.loading {
+  animation: pulse-dots 0.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dots {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* Invoice Format Selection */
 .invoice-format-selection {
   transition: all 0.3s ease;
@@ -1740,6 +1756,13 @@ CART */
   cursor: not-allowed;
 }
 
+/* Input de Preço (editable - when not readonly) */
+.input-field:last-child input:not([readonly]) {
+  color: #374151;
+  font-weight: bold;
+  cursor: text;
+}
+
 .input-field:last-child input:focus {
   border-color: #E5E7EB;
 }
@@ -2202,6 +2225,62 @@ CART */
 
 .keypad-pay-btn:hover {
   opacity: 0.9;
+}
+
+/* ===== NOVA ROW PARA EXACT + PAY ===== */
+.keypad-final-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+/* Botão EXACT (verde, estilo similar ao C) */
+.keypad-exact-btn {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #15803d;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad-exact-btn:hover {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
+.keypad-exact-btn:active {
+  background: #86efac;
+}
+
+/* Botão PAY (agora ocupa 2 colunas) */
+.keypad-pay-btn {
+  /* Removido grid-column: span 2; pois agora está dentro do grid de 3 colunas */
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  flex-shrink: 0;
+  background: var(--color-selection);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* ===== ORDER SUMMARY SLIDER COMPONENT ===== */

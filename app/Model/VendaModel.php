@@ -431,9 +431,24 @@ class VendaModel {
             error_log('✅ PASSO 11 OK: Resumo de impostos processado (' . count($resumo_impostos) . ' linhas)');
 
             // PASSO 12: Coletar observação (se existir)
-            $observacao = '';  // Fatura simples não recebe observação do frontend
+            // ✅ CORREÇÃO: Mesmo processo robusto
+            $observacao = '';
             
-            error_log('✅ PASSO 12 OK: Observação definida (vazia para fatura simples)');
+            if (isset($dados['observacao'])) {
+                if (is_string($dados['observacao'])) {
+                    $observacao = trim($dados['observacao']);
+                } else if (!is_null($dados['observacao'])) {
+                    $observacao = strval($dados['observacao']);
+                    error_log('⚠️ AVISO: Observacao não era string em processarFatura, convertida');
+                }
+            }
+            
+            if ($observacao === null) {
+                $observacao = '';
+                error_log('⚠️ AVISO: Observacao era null, forçada para string vazia');
+            }
+            
+            error_log('✅ PASSO 12 OK: Observação definida' . ($observacao ? ' (com conteúdo: "' . substr($observacao, 0, 30) . '...")' : ' (vazia)'));
 
             // PASSO 13: Definir nome do usuário
             $nome_usuario = 'Joana Rafael';
@@ -1043,9 +1058,26 @@ class VendaModel {
             error_log('✅ PASSO 11 OK: Resumo de impostos processado (' . count($resumo_impostos) . ' linhas)');
 
             // PASSO 12: Coletar observação do frontend (se existir)
-            $observacao = isset($dados['observacao']) ? trim($dados['observacao']) : '';
+            // ✅ CORREÇÃO: Garantir que sempre seja string válida
+            $observacao = '';
             
-            error_log('✅ PASSO 12 OK: Observação coletada' . ($observacao ? ' (com conteúdo)' : ' (vazia)'));
+            if (isset($dados['observacao'])) {
+                if (is_string($dados['observacao'])) {
+                    $observacao = trim($dados['observacao']);
+                } else if (!is_null($dados['observacao'])) {
+                    // Tentar converter para string
+                    $observacao = strval($dados['observacao']);
+                    error_log('⚠️ AVISO: Observacao não era string em processarFaturaRecibo, convertida');
+                }
+            }
+            
+            // Garantir que nunca seja null
+            if ($observacao === null) {
+                $observacao = '';
+                error_log('⚠️ AVISO: Observacao era null, forçada para string vazia');
+            }
+            
+            error_log('✅ PASSO 12 OK: Observação coletada' . ($observacao ? ' (com conteúdo: "' . substr($observacao, 0, 30) . '...")' : ' (vazia)'));
 
             // PASSO 13: Definir nome do usuário (fictício)
             $nome_usuario = 'Joana Rafael';  // Usuário ID 1
@@ -1503,9 +1535,26 @@ class VendaModel {
             error_log('✅ PASSO 11 OK: Resumo de impostos processado (' . count($resumo_impostos) . ' linhas)');
 
             // PASSO 12: Coletar observação (se existir)
-            $observacao = '';  // 🔹 Fatura pró-forma não recebe observação do frontend
+            // ✅ CORREÇÃO: Mesmo processo robusto, mesmo que normalmente esteja vazia
+            $observacao = '';
             
-            error_log('✅ PASSO 12 OK: Observação definida (vazia para pró-forma)');
+            if (isset($dados['observacao'])) {
+                if (is_string($dados['observacao'])) {
+                    $observacao = trim($dados['observacao']);
+                } else if (!is_null($dados['observacao'])) {
+                    // Tentar converter para string
+                    $observacao = strval($dados['observacao']);
+                    error_log('⚠️ AVISO: Observacao não era string em processar_factura_proforma_orcamento, convertida');
+                }
+            }
+            
+            // Garantir que nunca seja null
+            if ($observacao === null) {
+                $observacao = '';
+                error_log('⚠️ AVISO: Observacao era null, forçada para string vazia');
+            }
+            
+            error_log('✅ PASSO 12 OK: Observação definida' . ($observacao ? ' (com conteúdo: "' . substr($observacao, 0, 30) . '...")' : ' (vazia)'));
 
             // PASSO 13: Definir nome do usuário
             $nome_usuario = 'Joana Rafael';

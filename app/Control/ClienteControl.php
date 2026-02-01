@@ -108,5 +108,49 @@ class ClienteControl {
             ], JSON_UNESCAPED_UNICODE);
         }
     }
+
+    /**
+     * API: Busca o cliente padrão "Consumidor Final"
+     * Retorna o ID e dados básicos do cliente padrão
+     */
+    public function apiBuscarConsumidorFinal() {
+        try {
+            // Chama o Model para buscar no banco
+            $cliente = ClienteModel::buscarConsumidorFinal();
+            
+            if ($cliente === null) {
+                // Cliente não encontrado - ERRO CRÍTICO
+                http_response_code(404);
+                echo json_encode([
+                    'sucesso' => false,
+                    'erro' => 'Cliente "Consumidor Final" não encontrado no banco de dados',
+                    'mensagem_tecnica' => 'Verifique se existe um cliente cadastrado com nome "Consumidor Final"'
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+            
+            // Sucesso - Retorna dados do cliente
+            echo json_encode([
+                'sucesso' => true,
+                'mensagem' => 'Cliente padrão localizado com sucesso',
+                'cliente' => [
+                    'idcliente' => $cliente['idcliente'],
+                    'nome' => $cliente['nome'],
+                    'nif' => $cliente['nif'],
+                    'email' => $cliente['email'],
+                    'telefone' => $cliente['telefone'],
+                    'morada' => $cliente['morada']
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            // Erro inesperado (ex: problema de conexão)
+            http_response_code(500);
+            echo json_encode([
+                'sucesso' => false,
+                'erro' => 'Erro ao buscar cliente padrão: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    }
 }
 ?>

@@ -42,6 +42,21 @@ switch ($method) {
         
         error_log('JSON parseado com sucesso');
 
+        // ✅ VALIDAÇÃO GERAL DOS CAMPOS OPCIONAIS ANTES DE QUALQUER AÇÃO
+        // Validar que observacao é string antes de usar trim() em qualquer ação que utilize esse campo
+        if (isset($dados['observacao'])) {
+            if (is_string($dados['observacao'])) {
+                $dados['observacao'] = trim($dados['observacao']);
+            } else if (!is_null($dados['observacao'])) {
+                // Se não é string e não é null, tenta converter
+                $dados['observacao'] = strval($dados['observacao']);
+                error_log('⚠️ AVISO: Observacao não era string, foi convertida');
+            }
+        } else {
+            // Se observacao não está definido, definir como string vazia
+            $dados['observacao'] = '';
+        }
+
         if (!isset($dados['acao'])) {
             error_log('Ação não informada');
             http_response_code(400);
@@ -75,10 +90,11 @@ switch ($method) {
                 }
             }
 
-            // Campos opcionais: observacao, troco, valor_pago
-            $dados['observacao'] = isset($dados['observacao']) ? trim($dados['observacao']) : '';
             $dados['troco'] = isset($dados['troco']) ? (float)$dados['troco'] : 0;
             $dados['valor_pago'] = isset($dados['valor_pago']) ? (float)$dados['valor_pago'] : 0;
+            
+            // Log para debug
+            error_log('✅ Campos validados - Observacao: ' . ($dados['observacao'] ? 'preenchida' : 'vazia'));
 
             // Chama o método no controller
             error_log('Chamando apiProcessarFaturaRecibo...');  // ✅ ATUALIZADO

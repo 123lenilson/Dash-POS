@@ -17,7 +17,7 @@ switch ($method) {
     case 'GET':
         if (!isset($_GET['acao'])) {
             http_response_code(400);
-            echo json_encode(["erro" => "Ação não informada (use ?acao=listar_cliente para selecionar geral ou ?acao=pesquisar_cliente para pesquisa com termo)"], JSON_UNESCAPED_UNICODE);
+            echo json_encode(["erro" => "Ação não informada (use ?acao=listar_cliente, pesquisar_cliente ou buscar_consumidor_final)"], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -40,9 +40,12 @@ switch ($method) {
             }
 
             $clienteControl->apiBuscarClientes();
+        } else if ($acao === 'buscar_consumidor_final') {
+            // ✅ IMPLEMENTAÇÃO CORRETA: Apenas chama o Controller
+            $clienteControl->apiBuscarConsumidorFinal();
         } else {
             http_response_code(400);
-            echo json_encode(["erro" => "Ação inválida (use listar_cliente para seleção geral ou pesquisar_cliente para pesquisa)"], JSON_UNESCAPED_UNICODE);
+            echo json_encode(["erro" => "Ação inválida (use listar_cliente, pesquisar_cliente ou buscar_consumidor_final)"], JSON_UNESCAPED_UNICODE);
         }
         break;
 

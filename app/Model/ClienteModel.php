@@ -152,5 +152,50 @@ class ClienteModel {
             'id_cliente' => $id_cliente
         ];
     }
+
+    /**
+     * Busca o cliente padrão "Consumidor Final" no banco de dados
+     * 
+     * @return array|null Retorna array com dados do cliente ou null se não encontrado
+     * @throws Exception Se houver erro na query
+     */
+    public static function buscarConsumidorFinal() {
+        $db = Conexao::getConexao();
+        
+        // ✅ PREPARED STATEMENT para consistência com o resto do código
+        $sql = "
+            SELECT 
+                idcliente,
+                nome,
+                nif,
+                email,
+                telefone,
+                morada
+            FROM 
+                cliente
+            WHERE 
+                nome = 'Consumidor Final'
+                OR LOWER(nome) LIKE '%consumidor%final%'
+            LIMIT 1
+        ";
+        
+        $stmt = $db->prepare($sql);
+        
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar consulta de cliente padrão: " . $db->error);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $cliente = null;
+        if ($result && $result->num_rows > 0) {
+            $cliente = $result->fetch_assoc();
+        }
+        
+        $stmt->close();
+        
+        return $cliente;
+    }
 }
 ?>

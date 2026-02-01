@@ -321,9 +321,13 @@
 /* ========= ESTILOS PARA TELA (preview) ========= */
 @media screen {
     #fatura80-container-inv80 {
-        position: fixed !important;
-        top: -9999px !important;
+        position: absolute !important;
         left: -9999px !important;
-        z-index: -1 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        background: white !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 9999 !important;
     }
 }

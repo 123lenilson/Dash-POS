@@ -232,14 +232,14 @@
                   <label class="format-toggle-option active" data-format="A4">
                     <span class="format-label">A4</span>
                     <div class="format-switch-container">
-                      <input type="radio" name="invoiceFormatPanel" value="A4" checked>
+                      <input type="radio" name="invoiceFormat" value="A4" checked>
                       <span class="format-switch-visual"></span>
                     </div>
                   </label>
                   <label class="format-toggle-option" data-format="80mm">
                     <span class="format-label">80mm</span>
                     <div class="format-switch-container">
-                      <input type="radio" name="invoiceFormatPanel" value="80mm">
+                      <input type="radio" name="invoiceFormat" value="80mm">
                       <span class="format-switch-visual"></span>
                     </div>
                   </label>
@@ -448,7 +448,12 @@
                   <button class="keypad-btn keypad-backspace" data-value="back">⌫</button>
                 </div>
               </div>
-              <button class="keypad-pay-btn">Pay</button>
+              
+              <!-- ✅ NOVO: Grid de 3 colunas para botões finais -->
+              <div class="keypad-final-row">
+                <button class="keypad-exact-btn" onclick="fillExactAmount()">Exato</button>
+                <button class="keypad-pay-btn">Pagar</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1113,10 +1118,11 @@
 
 <!-- Scripts -->
 <script src="../assets/js/clientes.js"></script>
+<script src="../assets/js/fatura80.js"></script>
 <script src="../assets/js/fatura.js"></script>
 <script src="../assets/js/modal_checkout.js"></script>
+<script src="../assets/js/monetary-formatter.js"></script>
 <script src="../assets/js/app.js"></script>
-<!-- <script src="../assets/js/checkout-integrated.js"></script> TEMPORARIAMENTE DESATIVADO PARA TESTE -->
 <!-- Container para impressão da fatura -->
 <!-- Deve estar no final do body, antes dos scripts -->
 <div id="inv-a4-container-principal" style="position: fixed; top: -9999px; left: -9999px; z-index: -1; background: white;"></div>
