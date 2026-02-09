@@ -608,6 +608,49 @@ class VendaModel {
 
             error_log('✅ PASSO 2 OK: Cliente encontrado - Nome: ' . ($cliente['nome'] ?? 'N/A'));
 
+            // VALIDAÇÃO OBRIGATÓRIA: Total pago >= Total a pagar (antes de qualquer inserção)
+            $total_iliquido_val = 0;
+            $total_desconto_val = 0;
+            $total_imposto_val = 0;
+            foreach ($pedidos as $pedido) {
+                $qtd = (float)$pedido['qtd'];
+                $preco = (float)$pedido['preco'];
+                $desconto_percentual = (float)$pedido['desconto'];
+                $imposto_percentual = (float)$pedido['imposto'];
+                $valor_base = $qtd * $preco;
+                $total_iliquido_val += $valor_base;
+                if ($desconto_percentual > 0) {
+                    $total_desconto_val += ($valor_base * $desconto_percentual) / 100;
+                }
+                if ($imposto_percentual > 0) {
+                    $valor_com_desconto = $valor_base;
+                    if ($desconto_percentual > 0) {
+                        $valor_com_desconto = $valor_base - ($valor_base * $desconto_percentual) / 100;
+                    }
+                    $valor_imposto = ($valor_com_desconto * $imposto_percentual) / 100;
+                    if ($imposto_percentual == 6.5 || $imposto_percentual == 6.50) {
+                        // Retenção não entra no total a pagar
+                    } else {
+                        $total_imposto_val += $valor_imposto;
+                    }
+                }
+            }
+            $valor_a_pagar_validacao = round($total_iliquido_val - $total_desconto_val + $total_imposto_val, 2);
+            $total_pago_validacao = 0;
+            if (isset($dados['metodos_pagamento']) && is_array($dados['metodos_pagamento'])) {
+                foreach ($dados['metodos_pagamento'] as $mp) {
+                    $total_pago_validacao += (float)($mp['valor'] ?? 0);
+                }
+            }
+            $total_pago_validacao = round($total_pago_validacao, 2);
+            if ($total_pago_validacao < $valor_a_pagar_validacao) {
+                throw new Exception(
+                    'Valor pago insuficiente. Total a pagar: ' . number_format($valor_a_pagar_validacao, 2, '.', '') .
+                    '. Valor pago: ' . number_format($total_pago_validacao, 2, '.', '') . '.'
+                );
+            }
+            error_log('✅ VALIDAÇÃO OK: Total pago (' . $total_pago_validacao . ') >= Total a pagar (' . $valor_a_pagar_validacao . ')');
+
             // PASSO 3: Geração do NFatura a partir da tabela Venda
             $sql_max_nfat = "SELECT MAX(N_fat) AS max_nfat FROM venda";
             $result_max = $db->query($sql_max_nfat);

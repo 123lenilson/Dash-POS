@@ -403,7 +403,7 @@ function renderizarFaturaComDadosBackend(dadosBackend) {
             desconto: dadosBackend.total_desconto || 0,
             imposto: dadosBackend.total_imposto || 0,
             retencao: dadosBackend.total_retencao || 0,
-            total: dadosBackend.total_pago || 0
+            total: dadosBackend.total_pago ?? dadosBackend.valor_a_pagar ?? 0
         },
         impostos: (dadosBackend.resumo_impostos || []).map(imp => ({
             descricao: imp.descricao,

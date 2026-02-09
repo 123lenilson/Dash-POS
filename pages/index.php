@@ -7,8 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>L&P - POS Dashboard</title>
   <link rel="stylesheet" href="../assets/css/styles.css" />
-  <link rel="stylesheet" href="../assets/css/modal_checkout.css" />
-  <link rel="stylesheet" href="../assets/css/fatura.css" />
   <!-- Font Awesome Free (CDN) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18,6 +16,29 @@
 
 </head>
 <body>
+  <!-- Skeleton loading (estilo YouTube) - escondido quando produtos e carrinho estiverem prontos -->
+  <div class="app-skeleton" id="appSkeleton" aria-hidden="false">
+    <div class="skeleton-layout-main">
+      <div class="skeleton-block skeleton-search"></div>
+      <div class="skeleton-block skeleton-pills" style="margin-top: 14px;"></div>
+      <div class="skeleton-product-grid">
+        <?php for ($i = 0; $i < 12; $i++) { ?>
+        <div class="skeleton-block skeleton-card"></div>
+        <?php } ?>
+      </div>
+    </div>
+    <div class="skeleton-layout-side">
+      <div class="skeleton-block skeleton-cart-header"></div>
+      <div class="skeleton-block skeleton-cart-body"></div>
+      <div class="skeleton-block skeleton-cart-footer-row"></div>
+      <div class="skeleton-block skeleton-cart-footer-row"></div>
+      <div class="skeleton-block skeleton-cart-footer-btn" style="margin-top: 8px;"></div>
+    </div>
+    <div class="skeleton-mobile-wrap">
+      <div class="skeleton-block skeleton-mobile-btn"></div>
+    </div>
+  </div>
+
   <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
   <div class="interface">
     <!-- COLUNA 60% (MAIN / PRODUTOS) - Primeiro (à esquerda) -->
@@ -679,8 +700,8 @@
 <!-- MODAL DE CHECKOUT - ADICIONAR ANTES DOS SCRIPTS -->
 <!-- ============================================ -->
 
-<!-- Modal Overlay -->
-<div id="checkoutModalOverlay" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+<!-- Modal Overlay (kept in DOM for now but hidden — modal deprecated) -->
+<div id="checkoutModalOverlay" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" style="display:none;">
     <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
         
         <!-- Modal Header -->
@@ -689,7 +710,7 @@
             <h2 class="text-xl font-semibold text-gray-800">Finalizar Compra</h2>
 
             <!-- Botão de Fechar (X) -->
-            <button onclick="showCloseConfirmation()" class="text-gray-400 hover:text-gray-600 transition">
+            <button class="text-gray-400 hover:text-gray-600 transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                           d="M6 18L18 6M6 6l12 12"/>
@@ -1115,17 +1136,33 @@
 <!-- Coloque isso no final do body, antes dos scripts -->
 <div id="alertContainer"></div>
 
+<!-- Container para Fatura A4 -->
+<div id="inv-a4-container-principal" style="
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 210mm;
+  background: white;
+  z-index: -1;
+  display: none;
+"></div>
+
+<!-- Container para Fatura 80mm -->
+<div id="fatura80-container-inv80" class="recibo-inv80" style="
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 80mm;
+  background: white;
+  z-index: -1;
+  display: none;
+"></div>
 
 <!-- Scripts -->
+ <script src="../assets/js/fatura.js"></script>
+ <script src="../assets/js/fatura80.js"></script>
 <script src="../assets/js/clientes.js"></script>
-<script src="../assets/js/fatura80.js"></script>
-<script src="../assets/js/fatura.js"></script>
-<script src="../assets/js/modal_checkout.js"></script>
 <script src="../assets/js/monetary-formatter.js"></script>
 <script src="../assets/js/app.js"></script>
-<!-- Container para impressão da fatura -->
-<!-- Deve estar no final do body, antes dos scripts -->
-<div id="inv-a4-container-principal" style="position: fixed; top: -9999px; left: -9999px; z-index: -1; background: white;"></div>
-<div id="fatura80-container-inv80" style="position: fixed; top: -9999px; left: -9999px; z-index: -1; background: white; width: 80mm;"></div>
 </body>
 </html>

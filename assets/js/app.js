@@ -35,45 +35,215 @@ let formatoFaturaAtual = 'A4'; // Formato padrão
  * Garante que fatura80.js seja carregado antes de processar
  * @returns {Promise<boolean>} true se carregado com sucesso
  */
-async function ensureFatura80Loaded() {
-  // 1. Verifica se já está carregado
-  if (typeof window.renderizarFatura80ComDadosBackend === 'function') {
-    console.log('✅ [LOADER] fatura80.js já carregado');
-    return true;
+
+
+
+
+/* ======================================================
+   SISTEMA DE CARREGAMENTO DINÂMICO DE FATURAS
+   ====================================================== */
+
+/**
+ * Estado de carregamento dos recursos de fatura
+ * Rastreia quais arquivos CSS já foram carregados
+ */
+const invoiceAssetsState = {
+  css: {
+    a4: false,      // fatura.css
+    mm80: false     // fatura80.css
   }
-  
-  console.log('⏳ [LOADER] fatura80.js não encontrado, carregando...');
-  
-  // 2. Carrega o script dinamicamente
+};
+
+/**
+ * Carrega um arquivo CSS dinamicamente
+ * @param {string} href - Caminho do arquivo CSS
+ * @param {string} id - ID único para o elemento link
+ * @returns {Promise<void>}
+ */
+function loadCSS(href, id) {
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = '../assets/js/fatura80.js'; // Caminho correto para o projeto
-    script.async = false;
+    // Verifica se já existe no DOM
+    if (document.getElementById(id)) {
+      console.log(`✅ [CSS] ${id} já carregado`);
+      resolve();
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = href;
     
-    script.onload = () => {
-      // Aguarda 100ms para garantir execução
-      setTimeout(() => {
-        if (typeof window.renderizarFatura80ComDadosBackend === 'function') {
-          console.log('✅ [LOADER] fatura80.js carregado com sucesso');
-          resolve(true);
-        } else {
-          reject(new Error('Função não encontrada após carregar script'));
-        }
-      }, 100);
+    link.onload = () => {
+      console.log(`✅ [CSS] ${id} carregado com sucesso`);
+      resolve();
     };
     
-    script.onerror = () => {
-      reject(new Error('Falha ao carregar fatura80.js'));
+    link.onerror = () => {
+      console.error(`❌ [CSS] Falha ao carregar ${id}`);
+      reject(new Error(`Falha ao carregar CSS: ${href}`));
     };
     
-    document.head.appendChild(script);
-    
-    // Timeout de segurança (10 segundos)
-    setTimeout(() => reject(new Error('Timeout ao carregar fatura80.js')), 10000);
+    document.head.appendChild(link);
   });
 }
 
-// ✅ NOVO: ID do cliente padrão (Consumidor Final)
+
+
+/**
+ * Carrega todos os recursos necessários para renderizar faturas
+ * @param {string} format - Formato da fatura: 'A4' ou '80mm'
+ * @returns {Promise<void>}
+ * @throws {Error} Se formato inválido ou falha no carregamento
+ */
+async function loadInvoiceAssets(format) {
+  console.log(`🔄 [ASSETS] Iniciando carregamento para formato: ${format}`);
+  
+  if (format !== 'A4' && format !== '80mm') {
+    throw new Error(`Formato inválido: ${format}. Use 'A4' ou '80mm'.`);
+  }
+  
+  try {
+    // Carregar ambos os CSS (como no backup) para A4 e 80mm estarem sempre disponíveis
+    if (!invoiceAssetsState.css.a4) {
+      await loadCSS('../assets/css/fatura.css', 'fatura-a4-css');
+      invoiceAssetsState.css.a4 = true;
+    }
+    if (!invoiceAssetsState.css.mm80) {
+      await loadCSS('../assets/css/fatura80.css', 'fatura-80mm-css');
+      invoiceAssetsState.css.mm80 = true;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+    if (containerA4) {
+      containerA4.style.position = 'fixed';
+      containerA4.style.top = '-9999px';
+      containerA4.style.left = '-9999px';
+      containerA4.style.zIndex = '-1';
+    }
+    if (container80) {
+      container80.style.position = 'fixed';
+      container80.style.top = '-9999px';
+      container80.style.left = '-9999px';
+      container80.style.zIndex = '-1';
+    }
+    
+    console.log('✅ [ASSETS] Carregamento concluído');
+    
+  } catch (error) {
+    console.error('❌ [ASSETS] Erro ao carregar recursos:', error);
+    throw new Error(`Falha ao carregar recursos de fatura: ${error.message}`);
+  }
+}
+
+/**
+ * Verifica se os recursos CSS para um formato já estão carregados
+ * @param {string} format - Formato: 'A4' ou '80mm'
+ * @returns {boolean}
+ */
+function areInvoiceAssetsLoaded(format) {
+  if (format === 'A4') {
+    return invoiceAssetsState.css.a4;
+  } else if (format === '80mm') {
+    return invoiceAssetsState.css.mm80;
+  }
+  return false;
+}
+
+/**
+ * Reseta o estado de carregamento CSS (útil para debug)
+ */
+function resetInvoiceAssetsState() {
+  invoiceAssetsState.css.a4 = false;
+  invoiceAssetsState.css.mm80 = false;
+  console.log('🔄 [ASSETS] Estado de carregamento resetado');
+}
+
+/**
+ * Aplica ou atualiza estilos de impressão para o formato indicado.
+ * Mostra apenas o container da fatura usada e define @page correto (evita 1ª página em branco).
+ * @param {string} format - 'A4' ou '80mm'
+ */
+function applyInvoicePrintStyles(format) {
+  const printStylesId = 'invoice-print-styles-global';
+  let el = document.getElementById(printStylesId);
+  if (!el) {
+    el = document.createElement('style');
+    el.id = printStylesId;
+    document.head.appendChild(el);
+  }
+  const isA4 = format === 'A4';
+  el.textContent = `
+    @media print {
+      @page {
+        margin: 0 !important;
+        size: ${isA4 ? 'A4 portrait' : '80mm auto'};
+      }
+      /* Esconder só filhos diretos do body (evita 2.ª página); descendentes da fatura mantêm flex/grid do fatura.css */
+      html, body {
+        margin: 0 !important; padding: 0 !important;
+        height: auto !important; min-height: 0 !important;
+        overflow: hidden !important;
+      }
+      body > * { display: none !important; }
+      ${isA4
+        ? `#inv-a4-container-principal {
+             display: block !important;
+             position: absolute !important; left: 0 !important; top: 0 !important;
+             width: 210mm !important;
+             height: auto !important;
+             background: white !important;
+             z-index: 9999 !important; padding: 0 !important; margin: 0 !important;
+             page-break-after: avoid !important;
+           }
+           #fatura80-container-inv80 { display: none !important; }`
+        : `#fatura80-container-inv80 {
+             display: block !important;
+             position: absolute !important; left: 0 !important; top: 0 !important;
+             width: 80mm !important;
+             height: auto !important; min-height: 0 !important;
+             background: white !important;
+             z-index: 9999 !important; padding: 0 !important; margin: 0 !important;
+             page-break-after: avoid !important;
+           }
+           #inv-a4-container-principal { display: none !important; }`
+      }
+      .inv-a4-container-multiplas-paginas { gap: 0 !important; margin: 0 !important; padding: 0 !important; }
+      /* Altura fixa 297mm por página (como fatura.css do backup) para caber cabeçalho + corpo + rodapé numa folha */
+      .inv-a4-interface-fatura, .inv-a4-pagina-fatura {
+        width: 210mm !important; height: 297mm !important;
+        margin: 0 !important; padding: 12px !important;
+        box-shadow: none !important; border-radius: 0 !important;
+        overflow: hidden !important;
+        page-break-after: always !important; page-break-inside: avoid !important;
+      }
+      .inv-a4-interface-fatura:last-child, .inv-a4-pagina-fatura:last-child { page-break-after: auto !important; }
+      .inv-a4-sessao-cabecalho, .inv-a4-sessao-corpo-central, .inv-a4-sessao-rodape { page-break-inside: avoid !important; }
+    }
+    @media screen {
+      #inv-a4-container-principal, #fatura80-container-inv80 {
+        position: fixed !important; top: -9999px !important; left: -9999px !important;
+        z-index: -1 !important;
+      }
+    }
+  `;
+  console.log('✅ [STYLES] Estilos de impressão aplicados para', format);
+}
+
+// Expor funções globalmente para debug
+window.loadInvoiceAssets = loadInvoiceAssets;
+window.areInvoiceAssetsLoaded = areInvoiceAssetsLoaded;
+window.resetInvoiceAssetsState = resetInvoiceAssetsState;
+window.invoiceAssetsState = invoiceAssetsState;
+window.applyInvoicePrintStyles = applyInvoicePrintStyles;
+
+
+
+
+// NOVO: ID do cliente padrão (Consumidor Final)
 let idClientePadrao = null; // Será preenchido via API
 
 let currentEditingId = null;  // ID do produto sendo editado na modal
@@ -298,6 +468,7 @@ function loadCartFromAPI() {
         console.warn("Falha no loadCarrinho:", data.mensagem);
         cart.clear();
         renderCart();
+        if (typeof skeletonMarkCartReady === 'function') skeletonMarkCartReady();
         return;
       }
 
@@ -352,11 +523,13 @@ function loadCartFromAPI() {
 
       // ✅ PASSA O RESUMO DO BACKEND PARA O RENDER
       renderCart(resumoDB);
+      if (typeof skeletonMarkCartReady === 'function') skeletonMarkCartReady();
     })
     .catch(error => {
       console.error("Erro no loadCartFromAPI:", error);
       cart.clear();
       renderCart();
+      if (typeof skeletonMarkCartReady === 'function') skeletonMarkCartReady();
     });
 }
 
@@ -495,7 +668,29 @@ function carregarProdutos() {
     .catch(error => {
       console.error("Erro no fetch:", error);
       productGrid.innerHTML = `<div style='grid-column:1/-1; text-align:center; color:#8b8fa3; padding:20px;'>Erro ao carregar os dados: ${error.message}</div>`;
+      if (typeof skeletonMarkProductsReady === 'function') skeletonMarkProductsReady();
     });
+}
+
+/** Skeleton loading: marcar produtos como prontos e eventualmente esconder skeleton */
+function skeletonMarkProductsReady() {
+  window.__skeletonProductsReady = true;
+  skeletonTryHide();
+}
+
+/** Skeleton loading: marcar carrinho como pronto e eventualmente esconder skeleton */
+function skeletonMarkCartReady() {
+  window.__skeletonCartReady = true;
+  skeletonTryHide();
+}
+
+function skeletonTryHide() {
+  if (!window.__skeletonProductsReady || !window.__skeletonCartReady) return;
+  const el = document.getElementById('appSkeleton');
+  if (!el) return;
+  window.__skeletonHidden = true;
+  el.classList.add('hidden');
+  el.setAttribute('aria-hidden', 'true');
 }
 
 function atualizarProdutos(produtos) {
@@ -561,6 +756,7 @@ function atualizarProdutos(produtos) {
   }
 
   renderProducts();
+  if (typeof skeletonMarkProductsReady === 'function') skeletonMarkProductsReady();
 }
 /* ======= CATEGORY SLIDER ======= */
 function buildCategories(orderIn = null, countsIn = null, preserveScroll = false) {
@@ -1447,9 +1643,6 @@ function init() {
       // Adicionar event listeners para a modal de preço (uma vez só)
       setupPriceModalListeners();
       
-      // ✅ Inicializa seletor de tipo de documento
-      initInvoiceTypeSelector();
-      
       // ✅ NOVO: Inicializa sistema de seleção de formato
       initInvoiceFormat();
       
@@ -1460,7 +1653,8 @@ function init() {
     })
     .catch(error => {
       console.error('❌ Falha crítica na inicialização:', error);
-      
+      if (typeof skeletonMarkProductsReady === 'function') skeletonMarkProductsReady();
+      if (typeof skeletonMarkCartReady === 'function') skeletonMarkCartReady();
       // Bloqueia o app até resolver
       if (typeof showCriticalAlert === 'function') {
         showCriticalAlert(
@@ -1472,19 +1666,6 @@ function init() {
     });
 }
 init();
-
-// ✅ GARANTIR EXECUÇÃO EM MÚLTIPLOS MOMENTOS
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initInvoiceTypeSelector);
-} else {
-  initInvoiceTypeSelector();
-}
-
-// ✅ SEGUNDA TENTATIVA após 500ms (para garantir que o HTML renderizou)
-setTimeout(initInvoiceTypeSelector, 500);
-
-// ✅ TERCEIRA TENTATIVA ao carregar completamente a janela
-window.addEventListener('load', initInvoiceTypeSelector);
 
 /* ======= SSE (Server-Sent Events) - Substitui Polling ======= */
 /**
@@ -1601,183 +1782,6 @@ window.addEventListener('beforeunload', closeSSE);
 /* ======= CONTROLE DE TIPO DE DOCUMENTO - VERSÃO CORRIGIDA ======= */
 
 /**
- * ✅ FUNÇÃO CORRIGIDA: Seleciona tipo de documento
- * Agora sincroniza desktop e mobile automaticamente
- */
-function selecionarTipoDocumento(tipo) {
-  console.log(`📋 [TIPO DOC] Tentando selecionar: ${tipo}`);
-
-  // Verifica se o tipo já foi desenvolvido
-  if (!tiposDesenvolvidos.includes(tipo)) {
-    console.warn(`⚠️ [TIPO DOC] Tipo "${tipo}" ainda não desenvolvido`);
-
-    const nomeAmigavel = {
-      'fatura-recibo': 'Fatura Recibo',
-      'fatura-proforma': 'Fatura Proforma',
-      'fatura': 'Fatura',
-      'orcamento': 'Orçamento'
-    };
-
-    const nomeDocumento = nomeAmigavel[tipo] || tipo.replace('-', ' ');
-
-    showAlert('warning', '🚧 Em Desenvolvimento',
-      `O tipo de documento "${nomeDocumento}" ainda não foi implementado. Por favor, selecione "Fatura Recibo".`);
-
-    // ✅ CORREÇÃO: Força seleção de fatura-recibo em AMBOS os lugares
-    syncRadioSelection('fatura-recibo');
-    return false;
-  }
-
-  // Atualiza variável global
-  tipoDocumentoAtual = tipo;
-  console.log(`✅ [TIPO DOC] Tipo selecionado: ${tipo}`);
-
-  // ✅ SINCRONIZA todos os radios (desktop + mobile)
-  syncRadioSelection(tipo);
-
-  // Atualiza interface da modal se estiver aberta
-  if (typeof updateModalInterfaceByDocumentType === 'function') {
-    updateModalInterfaceByDocumentType();
-  }
-
-  // Mostrar seletor de formato de fatura quando fatura-recibo for selecionado
-  if (tipo === 'fatura-recibo') {
-    // Pequeno delay para garantir que a interface foi atualizada
-    setTimeout(showInvoiceFormatSelector, 100);
-  } else {
-    // Esconder o seletor para outros tipos
-    hideInvoiceFormatSelector();
-  }
-
-  return true;
-}
-
-/**
- * ✅ NOVA FUNÇÃO: Sincroniza seleção entre desktop e mobile
- */
-function syncRadioSelection(tipo) {
-  const allRadios = document.querySelectorAll('input[name="invoiceType"]');
-
-  allRadios.forEach(radio => {
-    const parent = radio.closest('.invoice-radio-option');
-
-    if (radio.value === tipo) {
-      // ✅ SELECIONA
-      radio.checked = true;
-      radio.setAttribute('checked', 'checked');
-
-      if (parent) {
-        parent.classList.add('selected', 'active');
-        parent.style.borderColor = 'var(--accent)';
-        parent.style.backgroundColor = '#f8f9ff';
-        parent.style.transform = 'translateX(2px)';
-      }
-
-      // Força atualização do custom radio
-      const customRadio = radio.nextElementSibling;
-      if (customRadio && customRadio.classList.contains('radio-custom')) {
-        customRadio.style.borderColor = 'var(--accent)';
-        customRadio.style.backgroundColor = 'var(--accent)';
-      }
-
-    } else {
-      // ✅ DESSELECIONA
-      radio.checked = false;
-      radio.removeAttribute('checked');
-
-      if (parent) {
-        parent.classList.remove('selected', 'active');
-        parent.style.borderColor = '#e6edf6';
-        parent.style.backgroundColor = '#fff';
-        parent.style.transform = 'translateX(0)';
-      }
-
-      // Reseta custom radio
-      const customRadio = radio.nextElementSibling;
-      if (customRadio && customRadio.classList.contains('radio-custom')) {
-        customRadio.style.borderColor = '#cbd5e1';
-        customRadio.style.backgroundColor = 'transparent';
-      }
-    }
-  });
-
-  console.log(`🔄 Sincronizados ${allRadios.length} radios para: ${tipo}`);
-}
-
-
-/**
- * ✅ CONFIGURAÇÃO INICIAL - EXECUTE LOGO APÓS O DOM CARREGAR
- */
-function initInvoiceTypeSelector() {
-  console.log('🔧 [TIPO DOC] Inicializando seletor de tipo de documento...');
-
-  // 1️⃣ Define estado global
-  tipoDocumentoAtual = 'fatura-recibo';
-
-  // 2️⃣ Encontra TODOS os radios (desktop + mobile)
-  const allRadios = document.querySelectorAll('input[name="invoiceType"]');
-
-  console.log(`📻 Encontrados ${allRadios.length} radio buttons`);
-
-  if (allRadios.length === 0) {
-    console.warn('⚠️ [TIPO DOC] Nenhum radio button encontrado! Verificar HTML.');
-    return;
-  }
-
-  // 3️⃣ Adiciona listeners e força estado inicial
-  allRadios.forEach((radio, index) => {
-    // Remove listeners antigos (evita duplicação)
-    const newRadio = radio.cloneNode(true);
-    radio.parentNode.replaceChild(newRadio, radio);
-
-    // Adiciona listener novo
-    newRadio.addEventListener('change', (e) => {
-      const tipo = e.target.value;
-      console.log(`🎯 Radio ${index + 1} mudou para: ${tipo}`);
-      selecionarTipoDocumento(tipo);
-    });
-
-    // ✅ FORÇA estado inicial EXPLICITAMENTE
-    if (newRadio.value === 'fatura-recibo') {
-      newRadio.checked = true;
-      newRadio.setAttribute('checked', 'checked');
-
-      // Força classes visuais no label pai
-      const parent = newRadio.closest('.invoice-radio-option');
-      if (parent) {
-        parent.classList.add('selected', 'active');
-        parent.style.borderColor = 'var(--accent)';
-        parent.style.backgroundColor = '#f8f9ff';
-      }
-    } else {
-      newRadio.checked = false;
-      newRadio.removeAttribute('checked');
-
-      const parent = newRadio.closest('.invoice-radio-option');
-      if (parent) {
-        parent.classList.remove('selected', 'active');
-        parent.style.borderColor = '#e6edf6';
-        parent.style.backgroundColor = '#fff';
-      }
-    }
-  });
-
-  // 4️⃣ SYNC final para garantir
-  syncRadioSelection('fatura-recibo');
-
-  // Show format selector if fatura-recibo is selected
-  if (tipoDocumentoAtual === 'fatura-recibo') {
-    setTimeout(showInvoiceFormatSelector, 100);
-  }
-
-  console.log('✅ [TIPO DOC] Seletor inicializado com sucesso');
-  console.log(`📋 Tipo atual: ${tipoDocumentoAtual}`);
-}
-
-// ✅ ADICIONAR ESTE CÓDIGO PARA GARANTIR QUE O ESTADO VISUAL SEJA APLICADO APÓS O CARREGAMENTO DA PÁGINA
-// Removido DOMContentLoaded duplicado - syncRadioSelection é chamado por initInvoiceTypeSelector
-
-/**
  * Retorna o tipo de documento atualmente selecionado
  */
 function getTipoDocumentoAtual() {
@@ -1845,26 +1849,6 @@ function initInvoiceFormat() {
   // Aplica seleção inicial
   selecionarFormatoFatura(initialFormat);
 }
-
-// Adiciona listener aos radio buttons de tipo de documento
-function setupInvoiceTypeListeners() {
-  // Add listeners to invoice type radio buttons
-  const invoiceTypeRadios = document.querySelectorAll('input[name="invoiceType"]');
-
-  invoiceTypeRadios.forEach(radio => {
-    radio.addEventListener('change', function () {
-      if (this.value === 'fatura-recibo') {
-        setTimeout(showInvoiceFormatSelector, 100);
-      } else {
-        hideInvoiceFormatSelector();
-      }
-    });
-  });
-}
-
-// Call the setup function
-setupInvoiceTypeListeners();
-
 
 /* ===== Menu responsivo ===== */
 (function setupResponsiveMenu() {
@@ -2311,8 +2295,24 @@ function closePriceModal() {
 // ===== FUNÇÕES DE MODAL DE STOCK REMOVIDAS =====
 // Substituído por showCriticalAlert para alertas de stock insuficiente
 
+/** Remove ícone/emoji no início do texto para evitar duplicar o ícone do próprio alerta */
+function stripLeadingIcon(str) {
+  if (typeof str !== 'string') return str;
+  let s = str.trimStart();
+  if (!s.length) return str;
+  const first = s[0];
+  if (!/\p{L}/u.test(first) && !/\p{N}/u.test(first)) {
+    s = s.slice(1);
+    if (s.length && (s[0] === '\uFE0F' || /\p{M}/u.test(s[0]))) s = s.slice(1);
+    s = s.trimStart();
+  }
+  return s;
+}
+
 // Função para criar e exibir alertas
 function showAlert(type, title, message, duration = 4000) {
+  title = stripLeadingIcon(String(title));
+  message = stripLeadingIcon(String(message));
   console.log(`🔔 showAlert chamado: [${type}] ${title} - ${message}`);
   const container = document.getElementById("alertContainer");
   if (!container) {
@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ✅ ADICIONAR ESTE CÓDIGO PARA GARANTIR QUE O ESTADO VISUAL SEJA APLICADO APÓS O CARREGAMENTO DA PÁGINA
   // Aguarda um pouco mais para garantir que todos os elementos estejam prontos
   setTimeout(() => {
-    syncRadioSelection('fatura-recibo');
+    //syncRadioSelection('fatura-recibo');
   }, 100);
 });
 
@@ -2937,45 +2937,27 @@ function showRemoveConfirmation(productId, productName) {
 console.log('✅ Sistema de código de barras inicializado');
 console.log('💡 Digite "barcodeStats()" no console para ver estatísticas');
 
-// Função para mostrar o seletor de formato de fatura
+// Função para mostrar o seletor de formato de fatura (painel único - formatSubOptions)
 function showInvoiceFormatSelector() {
-  const formatSelector = document.getElementById('invoiceFormatSelection');
-  const formatSelectorMobile = document.getElementById('invoiceFormatSelectionMobile');
-
-  if (formatSelector) {
-    formatSelector.classList.remove('hidden');
+  const formatSubOptions = document.getElementById('formatSubOptions');
+  if (formatSubOptions) {
+    formatSubOptions.style.display = 'flex';
   }
-
-  if (formatSelectorMobile) {
-    formatSelectorMobile.classList.remove('hidden');
-  }
-
-  // Set default selection to A4 if nothing is selected
   const formatRadios = document.querySelectorAll('input[name="invoiceFormat"]');
   let hasSelection = false;
-
   formatRadios.forEach(radio => {
-    if (radio.checked) {
-      hasSelection = true;
-    }
+    if (radio.checked) hasSelection = true;
   });
-
   if (!hasSelection && formatRadios.length > 0) {
-    formatRadios[0].checked = true; // Select A4 by default
+    formatRadios[0].checked = true;
   }
 }
 
-// Função para esconder o seletor de formato de fatura
+// Função para esconder o seletor de formato de fatura (painel único - formatSubOptions)
 function hideInvoiceFormatSelector() {
-  const formatSelector = document.getElementById('invoiceFormatSelection');
-  const formatSelectorMobile = document.getElementById('invoiceFormatSelectionMobile');
-
-  if (formatSelector) {
-    formatSelector.classList.add('hidden');
-  }
-
-  if (formatSelectorMobile) {
-    formatSelectorMobile.classList.add('hidden');
+  const formatSubOptions = document.getElementById('formatSubOptions');
+  if (formatSubOptions) {
+    formatSubOptions.style.display = 'none';
   }
 }
 
@@ -3165,6 +3147,7 @@ function initInvoiceTypePanelToggles() {
       if (radio) radio.checked = true;
 
       const invoiceType = this.dataset.invoiceType;
+      tipoDocumentoAtual = invoiceType;
       updateInvoiceTypeDisplay(invoiceType);
       console.log('📄 [TOGGLES] Tipo selecionado:', invoiceType);
 
@@ -3247,6 +3230,17 @@ function updateInvoiceTypeDisplay(invoiceType) {
   if (invoiceType !== 'fatura-recibo') {
     if (formatDisplay) formatDisplay.textContent = 'Formato A4';
   }
+
+  // Fatura Proforma: bloquear métodos de pagamento e teclado; alterar texto do botão
+  const cartFooter = document.querySelector('.cart-footer');
+  const payBtn = document.querySelector('.keypad-pay-btn');
+  if (invoiceType === 'fatura-proforma') {
+    if (cartFooter) cartFooter.classList.add('document-type-proforma');
+    if (payBtn) payBtn.textContent = 'Gerar Factura Proforma';
+  } else {
+    if (cartFooter) cartFooter.classList.remove('document-type-proforma');
+    if (payBtn) payBtn.textContent = 'Pagar';
+  }
 }
 
 /**
@@ -3274,6 +3268,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const isFaturaRecibo = tipoDocumentoAtual === 'fatura-recibo';
     formatSubOptions.style.display = isFaturaRecibo ? 'flex' : 'none';
   }
+
+  // Inicializa o handler do botão "Pagar" (overlay e botões internos)
+  function handlePayClick(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+    const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+
+    const friendlyNames = {
+      'fatura-recibo': 'Fatura-Recibo',
+      'fatura-proforma': 'Fatura Proforma',
+      'fatura': 'Fatura',
+      'orcamento': 'Orçamento'
+    };
+
+    if (tipo === 'fatura-proforma') {
+      if (typeof processProformaInvoice === 'function') processProformaInvoice();
+      return;
+    }
+    if (tipo !== 'fatura-recibo') {
+      const nome = friendlyNames[tipo] || tipo;
+      showAlert('info', 'Tipo de Documento', `${nome} está em desenvolvimento ou indisponível no momento.`);
+      return;
+    }
+
+    // Caso seja fatura-recibo, prossegue com o fluxo de checkout
+    if (typeof checkoutNextStep === 'function') {
+      checkoutNextStep();
+      return;
+    }
+
+    if (typeof openCheckoutModal === 'function') {
+      openCheckoutModal();
+      return;
+    }
+
+    // Fallback: abre o painel integrado via classe
+    const wrapper = document.querySelector('.products-container-wrapper') || document.querySelector('.interface');
+    if (wrapper) {
+      wrapper.classList.add('panel-open');
+      showAlert('success', 'Checkout', 'Abrindo painel de checkout integrado');
+    } else {
+      showAlert('error', 'Erro', 'Não foi possível iniciar o fluxo de pagamento.');
+    }
+  }
+
+  // Liga o listener ao botão overlay (mobile) e ao botão interno 'btnPayNow' se existirem
+  const placeOrderOverlayBtn = document.getElementById('placeOrderOverlay');
+  if (placeOrderOverlayBtn) placeOrderOverlayBtn.addEventListener('click', handlePayClick);
+
+  const btnPayNow = document.getElementById('btnPayNow');
+  if (btnPayNow) btnPayNow.addEventListener('click', handlePayClick);
+
 });
 
 /**
@@ -4614,6 +4660,37 @@ function updateFooterPaymentCards() {
 }
 
 /**
+ * Exibe o estado de "Valor em falta" após falha na validação de pagamento
+ * Mostra um estado visual vermelho com a quantidade em falta
+ */
+function showPaymentMissing(valorEmFalta) {
+  const statusElement = document.getElementById('paymentStatusElement');
+  const statusLabel = document.getElementById('statusLabel');
+  const statusValue = document.getElementById('statusValue');
+  const statusIcon = document.getElementById('statusIcon');
+
+  if (!statusElement || !statusLabel || !statusValue || !statusIcon) return;
+
+  // Ícone de aviso
+  const iconWarning = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m.93-6.93a9.001 9.001 0 1 1-1.86 0M9 16H3m6-8l-5.66 5.66m0 0l11.32 0" /><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>';
+  const iconAlertIcon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+
+  // Limpa classes anteriores
+  statusElement.classList.remove('state-change', 'state-complete');
+
+  // Mostra o estado de valor em falta
+  statusLabel.textContent = 'Valor em falta';
+  statusValue.textContent = valorEmFalta.toLocaleString('pt-AO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + ' Kz';
+  statusIcon.innerHTML = iconAlertIcon;
+  statusElement.classList.add('visible', 'state-remaining');
+
+  console.log(`🔴 [STATUS] Valor em falta exibido: ${valorEmFalta.toFixed(2)} Kz`);
+}
+
+/**
  * Atualiza a exibição do status de pagamento (3 estados)
  * - Troco (verde): pagou mais do que o total
  * - Valor em falta (vermelho): ainda falta pagar
@@ -5109,6 +5186,26 @@ window.initOrderSummarySlider = initOrderSummarySlider;
 // ============================================
 
 /**
+ * Obtém o ID do cliente para envio ao backend (selecionado ou Consumidor Final).
+ * Usado por Fatura-Recibo e Fatura Proforma.
+ * @returns {number}
+ * @throws {Error}
+ */
+function getIdClienteForDocument() {
+  const clientManager = window.getClientManager ? window.getClientManager() : null;
+  const selectedClient = clientManager ? clientManager.getSelectedClient() : null;
+  if (selectedClient && selectedClient.idcliente) {
+    return parseInt(selectedClient.idcliente);
+  }
+  if (!idClientePadrao) {
+    throw new Error('Cliente padrão não foi carregado. Recarregue a página.');
+  }
+  const id = parseInt(idClientePadrao);
+  if (!id || isNaN(id)) throw new Error('ID de cliente inválido.');
+  return id;
+}
+
+/**
  * Coleta todos os dados de pagamento para envio ao backend
  * @returns {Object} Dados formatados para o backend
  * @throws {Error} Se validação falhar
@@ -5295,21 +5392,228 @@ function resetPayButtonText() {
 }
 
 /**
+ * Processa e imprime Fatura Proforma (sem pagamento).
+ * Envia id_cliente e tipo_documento ao backend, renderiza A4 e abre a janela de impressão.
+ */
+async function processProformaInvoice() {
+  console.log('🚀 [PROFORMA] Iniciando Factura Proforma...');
+
+  if (!cart || cart.size === 0 || currentCartTotal <= 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('warning', 'Carrinho Vazio', 'Adicione produtos ao carrinho antes de gerar a Factura Proforma.', 4000);
+    } else {
+      alert('Adicione produtos ao carrinho.');
+    }
+    return;
+  }
+
+  let idCliente;
+  try {
+    idCliente = getIdClienteForDocument();
+  } catch (e) {
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', e.message || 'Cliente inválido.');
+    } else {
+      alert(e.message);
+    }
+    return;
+  }
+
+  try {
+    startPayButtonAnimation();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'Processando', 'A gerar Factura Proforma...', 0);
+    }
+
+    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        acao: 'fatura-proforma',
+        id_cliente: idCliente,
+        tipo_documento: 'Factura-Proforma'
+      })
+    });
+
+    const rawText = await response.text();
+    if (rawText.trim().startsWith('<')) {
+      throw new Error('Erro no servidor. Verifique os logs do PHP.');
+    }
+    const data = JSON.parse(rawText);
+
+    if (!response.ok || !data.sucesso) {
+      throw new Error(data.erro || data.mensagem || 'Erro ao processar Factura Proforma');
+    }
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'A gerar documento', 'A preparar impressão A4...', 0);
+    }
+
+    await loadInvoiceAssets('A4');
+    applyInvoicePrintStyles('A4');
+
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+    if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
+
+    container80.innerHTML = '';
+    container80.style.display = 'none';
+    containerA4.style.display = 'block';
+    containerA4.style.position = 'fixed';
+    containerA4.style.top = '-9999px';
+    containerA4.style.left = '-9999px';
+    containerA4.style.zIndex = '-1';
+    containerA4.innerHTML = '';
+
+    if (typeof window.renderizarFaturaComDadosBackend !== 'function') {
+      throw new Error('Função renderizarFaturaComDadosBackend não encontrada');
+    }
+    window.renderizarFaturaComDadosBackend(data);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    if (!containerA4.innerHTML.trim()) throw new Error('Falha na renderização da Factura Proforma');
+
+    window.print();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    await new Promise(resolve => setTimeout(resolve, 150));
+    await clearCartAfterSale();
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('success', 'Factura Proforma gerada', `Documento ${data.codigo_documento} gerado com sucesso.`, 4000);
+    }
+  } catch (error) {
+    console.error('❌ [PROFORMA]', error);
+    if (typeof closeAlert === 'function') closeAlert();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', error.message || 'Erro ao gerar Factura Proforma.', 5000);
+    } else {
+      alert(error.message || 'Erro ao gerar Factura Proforma.');
+    }
+  }
+}
+
+/**
  * Processa a venda de Fatura-Recibo
- * Envia dados ao backend, gera PDF e limpa carrinho
+ * Envia dados ao backend, carrega recursos, imprime a fatura (janela do navegador) e limpa o carrinho.
+ * Não mostra opção de download em PDF após fechar a impressão; isso ficará para etapa futura.
  */
 async function processReceiptInvoice() {
-  console.log('🚀 Iniciando processamento de Fatura-Recibo...');
+  console.log('🚀 [PAYMENT] Iniciando processamento de Fatura-Recibo...');
+  
+  // ============================================
+  // PASSO 1: VALIDAÇÃO DO TIPO DE DOCUMENTO
+  // ============================================
+  
+  const tipoDocumento = typeof getTipoDocumentoAtual === 'function' ? 
+    getTipoDocumentoAtual() : tipoDocumentoAtual;
+  
+  console.log('📄 [PAYMENT] Tipo de documento:', tipoDocumento);
+  
+  if (tipoDocumento !== 'fatura-recibo') {
+    console.error('❌ [PAYMENT] Tipo de documento não suportado:', tipoDocumento);
+    
+    const nomeAmigavel = {
+      'fatura-recibo': 'Fatura-Recibo',
+      'fatura-proforma': 'Fatura Proforma',
+      'fatura': 'Fatura',
+      'orcamento': 'Orçamento'
+    };
+    
+    const nomeDocumento = nomeAmigavel[tipoDocumento] || tipoDocumento;
+    
+    if (typeof showAlert === 'function') {
+      showAlert('error', '❌ Tipo Não Suportado', 
+        `"${nomeDocumento}" ainda não está implementado. Apenas "Fatura-Recibo" está disponível.`, 4000);
+    } else {
+      alert(`"${nomeDocumento}" ainda não está implementado.`);
+    }
+    
+    return; // BLOQUEIA EXECUÇÃO
+  }
+  
+  // ============================================
+  // PASSO 1.5: VALIDAÇÃO CARRINHO E MÉTODOS DE PAGAMENTO (antes de animação)
+  // ============================================
+  
+  if (!cart || cart.size === 0 || currentCartTotal <= 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('warning', '⚠️ Carrinho Vazio', 'Adicione produtos ao carrinho antes de pagar.', 4000);
+    } else {
+      alert('Adicione produtos ao carrinho antes de pagar.');
+    }
+    console.warn('⚠️ [PAYMENT] Bloqueado: carrinho vazio');
+    return;
+  }
+  
+  let somaPagamentosPre = 0;
+  if (footerPaymentMethods && footerPaymentMethods.length > 0) {
+    footerPaymentMethods.forEach(metodo => {
+      somaPagamentosPre += parseFloat(footerValoresPorMetodo[metodo.slug]) || 0;
+    });
+  }
+  if (somaPagamentosPre <= 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('warning', '⚠️ Métodos de Pagamento', 'Preencha os valores nos métodos de pagamento (dinheiro, multibanco, etc.) antes de pagar.', 5000);
+    } else {
+      alert('Preencha os valores nos métodos de pagamento antes de pagar.');
+    }
+    console.warn('⚠️ [PAYMENT] Bloqueado: nenhum valor de pagamento informado');
+    return;
+  }
+  
+  // ============================================
+  // PASSO 2: RECOLHA E ENVIO DE DADOS
+  // ============================================
   
   try {
     startPayButtonAnimation();
     
     if (typeof showAlert === 'function') {
-      showAlert('info', '⏳ Processando', 'Gerando fatura recibo...', 0);
+      showAlert('info', '⏳ Processando', 'Validando dados do pagamento...', 0);
     }
     
+    console.log('📊 [PAYMENT] Coletando dados de pagamento...');
     const paymentData = collectPaymentData();
-    console.log('📤 Enviando dados para backend...');
+    
+    // Validação frontend: valor pago >= total a pagar
+    const totalAPagar = currentCartTotal || 0;
+    const totalPago = paymentData.valor_pago || 0;
+    
+    console.log('💰 [PAYMENT] Validação:', {
+      totalAPagar: totalAPagar.toFixed(2),
+      totalPago: totalPago.toFixed(2),
+      diferenca: (totalPago - totalAPagar).toFixed(2)
+    });
+    
+    if (totalPago < totalAPagar) {
+      stopPayButtonAnimation();
+      
+      const valorEmFalta = totalAPagar - totalPago;
+      showPaymentMissing(valorEmFalta);
+      
+      const msg = `Valor insuficiente! Faltam ${valorEmFalta.toLocaleString('pt-AO', { 
+        minimumFractionDigits: 2 
+      })} Kz para completar o pagamento.`;
+      
+      if (typeof showAlert === 'function') {
+        showAlert('error', '❌ Pagamento Incompleto', msg, 5000);
+      } else {
+        alert(msg);
+      }
+      
+      console.warn('❌ [PAYMENT] Bloqueado: valor insuficiente');
+      return;
+    }
+    
+    console.log('📤 [PAYMENT] Enviando dados para backend...');
     
     const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
       method: 'POST',
@@ -5317,195 +5621,221 @@ async function processReceiptInvoice() {
       body: JSON.stringify(paymentData)
     });
 
-    console.log('📡 Resposta recebida. Status:', response.status);
+    console.log('📡 [PAYMENT] Resposta recebida. Status:', response.status);
 
     const rawText = await response.text();
-    console.log('📥 Resposta RAW (primeiros 500 chars):', rawText.substring(0, 500));
+    console.log('📥 [PAYMENT] Resposta RAW (primeiros 300 chars):', rawText.substring(0, 300));
 
+    // Valida se não é HTML (erro PHP)
     if (rawText.trim().startsWith('<')) {
-      console.error('❌ SERVIDOR RETORNOU HTML:', rawText.substring(0, 1000));
-      throw new Error('Erro no servidor PHP. Verifique os logs do PHP.');
+      console.error('❌ [PAYMENT] SERVIDOR RETORNOU HTML (erro PHP)');
+      throw new Error('Erro no servidor. Verifique os logs do PHP.');
     }
 
-    if (!response.ok) {
-      throw new Error(`Erro HTTP ${response.status}: ${rawText}`);
-    }
-
+    // Parse JSON
     let data;
     try {
       data = JSON.parse(rawText);
     } catch (parseError) {
-      console.error('❌ JSON inválido:', parseError);
-      throw new Error('Resposta do servidor não é JSON válido');
+      console.error('❌ [PAYMENT] JSON inválido:', parseError);
+      throw new Error('Resposta do servidor inválida');
     }
 
-    console.log('📥 Dados parseados:', data);
-    
+    console.log('📥 [PAYMENT] Dados parseados:', data);
+
+    // Valida resposta do backend
     if (!response.ok || !data.sucesso) {
-      const errorMsg = data.erro || data.mensagem || 'Erro desconhecido';
+      const errorMsg = data.erro || data.mensagem || 'Erro desconhecido no backend';
       throw new Error(errorMsg);
     }
     
-    console.log('✅ Fatura processada:', data.codigo_documento);
+    console.log('✅ [PAYMENT] Pagamento aprovado pelo backend!');
+    console.log('📄 [PAYMENT] Código do documento:', data.codigo_documento);
     
-    // ✅ DETECÇÃO DE FORMATO COM LOGS
+    // ============================================
+    // PASSO 3: CARREGAMENTO DINÂMICO DE RECURSOS
+    // ============================================
+    
+    // Detecta formato selecionado pelo usuário
     let formato = 'A4';
     
-    console.log('🔍 [FORMAT] Iniciando detecção...');
+    console.log('🔍 [FORMAT] Detectando formato selecionado...');
     
     if (typeof formatoFaturaAtual !== 'undefined' && formatoFaturaAtual) {
       formato = formatoFaturaAtual;
-      console.log('✅ [FORMAT] Global:', formato);
+      console.log('✅ [FORMAT] Variável global:', formato);
     } else if (typeof getInvoiceFormat === 'function') {
       formato = getInvoiceFormat() || 'A4';
-      console.log('✅ [FORMAT] Function:', formato);
+      console.log('✅ [FORMAT] Função getInvoiceFormat():', formato);
     } else {
       const radio = document.querySelector('input[name="invoiceFormat"]:checked');
       formato = radio?.value || 'A4';
-      console.log('✅ [FORMAT] DOM:', formato);
+      console.log('✅ [FORMAT] Radio button:', formato);
     }
     
-    // ✅ LOG COMPLETO DO ESTADO
-    console.log('🔍 [FORMAT] Estado completo:', {
-      formatoFinal: formato,
-      formatoFaturaAtual: typeof formatoFaturaAtual !== 'undefined' ? formatoFaturaAtual : 'undefined',
-      localStorage: localStorage.getItem('invoiceFormat'),
-      radioMarcado: document.querySelector('input[name="invoiceFormat"]:checked')?.value,
-      funcao80mmExiste: typeof window.renderizarFatura80ComDadosBackend === 'function',
-      container80mmExiste: !!document.getElementById('fatura80-container-inv80')
-    });
-    
+    // Validação do formato
     if (formato !== 'A4' && formato !== '80mm') {
-      console.warn('⚠️ Formato inválido:', formato);
+      console.warn('⚠️ [FORMAT] Formato inválido:', formato, '- Usando A4');
       formato = 'A4';
     }
     
-    console.log('📄 [FORMAT] CONFIRMADO:', formato);
+    console.log('📐 [FORMAT] Formato CONFIRMADO:', formato);
+    
+    // Atualiza mensagem de loading
+    if (typeof showAlert === 'function') {
+      closeAlert();
+      showAlert('info', '⏳ Gerando Fatura', `Carregando recursos para ${formato}...`, 0);
+    }
+    
+    // ✅ CARREGA RECURSOS DINAMICAMENTE
+    console.log(`🔄 [ASSETS] Iniciando carregamento para ${formato}...`);
+    
+    try {
+      await loadInvoiceAssets(formato);
+      console.log('✅ [ASSETS] Recursos carregados com sucesso');
+    } catch (assetError) {
+      throw new Error(`Falha ao carregar recursos de fatura: ${assetError.message}`);
+    }
     
     // ============================================
-    // RENDERIZAÇÃO 80MM
+    // PASSO 3.5.5: APLICAR ESTILOS DE IMPRESSÃO
     // ============================================
     
+    // ✅ ESTILOS DE IMPRESSÃO: apenas o container usado fica visível (evita 1ª página em branco)
+    applyInvoicePrintStyles(formato);
+    
+    // ============================================
+    // PASSO 4: RENDERIZAÇÃO DA FATURA (CORRIGIDO)
+    // ============================================
+
+    if (typeof showAlert === 'function') {
+      closeAlert();
+      showAlert('info', '⏳ Gerando Fatura', 'Preparando documento para impressão...', 0);
+    }
+
+    console.log('🎨 [RENDER] Iniciando renderização...');
+
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+    if (!containerA4 || !container80) {
+      throw new Error('Containers de fatura não encontrados no DOM');
+    }
+
+    // ✅ Mostrar só o container que vamos usar e esconder/limpar o outro (igual ao backup)
     if (formato === '80mm') {
-      console.log('📄 [RENDER] Iniciando 80mm...');
+      containerA4.innerHTML = '';
+      containerA4.style.display = 'none';
+      container80.style.display = 'block';
+      container80.style.position = 'fixed';
+      container80.style.top = '-9999px';
+      container80.style.left = '-9999px';
+      container80.style.zIndex = '-1';
+      console.log('📄 [RENDER] Container 80mm ativo, A4 oculto');
+    } else {
+      container80.innerHTML = '';
+      container80.style.display = 'none';
+      containerA4.style.display = 'block';
+      containerA4.style.position = 'fixed';
+      containerA4.style.top = '-9999px';
+      containerA4.style.left = '-9999px';
+      containerA4.style.zIndex = '-1';
+      console.log('📄 [RENDER] Container A4 ativo, 80mm oculto');
+    }
+
+    if (formato === '80mm') {
+      // ========== RENDERIZAÇÃO 80MM ==========
       
-      // PASSO 1: Carrega script
-      console.log('⏳ [LOADER] Carregando fatura80.js...');
-      try {
-        await ensureFatura80Loaded();
-        console.log('✅ [LOADER] Script confirmado');
-      } catch (loadError) {
-        console.error('❌ [LOADER] Falha:', loadError);
-        throw new Error('Impossível carregar módulo 80mm: ' + loadError.message);
-      }
+      console.log('📄 [RENDER] Renderizando fatura 80mm...');
       
-      // PASSO 2: Verifica função
       if (typeof window.renderizarFatura80ComDadosBackend !== 'function') {
-        console.error('❌ [RENDER] Função NÃO ENCONTRADA');
-        throw new Error('Função de renderização 80mm não encontrada');
-      }
-      console.log('✅ [RENDER] Função confirmada');
-      
-      // ✅ CRITICAL: Renderiza e AGUARDA conclusão
-      console.log('🎨 [RENDER] Renderizando...');
-      try {
-        await window.renderizarFatura80ComDadosBackend(data);
-        console.log('✅ [RENDER] Concluído');
-      } catch (renderError) {
-        console.error('❌ [RENDER] Erro:', renderError);
-        throw new Error('Falha na renderização 80mm: ' + renderError.message);
+        throw new Error('Função renderizarFatura80ComDadosBackend não encontrada');
       }
       
-      // PASSO 3: Verifica conteúdo
-      const container80 = document.getElementById('fatura80-container-inv80');
-      if (!container80) {
-        throw new Error('Container 80mm não encontrado após renderização');
-      }
+      window.renderizarFatura80ComDadosBackend(data);
       
-      const hasContent = container80.children.length > 0 && container80.innerHTML.trim().length > 100;
-      console.log('🔍 [VERIFY] Tem conteúdo?', hasContent, 'Elementos:', container80.children.length);
+      await new Promise(resolve => setTimeout(resolve, 300));
       
+      const hasContent = container80.innerHTML.length > 0;
       if (!hasContent) {
-        console.error('❌ [VERIFY] Container HTML:', container80.innerHTML.substring(0, 200));
-        throw new Error('Container vazio após renderização');
+        throw new Error('Falha na renderização da fatura 80mm');
       }
       
-      // ✅ Aguarda renderização completa (aumentado para 1500ms)
-      console.log('⏳ [RENDER] Aguardando renderização completa...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('✅ [RENDER] Fatura 80mm renderizada');
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
       
     } else {
-      // ============================================
-      // RENDERIZAÇÃO A4
-      // ============================================
+      // ========== RENDERIZAÇÃO A4 ==========
       
-      console.log('📄 [RENDER] Iniciando A4...');
+      console.log('📄 [RENDER] Renderizando fatura A4...');
       
       if (typeof window.renderizarFaturaComDadosBackend !== 'function') {
         throw new Error('Função renderizarFaturaComDadosBackend não encontrada');
       }
       
-      let containerA4 = document.getElementById('inv-a4-container-principal');
-      
-      if (!containerA4) {
-        containerA4 = document.createElement('div');
-        containerA4.id = 'inv-a4-container-principal';
-        containerA4.style.cssText = `
-          position: fixed;
-          top: -9999px;
-          left: -9999px;
-          background: white;
-          z-index: -1;
-        `;
-        document.body.appendChild(containerA4);
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      containerA4.innerHTML = '';
       window.renderizarFaturaComDadosBackend(data);
       
       await new Promise(resolve => setTimeout(resolve, 300));
-      const hasContent = containerA4.children.length > 0;
       
+      const hasContent = containerA4.innerHTML.length > 0;
       if (!hasContent) {
-        throw new Error('Container A4 vazio após renderização');
+        throw new Error('Falha na renderização da fatura A4');
       }
+      
+      console.log('✅ [RENDER] Fatura A4 renderizada');
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    // Aguarda renderização completa
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // ========== IMPRESSÃO ==========
     
-    stopPayButtonAnimation();
+    console.log('🖨️ [PRINT] Abrindo janela de impressão...');
     
-    console.log('🖨️ Abrindo impressão...');
+    // ✅ CHAMADA DIRETA: janela de impressão abre (animação continua a rodar)
     window.print();
     
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    await clearCartAfterSale();
-    
-    if (typeof closeAlert === 'function') {
-      closeAlert();
-    }
-    
-    if (typeof showAlert === 'function') {
-      showAlert('success', '✅ Sucesso', `Fatura ${data.codigo_documento} gerada!`, 3000);
-    }
-    
-    console.log('🎉 Processo concluído!');
-    
-  } catch (error) {
-    console.error('❌ Erro:', error);
-    console.error('Stack:', error.stack);
-    
-    if (typeof closeAlert === 'function') {
-      closeAlert();
-    }
-    
+    // Utilizador fechou a janela de impressão → parar animação e repor texto "Pagar" de imediato
     resetPayButtonText();
     
+    // Pequena pausa para o diálogo fechar por completo (evita race)
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // ============================================
+    // PASSO 5: LIMPEZA DO ESTADO DA VENDA
+    // ============================================
+    
+    console.log('🧹 [CLEANUP] Iniciando limpeza pós-venda...');
+    
+    // Limpa carrinho e estado (UI fica disponível logo)
+    await clearCartAfterSale();
+    
+    // Mensagem de sucesso
     if (typeof showAlert === 'function') {
-      showAlert('error', '❌ Erro', error.message || 'Erro ao processar', 5000);
+      showAlert('success', '✅ Venda Concluída', 
+        `Fatura ${data.codigo_documento} gerada com sucesso!`, 4000);
+    }
+    
+    console.log('🎉 [PAYMENT] Processo concluído com sucesso!');
+    console.log('=' .repeat(60));
+    
+  } catch (error) {
+    // ========== TRATAMENTO DE ERROS ==========
+    
+    console.error('❌ [PAYMENT] Erro no processamento:', error);
+    console.error('Stack:', error.stack);
+    
+    // Fecha loading
+    if (typeof closeAlert === 'function') {
+      closeAlert();
+    }
+    
+    // Restaura botão
+    resetPayButtonText();
+    
+    // Mostra erro ao usuário
+    if (typeof showAlert === 'function') {
+      showAlert('error', '❌ Erro no Pagamento', 
+        error.message || 'Erro ao processar a venda', 6000);
     } else {
       alert('Erro: ' + (error.message || 'Erro ao processar'));
     }
@@ -5550,11 +5880,19 @@ async function clearCartAfterSale() {
       renderCart();
     }
     
-    // 5. RECARREGAR CARRINHO DA API (SE APLICÁVEL)
+    // 5. Recarrega carrinho da API em background (não bloqueia; UI já está limpa)
     if (typeof loadCartFromAPI === 'function') {
-      await loadCartFromAPI();
-      console.log('✅ Carrinho recarregado da API');
+      loadCartFromAPI().then(() => console.log('✅ Carrinho recarregado da API')).catch(err => console.warn('⚠️ loadCartFromAPI:', err));
     }
+    
+    // ✅ LIMPA OS CONTAINERS APÓS A IMPRESSÃO (não antes!)
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+
+    if (containerA4) containerA4.innerHTML = '';
+    if (container80) container80.innerHTML = '';
+
+    console.log('✅ Containers de fatura limpos');
     
     console.log('✅ Limpeza concluída');
     
@@ -5624,20 +5962,25 @@ function initPayButton() {
       
       console.log('📄 [PAY BUTTON] Tipo de documento:', tipoDoc);
       
+      if (tipoDoc === 'fatura-proforma') {
+        console.log('🚀 [PAY BUTTON] Chamando processProformaInvoice()...');
+        await processProformaInvoice();
+        return;
+      }
       if (tipoDoc !== 'fatura-recibo') {
         if (typeof showAlert === 'function') {
           showAlert(
-            'warning', 
-            '⚠️ Tipo Não Suportado', 
-            'Apenas Fatura-Recibo está implementada no momento. Por favor, selecione "Fatura-Recibo".', 
+            'warning',
+            'Tipo Não Suportado',
+            'Este tipo de documento ainda não está implementado. Use Fatura-Recibo ou Fatura Proforma.',
             4000
           );
         } else {
-          alert('Apenas Fatura-Recibo está implementada no momento.');
+          alert('Este tipo de documento ainda não está implementado.');
         }
         return;
       }
-      
+
       // Process receipt-invoice
       console.log('🚀 [PAY BUTTON] Chamando processReceiptInvoice()...');
       await processReceiptInvoice();
@@ -5655,6 +5998,8 @@ function initPayButton() {
 
 // ✅ DEBUG FUNCTION: Test 80mm rendering
 async function testRender80mm() {
+    console.log('🧪 [TEST] Iniciando teste de renderização 80mm...');
+    
     const testData = {
         codigo_documento: 'FR TEST/001',
         data_emissao: '01/02/2026',
@@ -5663,33 +6008,348 @@ async function testRender80mm() {
             Empresa: 'Teste LTDA',
             NIF: '1234567890'
         },
-        cliente: {
-            nome: 'Cliente Teste'
+        dados_cliente: {
+            Nome: 'Cliente Teste',
+            NIF: '987654321'
         },
-        produtos_fatura: [{
-            designacao: 'Produto Teste',
-            qtd: 1,
-            preco_unitario: 100,
-            desconto_percentual: 0,
-            taxa_percentual: 14,
-            total: 100
-        }],
-        total_iliquido: 100,
-        total_imposto: 14,
-        total_pago: 114,
-        resumo_impostos: [],
-        formas_pagamento: []
+        produtos: [
+            {
+                designacao: 'Produto Teste 1',
+                quantidade: 2,
+                precoUnitario: 50.00,
+                desconto: 5.00,
+                taxa: '14%',
+                total: 95.00
+            },
+            {
+                designacao: 'Produto Teste 2',
+                quantidade: 1,
+                precoUnitario: 30.00,
+                desconto: 0.00,
+                taxa: '14%',
+                total: 34.20
+            }
+        ],
+        impostos: [
+            {
+                taxa: '14%',
+                incidencia: 80.00,
+                valor: 11.20
+            }
+        ],
+        totais: {
+            totalMercadorias: 80.00,
+            totalImposto: 11.20,
+            totalDescontos: 5.00,
+            totalDocumento: 129.20
+        },
+        numeroFatura: 'FR TEST/001',
+        operador: 'Operador Teste'
     };
     
-    console.log('🧪 Testando renderização 80mm...');
-    
-    if (typeof window.renderizarFatura80ComDadosBackend === 'function') {
-        await window.renderizarFatura80ComDadosBackend(testData);
-        console.log('✅ Teste concluído!');
+    try {
+        // Força formato 80mm para teste
+        window.formatoFaturaAtual = '80mm';
         
-        const container = document.getElementById('fatura80-container-inv80');
-        console.log('📊 Container:', container);
-        console.log('📏 Filhos:', container?.children.length);
-        console.log('📝 HTML length:', container?.innerHTML.length);
+        console.log('📦 [TEST] Dados de teste:', testData);
+        
+        // Chama a função principal com dados de teste
+        await processReceiptInvoice(testData);
+        
+        console.log('✅ [TEST] Teste concluído com sucesso!');
+        
+    } catch (error) {
+        console.error('❌ [TEST] Erro no teste:', error);
+        alert('Erro no teste: ' + error.message);
     }
 }
+
+// ✅ Função auxiliar para verificar estado do container 80mm
+function debug80mmContainer() {
+    const container = document.getElementById('fatura80-container-inv80');
+    if (!container) {
+        console.log('❌ [DEBUG] Container 80mm NÃO ENCONTRADO');
+        return null;
+    }
+    
+    console.log('🔍 [DEBUG] Container 80mm encontrado:', {
+        id: container.id,
+        className: container.className,
+        childrenCount: container.children.length,
+        htmlLength: container.innerHTML.length,
+        style: {
+            position: container.style.position,
+            left: container.style.left,
+            top: container.style.top,
+            width: container.style.width,
+            visibility: container.style.visibility,
+            opacity: container.style.opacity,
+            zIndex: container.style.zIndex
+        },
+        computedStyle: {
+            position: getComputedStyle(container).position,
+            display: getComputedStyle(container).display,
+            visibility: getComputedStyle(container).visibility
+        }
+    });
+    
+    if (container.innerHTML.length > 0) {
+        console.log('📄 [DEBUG] Conteúdo do container (primeiros 500 caracteres):', 
+                   container.innerHTML.substring(0, 500));
+    } else {
+        console.log('⚠️ [DEBUG] Container está vazio');
+    }
+    
+    return container;
+}
+
+// ============================================
+// MODAL DE CONFIRMAÇÃO (Centralizado em app.js)
+// ============================================
+
+let confirmCallback = null;
+let cancelCallback = null;
+
+/**
+ * Mostra a modal de confirmação dinâmica
+ * @param {Object} config - Configuração da modal
+ * @param {Function} onConfirm - Callback quando confirmar
+ * @param {Function} onCancel - Callback quando cancelar (opcional)
+ */
+function showConfirmModal(config = {}, onConfirm = null, onCancel = null) {
+    console.log('❓ [CONFIRM] Mostrando modal de confirmação dinâmica...', config);
+    
+    // Guarda os callbacks
+    confirmCallback = onConfirm;
+    cancelCallback = onCancel;
+    
+    // Configurações padrão
+    const defaultConfig = {
+        title: "Are you sure?",
+        message: "This action can't be undone. Please confirm if you want to proceed.",
+        confirmText: "Confirm",
+        cancelText: "Cancel",
+        confirmColor: "blue", // blue, red, green, yellow
+        icon: "warning" // warning, success, error, info, question
+    };
+    
+    const finalConfig = { ...defaultConfig, ...config };
+    
+    // Atualiza o conteúdo da modal
+    updateConfirmModalContent(finalConfig);
+    
+    // Mostra a modal
+    const modal = document.getElementById('modal-confirm-dialog');
+    const overlay = document.getElementById('overlay-confirm-dialog');
+    const box = document.getElementById('box-confirm-dialog');
+    
+    if (!modal || !overlay || !box) {
+        console.error('❌ [CONFIRM] Elementos da modal de confirmação não encontrados!');
+        return;
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Força reflow para garantir a animação
+    void modal.offsetWidth;
+    
+    // Animações
+    overlay.style.opacity = '1';
+    box.style.transform = 'scale(1)';
+    box.style.opacity = '1';
+    
+    // Foco no botão de cancelar para acessibilidade
+    setTimeout(() => {
+        const cancelBtn = document.getElementById('cancel-confirm-dialog');
+        if (cancelBtn) cancelBtn.focus();
+    }, 100);
+}
+
+/**
+ * Atualiza o conteúdo da modal baseado na configuração
+ */
+function updateConfirmModalContent(config) {
+    const { title, message, confirmText, cancelText, confirmColor, icon } = config;
+    
+    // Atualiza textos
+    const titleElement = document.getElementById('title-confirm-dialog');
+    const messageElement = document.getElementById('desc-confirm-dialog');
+    const confirmBtn = document.getElementById('confirm-confirm-dialog');
+    const cancelBtn = document.getElementById('cancel-confirm-dialog');
+    const iconElement = document.getElementById('icon-confirm-dialog');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+    if (confirmBtn) confirmBtn.textContent = confirmText;
+    if (cancelBtn) cancelBtn.textContent = cancelText;
+    
+    // Atualiza cor do botão de confirmar
+    if (confirmBtn) {
+        // Remove classes de cor anteriores
+        confirmBtn.className = confirmBtn.className.replace(/bg-(blue|red|green|yellow|gray)-600/g, '');
+        confirmBtn.className = confirmBtn.className.replace(/hover:bg-(blue|red|green|yellow|gray)-700/g, '');
+        
+        // Adiciona nova cor
+        const colorMap = {
+            blue: 'bg-blue-600 hover:bg-blue-700',
+            red: 'bg-red-600 hover:bg-red-700',
+            green: 'bg-green-600 hover:bg-green-700',
+            yellow: 'bg-yellow-600 hover:bg-yellow-700',
+            gray: 'bg-gray-600 hover:bg-gray-700'
+        };
+        
+        const colorClasses = colorMap[confirmColor] || colorMap.blue;
+        confirmBtn.className += ` ${colorClasses}`;
+    }
+    
+    // Atualiza ícone (opcional - você pode expandir esta parte)
+    if (iconElement) {
+        console.log('🎨 [CONFIRM] Ícone selecionado:', icon);
+    }
+}
+
+/**
+ * Esconde a modal de confirmação
+ */
+function hideConfirmModal() {
+    console.log('✅ [CONFIRM] Escondendo modal de confirmação...');
+    
+    const modal = document.getElementById('modal-confirm-dialog');
+    const overlay = document.getElementById('overlay-confirm-dialog');
+    const box = document.getElementById('box-confirm-dialog');
+    
+    if (!modal || !overlay || !box) return;
+    
+    // Animações de saída
+    overlay.style.opacity = '0';
+    box.style.transform = 'scale(0.9)';
+    box.style.opacity = '0';
+    
+    // Esconde após animação
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        // Limpa os callbacks
+        confirmCallback = null;
+        cancelCallback = null;
+    }, 300);
+}
+
+/**
+ * Quando usuário confirma
+ */
+function onConfirmAction() {
+    console.log('✅ [CONFIRM] Ação confirmada pelo usuário');
+    if (typeof confirmCallback === 'function') {
+        confirmCallback();
+    }
+    hideConfirmModal();
+}
+
+/**
+ * Quando usuário cancela
+ */
+function onCancelAction() {
+    console.log('❌ [CONFIRM] Ação cancelada pelo usuário');
+    if (typeof cancelCallback === 'function') {
+        cancelCallback();
+    }
+    hideConfirmModal();
+}
+
+/**
+ * Função legada para compatibilidade (usada em index.php)
+ */
+function closeCheckoutModal() {
+  // Fallback legada: fecha o checkout integrado / overlay se existir
+  const wrapper = document.querySelector('.interface');
+  if (wrapper) wrapper.classList.remove('panel-open');
+  const overlay = document.getElementById('checkoutModalOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+  }
+  console.log('⚠️ [FALLBACK] closeCheckoutModal executed (legacy fallback)');
+}
+
+function showCloseConfirmation() {
+    console.log('❓ [CONFIRM] Mostrando modal de confirmação (legado)...');
+    
+    showConfirmModal({
+        title: 'Fechar Checkout?',
+        message: 'Tem certeza que deseja fechar? Todo o progresso será perdido.',
+        confirmText: 'Sim, Fechar',
+        cancelText: 'Cancelar',
+        confirmColor: 'red',
+        icon: 'warning'
+    }, closeCheckoutModal);
+}
+
+/**
+ * Função legada para compatibilidade (usada em index.php)
+ */
+function hideCloseConfirmation() {
+    hideConfirmModal();
+}
+
+/**
+ * Inicializa os listeners dos botões da modal de confirmação
+ * Liga: confirm -> onConfirmAction, cancel/close/overlay -> onCancelAction
+ */
+function initConfirmModalListeners() {
+  const confirmBtn = document.getElementById('confirm-confirm-dialog');
+  const cancelBtn = document.getElementById('cancel-confirm-dialog');
+  const closeBtn = document.getElementById('close-confirm-dialog');
+  const overlay = document.getElementById('overlay-confirm-dialog');
+  const modal = document.getElementById('modal-confirm-dialog');
+
+  if (confirmBtn) confirmBtn.addEventListener('click', onConfirmAction);
+  if (cancelBtn) cancelBtn.addEventListener('click', onCancelAction);
+  if (closeBtn) closeBtn.addEventListener('click', onCancelAction);
+  if (overlay) overlay.addEventListener('click', onCancelAction);
+
+  // Escape key closes modal
+  document.addEventListener('keydown', function (e) {
+    if ((e.key === 'Escape' || e.key === 'Esc') && modal && !modal.classList.contains('hidden')) {
+      onCancelAction();
+    }
+  });
+
+  console.log('🔧 [CONFIRM] Listeners de confirmação inicializados');
+}
+
+// Tenta inicializar imediatamente quando o DOM estiver pronto
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(initConfirmModalListeners, 10);
+} else {
+  document.addEventListener('DOMContentLoaded', initConfirmModalListeners);
+}
+
+// ✅ Export debug functions globally
+window.testRender80mm = testRender80mm;
+window.debug80mmContainer = debug80mmContainer;
+//window.ensureFatura80Loaded = ensureFatura80Loaded;
+window.showConfirmModal = showConfirmModal;
+window.hideConfirmModal = hideConfirmModal;
+window.onConfirmAction = onConfirmAction;
+window.onCancelAction = onCancelAction;
+window.showCloseConfirmation = showCloseConfirmation;
+window.hideCloseConfirmation = hideCloseConfirmation;
+window.closeCheckoutModal = closeCheckoutModal;
+window.updateConfirmModalContent = updateConfirmModalContent;
+
+// ============================================
+// EXPORTS GLOBAIS
+// ============================================
+
+// Funções de pagamento
+window.processReceiptInvoice = processReceiptInvoice;
+window.collectPaymentData = collectPaymentData;
+window.clearCartAfterSale = clearCartAfterSale;
+
+// Funções de recursos de fatura
+window.loadInvoiceAssets = loadInvoiceAssets;
+window.areInvoiceAssetsLoaded = areInvoiceAssetsLoaded;
+window.resetInvoiceAssetsState = resetInvoiceAssetsState;
+window.invoiceAssetsState = invoiceAssetsState;
+
+console.log('✅ [APP] Funções de pagamento e fatura exportadas globalmente');
