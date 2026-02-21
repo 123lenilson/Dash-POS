@@ -1,0 +1,23 @@
+/* ================================================
+   BASE: Reset
+   Ficheiro: assets/css/base/reset.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-size: var(--font-base);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
+  line-height: 1.4;
+  color:var(--text);
+  background:#ffffff !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+}
+
+/* scrollbars gerais (onde permitimos) */
+.side::-webkit-scrollbar, .main::-webkit-scrollbar { width:6px; height:6px; }
+.side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:6px; }

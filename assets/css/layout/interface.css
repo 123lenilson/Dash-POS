@@ -1,0 +1,111 @@
+/* ================================================
+   LAYOUT: Interface
+   Ficheiro: assets/css/layout/interface.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+.interface{
+  display:grid;
+  grid-template-columns: 64% 36%;
+  gap:0;
+  height:100vh;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background:#ffffff !important;
+}
+
+/* Quando o side panel estiver aberto */
+.interface.panel-open {
+  grid-template-columns: 39% 36% 25%;
+}
+
+.main{
+  background:#ffffff !important;
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Quando painel aberto, empurra produtos */
+.interface.panel-open .main {
+  width: 100% !important;
+}
+
+/* SIDE (comentado no original - mantido para compatibilidade) */
+.side{
+  background:#fff;
+  border-left:1px solid var(--line);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  box-sizing:border-box;
+}
+.side-inner{ display:flex; flex-direction:column; height:100%; }
+
+/* FORÇA O .main SEMPRE SER BRANCO, em qualquer estado */
+.main,
+.interface.panel-open .main,
+.interface.panel-open ~ .main,
+.main:has(+ .checkout-panel),
+.main {
+  background: #ffffff !important;
+}
+
+/* FORÇA FUNDO BRANCO TOTAL NA SEÇÃO STICKY */
+.sticky-section-home {
+  background: #ffffff !important;
+  position: relative !important;
+  z-index: 1;
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
+/* Camada branca ABSOLUTA que mata qualquer vazamento do pai */
+.sticky-section-home::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Garante que os filhos não herdem nada estranho */
+.sticky-section-home > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Se ainda aparecer uma linha cinza em cima/baixo (borda do .main vazando) */
+.main > .sticky-section-home {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* CHECKOUT PANEL INTEGRADO (40% direita) */
+.checkout-panel {
+  background: #f8f9fa;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100vh;
+  box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Quando painel aberto, comprime checkout */
+.interface.panel-open .checkout-panel {
+  width: 100% !important;
+}

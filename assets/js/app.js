@@ -18,6 +18,11 @@ let footerPaymentMethods = [];  // Array de métodos de pagamento carregados
 let footerValoresPorMetodo = {};  // Valores por método de pagamento
 let footerCashAmount = '0';  // Valor digitado no input do footer
 
+// ✅ ESTADO: Controlo de edição inline dos cards do carrinho
+let isSwitchingCards = false;        // Impede reload do carrinho durante troca de card expandido
+let isPriceEditCancelled = false;    // Flag para cancelamento de edição de preço via ESC
+let quantityInputIsSelected = false; // Controla se o texto do input de qtd está seleccionado
+
 // ✅ SSE: Variável global para conexão Server-Sent Events
 let sseConnection = null;
 let sseReconnectAttempts = 0;
@@ -246,17 +251,8 @@ window.applyInvoicePrintStyles = applyInvoicePrintStyles;
 // NOVO: ID do cliente padrão (Consumidor Final)
 let idClientePadrao = null; // Será preenchido via API
 
-let currentEditingId = null;  // ID do produto sendo editado na modal
-let currentInput = '';        // String para construir o input do preço na modal
-let replaceOnNextDigit = false; // Flag para substituir o input ao primeiro dígito
-let isQuantityMode = false;   // Flag para modo quantidade na modal de preço
 let lastCartHash = null;  // Pra otimizar: só atualiza se mudou
 let lastExpandedProductId = null; // Rastreia o último produto que ficou expansivo
-let isSwitchingCards = false; // Flag para indicar que está trocando entre cards
-let quantityInputIsSelected = false; // Flag para rastrear se o input de quantidade está selecionado
-
-// Flags para rastrear estado
-let isPriceEditCancelled = false;  // Flag to track if ESC was pressed
 
 /**
  * Connects any input to monetary formatting
@@ -561,21 +557,8 @@ const cartEmptyStateMobile = document.getElementById('cartEmptyStateMobile');
 const clearCartBtn = document.getElementById('clearCart');
 //const placeOrderBtn = document.getElementById('placeOrder');
 
-const clearCartOverlayBtn = document.getElementById('clearCartOverlay');
 //const placeOrderOverlayBtn = document.getElementById('placeOrderOverlay');
 
-const mobileCartBtn = document.getElementById('mobileCartBtn');
-const mobileCartBadge = document.getElementById('mobileCartBadge');
-const cartOverlay = document.getElementById('cartOverlay');
-const closeCartOverlayBtn = document.getElementById('closeCartOverlay');
-
-// Novo: Elementos da modal de preço
-const pmOverlay = document.getElementById('pm-overlay');
-const pmAmount = document.getElementById('pm-amount');
-const pmConfirm = document.getElementById('pm-confirm');
-const pmCancel = document.getElementById('pm-cancel');
-const pmClose = document.getElementById('pm-close');
-const pmKeys = document.querySelectorAll('.pm-key');
 
 /* ======= UTIL ======= */
 function nowFancy() {
@@ -599,7 +582,7 @@ function placeholderIMG(name) {
 }
 
 function isMobileView() {
-  return window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+  return window.matchMedia && window.matchMedia('(max-width:905px)').matches;
 }
 
 /* ======= FETCH ======= */
@@ -1159,20 +1142,6 @@ function renderCart(resumoServidor = null) {
             showRemoveConfirmation(id, productName);
           }
         });
-
-        row.addEventListener('click', (e) => {
-          if (!e.target.closest('.right')) {
-            openPriceModal(id);
-          }
-        });
-
-        const qtyDisplay = row.querySelector('.qty-display');
-        if (qtyDisplay) {
-          qtyDisplay.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openPriceModal(id, true);
-          });
-        }
       });
     }
 
@@ -1199,20 +1168,6 @@ function renderCart(resumoServidor = null) {
             showRemoveConfirmation(id, productName);
           }
         });
-
-        row.addEventListener('click', (e) => {
-          if (!e.target.closest('.right')) {
-            openPriceModal(id);
-          }
-        });
-
-        const qtyDisplay = row.querySelector('.qty-display');
-        if (qtyDisplay) {
-          qtyDisplay.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openPriceModal(id, true);
-          });
-        }
       });
     }
 
@@ -1306,25 +1261,28 @@ function renderCart(resumoServidor = null) {
   if (cartTaxOverlay) cartTaxOverlay.textContent = currency.format(totalImposto);
   if (cartTotalBtnOverlay) cartTotalBtnOverlay.textContent = currency.format(total);
 
-  if (mobileCartBadge) {
-    mobileCartBadge.textContent = stats.items;
-    mobileCartBadge.style.display = stats.items > 0 ? 'inline-grid' : 'none';
-  }
+  if (typeof window.updateStickyCartBadge === 'function') window.updateStickyCartBadge();
 
   // ✅ Atualiza o Order Summary no footer (40% div)
   updateOrderSummaryFooter(totalIliquido, totalImposto, totalRetencao, total);
 
   updateProductSelections();
+
+  // Re-verificar overflow do slider de métodos de pagamento após qualquer alteração no carrinho
+  if (typeof scheduleRefreshPaymentMethodsOverflow === 'function') scheduleRefreshPaymentMethodsOverflow();
 }
 
 function removeFromCart(id) {
+  const wasOnlyItem = cart.size === 1;
   if (cart.has(id)) {
     syncToAPI(id, 0);  // Envia qty=0
   }
   cart.delete(id);
 
-  // ✅ Reseta os valores dos métodos de pagamento (mesma lógica do clearCart)
-  resetFooterPaymentValues();
+  // Só reseta métodos de pagamento quando era o único produto (igual ao botão Limpar Tudo)
+  if (wasOnlyItem && typeof resetFooterPaymentValues === 'function') {
+    resetFooterPaymentValues();
+  }
 
   renderCart();
 }
@@ -1546,15 +1504,6 @@ async function processBarcodeFromSearch(barcode) {
 }
 
 /* ======= ATUALIZAR FUNÇÃO clearSearch ======= */
-clearSearch.addEventListener('click', () => {
-  searchInput.value = "";
-  searchTerm = "";
-  estaPesquisando = false;
-  searchResults = [];
-  searchInput.focus();
-  renderProducts();
-});
-
 searchInput.addEventListener('input', debouncedSearch);
 
 clearSearch.addEventListener('click', () => {
@@ -1564,7 +1513,35 @@ clearSearch.addEventListener('click', () => {
   searchResults = [];
   searchInput.focus();
   renderProducts();
+  var inner = document.getElementById('searchBarInner');
+  if (inner && inner.parentElement && inner.parentElement.id === 'headerSearchSlot') {
+    var w = document.querySelector('.search-wrapper');
+    if (w) { w.classList.add('search-wrapper--collapsed'); w.classList.remove('search-wrapper--expanded'); }
+  }
 });
+
+/* ======= HEADER SEARCH MOBILE (≤905px): expandir/colapsar ao clicar no ícone ======= */
+(function setupHeaderSearchToggle() {
+  function isHeaderSearchMode() {
+    var inner = document.getElementById('searchBarInner');
+    return inner && inner.parentElement && inner.parentElement.id === 'headerSearchSlot';
+  }
+  document.addEventListener('click', function (e) {
+    if (!isHeaderSearchMode()) return;
+    var wrapper = document.querySelector('.search-wrapper');
+    if (!wrapper) return;
+    var slot = document.getElementById('headerSearchSlot');
+    if (e.target.closest('#headerSearchSlot') && (e.target.closest('.search-icon-left') || (wrapper.classList.contains('search-wrapper--collapsed') && e.target.closest('.search-wrapper')))) {
+      wrapper.classList.remove('search-wrapper--collapsed');
+      wrapper.classList.add('search-wrapper--expanded');
+      searchInput.focus();
+      e.preventDefault();
+    } else if (!e.target.closest('#headerSearchSlot')) {
+      wrapper.classList.remove('search-wrapper--expanded');
+      wrapper.classList.add('search-wrapper--collapsed');
+    }
+  });
+})();
 
 /* ======= GLOBAL BUTTONS ======= */
 //Comentado/removido o listener original do placeOrder, pois agora a modal cuida disso
@@ -1572,23 +1549,6 @@ clearSearch.addEventListener('click', () => {
 
 
 clearCartBtn?.addEventListener('click', () => clearCart());
-clearCartOverlayBtn?.addEventListener('click', () => clearCart());
-
-/* ======= MOBILE DRAWER ======= */
-mobileCartBtn?.addEventListener('click', () => openCartOverlay());
-closeCartOverlayBtn?.addEventListener('click', () => closeCartOverlay());
-cartOverlay?.addEventListener('click', (e) => { if (e.target === cartOverlay) closeCartOverlay(); });
-
-function openCartOverlay() {
-  cartOverlay.classList.add('is-open');
-  cartOverlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
-function closeCartOverlay() {
-  cartOverlay.classList.remove('is-open');
-  cartOverlay.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-}
 
 /* ======= MAIN MENU (nav) ======= */
 document.querySelectorAll('.main .main-nav .nav-link').forEach(btn => {
@@ -1605,18 +1565,38 @@ function updateDateTime() {
 }
 
 function updateResponsiveUI() {
-  if (isMobileView()) {
+  var cartDrawerView = window.matchMedia && window.matchMedia('(max-width: 905px)').matches;
+  if (cartDrawerView) {
     document.querySelector('.side') && (document.querySelector('.side').style.display = 'none');
-    mobileCartBtn && (mobileCartBtn.style.display = 'grid');
   } else {
     document.querySelector('.side') && (document.querySelector('.side').style.display = '');
-    mobileCartBtn && (mobileCartBtn.style.display = 'none');
-    closeCartOverlay();
   }
 
   if (window.matchMedia && window.matchMedia('(max-width:890px)').matches) {
     const mainNav = document.querySelector('.main .main-nav');
     if (mainNav) mainNav.style.display = '';
+  }
+
+  // Search no header em ≤905px: move searchBarInner para headerSearchSlot ou devolve ao search-bar-container
+  var headerSearchSlot = document.getElementById('headerSearchSlot');
+  var searchBarInner = document.getElementById('searchBarInner');
+  var searchBarContainer = document.querySelector('.search-bar-container');
+  if (headerSearchSlot && searchBarInner && searchBarContainer) {
+    if (cartDrawerView) {
+      if (searchBarInner.parentElement !== headerSearchSlot) {
+        headerSearchSlot.appendChild(searchBarInner);
+        headerSearchSlot.setAttribute('aria-hidden', 'false');
+        var wrapper = searchBarInner.querySelector('.search-wrapper');
+        if (wrapper) wrapper.classList.add('search-wrapper--collapsed');
+      }
+    } else {
+      if (searchBarInner.parentElement !== searchBarContainer) {
+        searchBarContainer.insertBefore(searchBarInner, searchBarContainer.firstChild);
+        headerSearchSlot.setAttribute('aria-hidden', 'true');
+        var w = searchBarInner.querySelector('.search-wrapper');
+        if (w) w.classList.remove('search-wrapper--collapsed', 'search-wrapper--expanded');
+      }
+    }
   }
 }
 
@@ -1633,15 +1613,11 @@ function init() {
       loadCartFromAPI();
       updateDateTime();
       setInterval(updateDateTime, 30000);
-      if (+mobileCartBadge.textContent === 0) mobileCartBadge.style.display = 'none';
       updateResponsiveUI();
       window.addEventListener('resize', updateResponsiveUI);
       
       // ✅ SSE: Substitui o polling de 500ms por conexão persistente
       initSSE();
-      
-      // Adicionar event listeners para a modal de preço (uma vez só)
-      setupPriceModalListeners();
       
       // ✅ NOVO: Inicializa sistema de seleção de formato
       initInvoiceFormat();
@@ -1825,7 +1801,14 @@ function selecionarFormatoFatura(formato) {
   
   // ✅ 5. Atualiza display no cabeçalho do carrinho
   updateInvoiceFormatDisplay(formato);
-  
+
+  if (typeof updateStickyDocTypeLabel === 'function') updateStickyDocTypeLabel();
+
+  // Fatura-Recibo (A4 ou 80mm): garantir que a aba Desc. e os blocos do rodapé ficam sem cadeado
+  if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
+  var currentType = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+  if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(currentType);
+
   console.log(`✅ [FORMATO] Formato selecionado: ${formato}`);
 }
 
@@ -1897,400 +1880,6 @@ function initInvoiceFormat() {
     }
   });
 })();
-
-// Função para configurar listeners da modal (chamada no init)
-// Função para configurar listeners da modal (chamada no init)
-function setupPriceModalListeners() {
-  pmKeys.forEach(key => {
-    key.addEventListener('click', () => {
-      const value = key.dataset.key;
-      handleKeyInput(value);
-    });
-  });
-
-  // ✅ CONFIGURAÇÃO DO INPUT: Previne edição direta e controla cursor
-  const pmInput = document.getElementById('pm-amount');
-  if (pmInput) {
-    // Função para forçar cursor no final
-    const forceCursorToEnd = function () {
-      const len = this.value.length;
-      this.setSelectionRange(len, len);
-    };
-
-    // ✅ Previne que o input aceite entrada direta
-    pmInput.addEventListener('input', function (e) {
-      e.preventDefault();
-      // Restaura o valor correto
-      updatePriceDisplay();
-    });
-
-    // ✅ CRÍTICO: Previne seleção de texto
-    pmInput.addEventListener('select', function (e) {
-      e.preventDefault();
-      forceCursorToEnd.call(this);
-    });
-
-    // ✅ Garante que o cursor sempre fica no final ao clicar
-    pmInput.addEventListener('click', forceCursorToEnd);
-
-    // ✅ Garante que o cursor sempre fica no final ao focar
-    pmInput.addEventListener('focus', forceCursorToEnd);
-
-    // ✅ Garante que o cursor sempre fica no final ao mover mouse
-    pmInput.addEventListener('mousedown', forceCursorToEnd);
-    pmInput.addEventListener('mouseup', forceCursorToEnd);
-
-    // ✅ Garante que o cursor sempre fica no final ao usar teclado
-    pmInput.addEventListener('keyup', function (e) {
-      // Não força em teclas de ação (Enter, Escape, etc)
-      if (!['Enter', 'Escape', 'Tab'].includes(e.key)) {
-        forceCursorToEnd.call(this);
-      }
-    });
-
-    // ✅ CRÍTICO: Previne movimento do cursor com setas, Home, End
-    pmInput.addEventListener('keydown', function (e) {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
-        e.preventDefault();
-        forceCursorToEnd.call(this);
-      }
-    });
-
-    // ✅ Observa mudanças na posição do cursor continuamente
-    setInterval(() => {
-      if (document.activeElement === pmInput) {
-        const len = pmInput.value.length;
-        if (pmInput.selectionStart !== len || pmInput.selectionEnd !== len) {
-          pmInput.setSelectionRange(len, len);
-        }
-      }
-    }, 10);
-
-    console.log('✅ [SETUP] Listeners do input configurados com bloqueio total de cursor');
-  }
-
-  // ✅ CORREÇÃO NO CONFIRM
-  pmConfirm.addEventListener('click', () => {
-    if (!currentEditingId) {
-      console.warn("Nenhum produto em edição!");
-      closePriceModal();
-      return;
-    }
-
-    let newValue;
-
-    if (isQuantityMode) {
-      // Modo Quantidade
-      newValue = parseInt(currentInput) || 0;
-      if (newValue > 0) {
-        console.log(`✅ Confirmando QUANTIDADE: ${newValue} para produto ${currentEditingId}`);
-        syncToAPI(currentEditingId, newValue, null);  // qty override, preço null
-      } else {
-        alert("Quantidade inválida!");
-        return;
-      }
-    } else {
-      // Modo Preço Customizado
-      newValue = parseFloat(currentInput) || 0;
-      if (newValue > 0) {
-        console.log(`✅ Confirmando PREÇO CUSTOM: ${newValue.toFixed(2)} para produto ${currentEditingId}`);
-
-        // ✅ CRITICAL: Busca a quantidade ATUAL do carrinho
-        const entry = cart.get(currentEditingId);
-        if (!entry) {
-          console.error("Produto não encontrado no carrinho!");
-          closePriceModal();
-          return;
-        }
-
-        const qtyAtual = entry.qty;
-        console.log(`Quantidade atual no carrinho: ${qtyAtual}`);
-
-        // ✅ Envia QTY ATUAL + PREÇO CUSTOM (ambos explícitos)
-        syncToAPI(currentEditingId, qtyAtual, newValue.toFixed(2));
-      } else {
-        alert("Preço inválido!");
-        return;
-      }
-    }
-
-    closePriceModal();
-  });
-
-  pmCancel.addEventListener('click', closePriceModal);
-  pmClose.addEventListener('click', closePriceModal);
-}
-
-// Nova função para processar input (de botões ou teclado)
-// ✅ REFATORADA: Aplicando lógica do modal_checkout para evitar problemas de cursor
-function handleKeyInput(value) {
-  // ✅ CLEAR: Limpa tudo
-  if (value === 'C') {
-    currentInput = '0';
-    replaceOnNextDigit = false;
-  }
-  // ✅ BACKSPACE: Remove último caractere
-  else if (value === 'back') {
-    if (currentInput.length > 1) {
-      currentInput = currentInput.slice(0, -1);
-      // Se ficou apenas ".", converte para "0"
-      if (currentInput === '.') {
-        currentInput = '0';
-      }
-    } else {
-      currentInput = '0';
-    }
-    replaceOnNextDigit = false;
-  }
-  // ✅ PONTO DECIMAL (apenas no modo preço)
-  else if (value === '.' || value === ',') {
-    if (isQuantityMode) return;  // ← BLOQUEIA PONTO NO MODO QUANTIDADE
-
-    // Verifica se já existe ponto decimal
-    if (currentInput.includes('.')) {
-      return; // ⛔ NÃO permite múltiplos pontos
-    }
-
-    // Se estiver em modo de substituição, inicia com "0."
-    if (replaceOnNextDigit) {
-      currentInput = '0.';
-      replaceOnNextDigit = false;
-    }
-    // Se o valor é "0" ou vazio, adiciona "0."
-    else if (currentInput === '0' || currentInput === '') {
-      currentInput = '0.';
-    }
-    // Adiciona o ponto à string existente
-    else {
-      currentInput += '.';
-    }
-  }
-  // ✅ NÚMEROS (0-9)
-  else if (/\d/.test(value)) {
-    // Se estiver em modo de substituição, substitui completamente
-    if (replaceOnNextDigit) {
-      currentInput = value;
-      replaceOnNextDigit = false;
-    }
-    // Se o valor atual é apenas "0" (sem ponto), substitui pelo novo dígito
-    else if (currentInput === '0' && value === '0') {
-      currentInput = '0';
-    }
-    else if (currentInput === '0') {
-      currentInput = value;
-    }
-    // Se o valor atual é "0." (início de decimal), adiciona normalmente
-    else if (currentInput === '0.') {
-      currentInput = currentInput + value;
-    }
-    // Se já existe ponto decimal, verifica limite de 2 casas decimais
-    else if (currentInput.includes('.')) {
-      const parts = currentInput.split('.');
-      // Limita a 2 casas decimais (apenas no modo preço)
-      if (!isQuantityMode && parts[1] && parts[1].length >= 2) {
-        return; // Não adiciona mais dígitos após 2 casas decimais
-      }
-      currentInput = currentInput + value;
-    }
-    // Adiciona ao valor existente
-    else {
-      currentInput = currentInput + value;
-    }
-  }
-
-  updatePriceDisplay();
-}
-
-// ✅ NOVA FUNÇÃO: Atualiza preview do item no carrinho em tempo real
-function updateCartItemPreview() {
-  console.log('🔄 [PREVIEW] updateCartItemPreview chamada');
-  console.log('🔄 [PREVIEW] currentEditingId:', currentEditingId);
-  console.log('🔄 [PREVIEW] isQuantityMode:', isQuantityMode);
-  console.log('🔄 [PREVIEW] currentInput:', currentInput);
-
-  if (!currentEditingId) {
-    console.warn('⚠️ [PREVIEW] currentEditingId é null, saindo...');
-    return;
-  }
-
-  const entry = cart.get(currentEditingId);
-  if (!entry) {
-    console.warn('⚠️ [PREVIEW] Produto não encontrado no carrinho');
-    return;
-  }
-
-  console.log('✅ [PREVIEW] Entry encontrada:', entry);
-
-  // Calcula valores temporários baseado no que está sendo digitado
-  let previewQty = entry.qty;
-  let previewPrice = entry.customPrice || entry.product.price;
-
-  if (isQuantityMode) {
-    // Se está editando quantidade, usa o valor sendo digitado
-    previewQty = parseInt(currentInput) || 0;
-    console.log('📊 [PREVIEW] Modo QUANTIDADE - previewQty:', previewQty);
-  } else {
-    // Se está editando preço, usa o valor sendo digitado
-    previewPrice = parseFloat(currentInput) || 0;
-    console.log('💰 [PREVIEW] Modo PREÇO - previewPrice:', previewPrice);
-  }
-
-  const previewTotal = previewPrice * previewQty;
-  const precoCustomizado = entry.product.preco_customizado === "1" ? ' (Custom)' : '';
-
-  console.log('🧮 [PREVIEW] Calculado - Qtd:', previewQty, 'Preço:', previewPrice, 'Total:', previewTotal);
-
-  // Atualiza AMBOS os cards (desktop e mobile)
-  const cartItems = document.querySelectorAll(`.cart-item[data-id="${currentEditingId}"]`);
-  console.log('🔍 [PREVIEW] Cards encontrados:', cartItems.length);
-
-  cartItems.forEach((item, index) => {
-    console.log(`📦 [PREVIEW] Atualizando card ${index + 1}`);
-
-    const metaDiv = item.querySelector('.meta');
-    if (metaDiv) {
-      const novoConteudo = `${currency.format(previewPrice)}${precoCustomizado} × ${previewQty} = <strong>${currency.format(previewTotal)}</strong>`;
-      metaDiv.innerHTML = novoConteudo;
-      console.log('✅ [PREVIEW] Meta atualizada:', novoConteudo);
-    } else {
-      console.warn('⚠️ [PREVIEW] .meta não encontrado');
-    }
-
-    const qtyDisplay = item.querySelector('.qty-display');
-    if (qtyDisplay) {
-      qtyDisplay.textContent = previewQty;
-      console.log('✅ [PREVIEW] qty-display atualizado:', previewQty);
-    } else {
-      console.warn('⚠️ [PREVIEW] .qty-display não encontrado');
-    }
-  });
-
-  console.log('✅ [PREVIEW] Atualização concluída!');
-}
-
-// Atualizar o display da modal (genérico para preço ou qty)
-function updatePriceDisplay() {
-  let displayValue;
-  if (isQuantityMode) {
-    displayValue = currentInput ? parseInt(currentInput) : '0';  // Inteiro para qty
-  } else {
-    const floatVal = currentInput ? parseFloat(currentInput) : 0;
-    displayValue = floatVal.toFixed(2);  // 2 decimais para preço
-  }
-
-  // ✅ CORRIGIDO: Usa .value para input em vez de .textContent
-  const pmInput = document.getElementById('pm-amount');
-  if (pmInput) {
-    pmInput.value = displayValue;
-    // Garante que o cursor fica no final após atualização
-    pmInput.selectionStart = pmInput.selectionEnd = pmInput.value.length;
-  }
-
-  // Atualiza label dinâmico
-  const pmLabel = document.getElementById('pm-label');
-  if (pmLabel) pmLabel.textContent = isQuantityMode ? 'Quantidade:' : 'Preço:';
-  // ✅ CORRIGIDO: Desabilita confirm se inválido (considerando '0' como inválido)
-  pmConfirm.disabled = !currentInput || currentInput === '0' || currentInput === '0.' || (isQuantityMode ? parseInt(currentInput) <= 0 : parseFloat(currentInput) <= 0);
-
-  // ✅ NOVO: Atualiza o card do carrinho em tempo real enquanto digita
-  updateCartItemPreview();
-}
-
-// Função para lidar com keydown do teclado
-function handleKeyboardInput(e) {
-  const key = e.key;
-  if (/\d/.test(key)) {
-    handleKeyInput(key);
-  } else if (key === '.' || key === ',' || key === 'Decimal') {  // ✅ Aceita . , e Decimal do numpad
-    handleKeyInput('.');
-  } else if (key === 'Backspace') {
-    handleKeyInput('back');
-  } else if (key === 'Delete') {
-    handleKeyInput('C');
-  } else if (key === 'Enter') {
-    pmConfirm.click();
-  } else if (key === 'Escape') {
-    closePriceModal();
-  } else {
-    return;
-  }
-  e.preventDefault(); // Prevenir comportamentos padrão como scroll
-}
-
-// Abrir a modal de preço (genérica para preço ou quantidade)
-function openPriceModal(productId, isQtyMode = false) {
-  console.log("=== openPriceModal CHAMADA ===");
-  console.log("productId:", productId);
-  console.log("isQtyMode:", isQtyMode);
-
-  let entry;
-
-  if (isQtyMode) {
-    // Modo quantidade: Produto DEVE existir no carrinho
-    entry = cart.get(productId);
-    if (!entry) {
-      console.warn("Produto não está no carrinho para ajustar quantidade");
-      return;
-    }
-  } else {
-    // Modo preço: Produto DEVE existir no carrinho
-    entry = cart.get(productId);
-    if (!entry) {
-      console.warn("Produto não está no carrinho para customizar preço");
-      return;
-    }
-  }
-
-  currentEditingId = productId;
-  isQuantityMode = isQtyMode;
-
-  const initialValue = isQtyMode ? entry.qty : (entry.customPrice || entry.product.price);
-  currentInput = initialValue.toString().replace('.', '');
-  replaceOnNextDigit = true;
-
-  // Atualiza título da modal dinamicamente
-  const modalTitle = document.getElementById('pm-title');
-  if (modalTitle) {
-    modalTitle.textContent = isQuantityMode ? 'Adicionar Quantidade' : 'Ajustar Preço';
-  }
-
-  updatePriceDisplay();
-  pmOverlay.classList.add('is-open');
-  pmOverlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  // ✅ FOCO AUTOMÁTICO no input para permitir digitação via teclado físico
-  setTimeout(() => {
-    const pmInput = document.getElementById('pm-amount');
-    if (pmInput) {
-      pmInput.focus();
-      // Garante que o cursor fica no final
-      pmInput.selectionStart = pmInput.selectionEnd = pmInput.value.length;
-      console.log('🎯 [FOCUS] Input focado automaticamente!');
-    }
-  }, 100);
-
-  if (!isMobileView()) {
-    document.addEventListener('keydown', handleKeyboardInput);
-  }
-
-  console.log(`Modal aberta - ID: ${productId}, Modo: ${isQtyMode ? 'QUANTIDADE' : 'PREÇO'}, Valor inicial: ${initialValue}`);
-  console.log("===========================");
-}
-
-// Fechar a modal de preço
-function closePriceModal() {
-  pmOverlay.classList.remove('is-open');
-  pmOverlay.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-  currentInput = '0';  // ✅ CORRIGIDO: Reseta para '0' em vez de string vazia
-  currentEditingId = null;
-  replaceOnNextDigit = false;
-  isQuantityMode = false;  // Reset para preço default
-
-  // Remover listener de teclado
-  document.removeEventListener('keydown', handleKeyboardInput);
-}
 
 // ===== FUNÇÕES DE MODAL DE STOCK REMOVIDAS =====
 // Substituído por showCriticalAlert para alertas de stock insuficiente
@@ -3110,6 +2699,7 @@ function closeClientPanel() {
     if (clientBtn) clientBtn.classList.remove('panel-active');
     console.log('✅ Painel cliente fechado');
   }
+  if (typeof closeBottomSheet === 'function') closeBottomSheet();
 }
 
 /**
@@ -3126,6 +2716,7 @@ function closeDocPanel() {
     if (docBtn) docBtn.classList.remove('panel-active');
     console.log('✅ Painel documento fechado');
   }
+  if (typeof closeBottomSheet === 'function') closeBottomSheet();
 }
 
 /**
@@ -3149,6 +2740,7 @@ function initInvoiceTypePanelToggles() {
       const invoiceType = this.dataset.invoiceType;
       tipoDocumentoAtual = invoiceType;
       updateInvoiceTypeDisplay(invoiceType);
+      if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
       console.log('📄 [TOGGLES] Tipo selecionado:', invoiceType);
 
       const formatSubOptions = document.getElementById('formatSubOptions');
@@ -3205,6 +2797,30 @@ function initInvoiceTypePanelToggles() {
 }
 
 /**
+ * Atualiza o texto do botão Tipo Factura no sticky bottom menu (telas ≤905px).
+ * Se for Fatura-Recibo, acrescenta o formato (A4 ou 80mm).
+ */
+function updateStickyDocTypeLabel() {
+  const el = document.getElementById('stickyDocTypeLabel');
+  if (!el) return;
+  const typeNames = {
+    'fatura-recibo': 'Fatura-Recibo',
+    'fatura-proforma': 'Fatura Proforma',
+    'fatura': 'Fatura',
+    'orcamento': 'Orçamento'
+  };
+  const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+  let text = typeNames[tipo] || tipo || 'Tipo Factura';
+  if (tipo === 'fatura-recibo') {
+    const formato = (typeof formatoFaturaAtual !== 'undefined' && formatoFaturaAtual)
+      ? formatoFaturaAtual
+      : (document.querySelector('input[name="invoiceFormat"]:checked')?.value || localStorage.getItem('invoiceFormat') || 'A4');
+    text = text + ' (' + (formato === '80mm' ? '80mm' : 'A4') + ')';
+  }
+  el.textContent = text;
+}
+
+/**
  * Atualiza o display do tipo de fatura no botão do cabeçalho
  */
 function updateInvoiceTypeDisplay(invoiceType) {
@@ -3219,6 +2835,8 @@ function updateInvoiceTypeDisplay(invoiceType) {
     displayElement.textContent = typeNames[invoiceType] || invoiceType;
   }
 
+  updateStickyDocTypeLabel();
+
   // Sempre mostra o formato e a seta
   const formatDisplay = document.getElementById('selectedDocFormat');
   const arrowDisplay = document.querySelector('.doc-arrow');
@@ -3231,15 +2849,84 @@ function updateInvoiceTypeDisplay(invoiceType) {
     if (formatDisplay) formatDisplay.textContent = 'Formato A4';
   }
 
-  // Fatura Proforma: bloquear métodos de pagamento e teclado; alterar texto do botão
+  // Fatura Proforma, Fatura e Orçamento: bloquear métodos de pagamento e teclado; alterar texto do botão
   const cartFooter = document.querySelector('.cart-footer');
-  const payBtn = document.querySelector('.keypad-pay-btn');
+  const payBtns = document.querySelectorAll('.keypad-pay-btn');
+  const setPayBtnText = function (text) { payBtns.forEach(function (btn) { btn.textContent = text; }); };
   if (invoiceType === 'fatura-proforma') {
     if (cartFooter) cartFooter.classList.add('document-type-proforma');
-    if (payBtn) payBtn.textContent = 'Gerar Factura Proforma';
+    setPayBtnText('Gerar Factura Proforma');
+  } else if (invoiceType === 'fatura') {
+    if (cartFooter) cartFooter.classList.add('document-type-proforma');
+    setPayBtnText('Gerar Fatura');
+  } else if (invoiceType === 'orcamento') {
+    if (cartFooter) cartFooter.classList.add('document-type-proforma');
+    setPayBtnText('Gerar Orçamento');
   } else {
     if (cartFooter) cartFooter.classList.remove('document-type-proforma');
-    if (payBtn) payBtn.textContent = 'Pagar';
+    setPayBtnText('Pagar');
+  }
+
+  // Cadeados no rodapé: mostrar só quando bloqueado (proforma/fatura/orçamento); sumir com Fatura-Recibo
+  if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(invoiceType);
+}
+
+/**
+ * Adiciona ou remove o ícone de cadeado DENTRO de cada elemento bloqueado do rodapé,
+ * com estilo igual ao do elemento (mesmo font-size e tom de cor).
+ * @param {string} invoiceType - Tipo de documento atual (fatura-recibo, fatura-proforma, fatura, orcamento)
+ */
+function updateCartFooterLockIcons(invoiceType) {
+  const blockFooter = invoiceType === 'fatura-proforma' || invoiceType === 'fatura' || invoiceType === 'orcamento';
+  const footer = document.querySelector('.cart-footer');
+  if (!footer) return;
+
+  function addLock(parent, lockClass) {
+    if (!parent.querySelector('.' + lockClass)) {
+      const wrap = document.createElement('span');
+      wrap.className = lockClass;
+      wrap.setAttribute('aria-hidden', 'true');
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid fa-lock';
+      wrap.appendChild(icon);
+      parent.appendChild(wrap);
+    }
+  }
+  function removeLocks(selector) {
+    footer.querySelectorAll(selector).forEach(function (el) { el.remove(); });
+  }
+
+  if (blockFooter) {
+    // 1) Cada card: substituir conteúdo pelo cadeado
+    footer.querySelectorAll('#paymentMethodsTrack .pm-card').forEach(function (card) {
+      addLock(card, 'pm-card-lock');
+      card.classList.add('locked');
+    });
+    // 2) Input: substituir valor pelo cadeado
+    const amountWrapper = footer.querySelector('.footer-amount-wrapper');
+    if (amountWrapper) {
+      addLock(amountWrapper, 'footer-input-lock');
+      amountWrapper.classList.add('locked');
+    }
+    // 3) Cada botão numérico: substituir número pelo cadeado
+    footer.querySelectorAll('.keypad-grid .keypad-btn').forEach(function (btn) {
+      addLock(btn, 'keypad-btn-lock');
+      btn.classList.add('locked');
+    });
+    // 4) Botão Exato: substituir palavra "Exato" pelo cadeado
+    const exactBtn = footer.querySelector('.keypad-exact-btn');
+    if (exactBtn) {
+      addLock(exactBtn, 'keypad-exact-lock');
+      exactBtn.classList.add('locked');
+    }
+  } else {
+    removeLocks('.pm-card-lock');
+    removeLocks('.footer-input-lock');
+    removeLocks('.keypad-btn-lock');
+    removeLocks('.keypad-exact-lock');
+    footer.querySelectorAll('.pm-card, .footer-amount-wrapper, .keypad-grid .keypad-btn, .keypad-exact-btn').forEach(function (el) {
+      el.classList.remove('locked');
+    });
   }
 }
 
@@ -3260,7 +2947,16 @@ function updateInvoiceFormatDisplay(format) {
 // Inicializa os toggles quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function () {
   initInvoiceTypePanelToggles();
-  
+
+  // [TESTE] Clique na área do usuário logado → alert com width da tela (útil ao redimensionar)
+  const loggedUserArea = document.getElementById('loggedUserArea');
+  if (loggedUserArea) {
+    loggedUserArea.addEventListener('click', function () {
+      var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      alert('Width da tela: ' + w + ' px');
+    });
+  }
+
   // Inicializa visibilidade do sub-toggle de formato
   const formatSubOptions = document.getElementById('formatSubOptions');
   if (formatSubOptions) {
@@ -3268,57 +2964,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const isFaturaRecibo = tipoDocumentoAtual === 'fatura-recibo';
     formatSubOptions.style.display = isFaturaRecibo ? 'flex' : 'none';
   }
-
-  // Inicializa o handler do botão "Pagar" (overlay e botões internos)
-  function handlePayClick(e) {
-    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-
-    const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
-
-    const friendlyNames = {
-      'fatura-recibo': 'Fatura-Recibo',
-      'fatura-proforma': 'Fatura Proforma',
-      'fatura': 'Fatura',
-      'orcamento': 'Orçamento'
-    };
-
-    if (tipo === 'fatura-proforma') {
-      if (typeof processProformaInvoice === 'function') processProformaInvoice();
-      return;
-    }
-    if (tipo !== 'fatura-recibo') {
-      const nome = friendlyNames[tipo] || tipo;
-      showAlert('info', 'Tipo de Documento', `${nome} está em desenvolvimento ou indisponível no momento.`);
-      return;
-    }
-
-    // Caso seja fatura-recibo, prossegue com o fluxo de checkout
-    if (typeof checkoutNextStep === 'function') {
-      checkoutNextStep();
-      return;
-    }
-
-    if (typeof openCheckoutModal === 'function') {
-      openCheckoutModal();
-      return;
-    }
-
-    // Fallback: abre o painel integrado via classe
-    const wrapper = document.querySelector('.products-container-wrapper') || document.querySelector('.interface');
-    if (wrapper) {
-      wrapper.classList.add('panel-open');
-      showAlert('success', 'Checkout', 'Abrindo painel de checkout integrado');
-    } else {
-      showAlert('error', 'Erro', 'Não foi possível iniciar o fluxo de pagamento.');
-    }
-  }
-
-  // Liga o listener ao botão overlay (mobile) e ao botão interno 'btnPayNow' se existirem
-  const placeOrderOverlayBtn = document.getElementById('placeOrderOverlay');
-  if (placeOrderOverlayBtn) placeOrderOverlayBtn.addEventListener('click', handlePayClick);
-
-  const btnPayNow = document.getElementById('btnPayNow');
-  if (btnPayNow) btnPayNow.addEventListener('click', handlePayClick);
 
 });
 
@@ -3347,10 +2992,14 @@ function selectClient(clientId, clientName) {
   // Adiciona active no item clicado
   event.currentTarget.classList.add('active');
 
-  // Atualiza o nome no botão cliente
+  // Atualiza o nome no botão cliente (topo e sticky bottom menu)
   const topClientName = document.getElementById('topSelectedClient');
   if (topClientName) {
     topClientName.textContent = clientName;
+  }
+  const stickyClientLabel = document.getElementById('stickyClientLabel');
+  if (stickyClientLabel) {
+    stickyClientLabel.textContent = clientName;
   }
 
   // Atualiza no checkout também (se existir)
@@ -3506,6 +3155,9 @@ function updateCartDisplay() {
       }
     });
   }
+
+  // Re-verificar overflow do slider de métodos de pagamento (layout do rodapé pode ter mudado)
+  if (typeof scheduleRefreshPaymentMethodsOverflow === 'function') scheduleRefreshPaymentMethodsOverflow();
 }
 
 /**
@@ -4228,14 +3880,18 @@ function removeCartProduct(productId) {
     function () {
       console.log('✅ [CART] Usuário confirmou remoção do produto:', productName);
 
+      // Só limpar métodos de pagamento se este era o único produto no carrinho (comportamento igual ao "Limpar Tudo")
+      const wasOnlyItem = cart.size === 1;
+
       // Remove do carrinho usando o ID numérico
       cart.delete(numericId);
 
       // Sincroniza com a API usando o ID numérico
       syncToAPI(numericId, 0, null);
 
-      // ✅ Reseta os valores dos métodos de pagamento
-      //resetFooterPaymentValues();
+      if (wasOnlyItem && typeof resetFooterPaymentValues === 'function') {
+        resetFooterPaymentValues();
+      }
 
       // Atualiza a exibição
       updateCartDisplay();
@@ -4440,12 +4096,64 @@ function renderFooterPaymentCards() {
   // Atualiza os valores exibidos nos cards
   updateFooterPaymentCards();
 
+  // Garantir que o overflow do slider é reavaliado após os cards estarem no DOM
+  if (typeof scheduleRefreshPaymentMethodsOverflow === 'function') scheduleRefreshPaymentMethodsOverflow();
+
   console.log('✅ [FOOTER] Cards renderizados');
 }
 
 /**
+ * Detecta se o track de métodos de pagamento tem overflow (quebra de linha)
+ * e atualiza a visibilidade das setas + estado disabled.
+ * Mostra setas sempre que qualquer card não estiver totalmente visível.
+ */
+function refreshPaymentMethodsOverflow() {
+  const wrapper = document.getElementById('paymentMethodsWrapper');
+  const track = document.getElementById('paymentMethodsTrack');
+  const prevBtn = document.getElementById('pmArrowPrev');
+  const nextBtn = document.getElementById('pmArrowNext');
+
+  if (!wrapper || !track || !prevBtn || !nextBtn) return;
+
+  const scrollW = track.scrollWidth;
+  const clientW = track.clientWidth;
+  const cards = track.querySelectorAll('.pm-card');
+
+  // Overflow quando o conteúdo é mais largo que a área visível
+  let hasOverflow = scrollW > clientW;
+
+  // Deteção extra: último card parcialmente visível (quebra mínima / subpixel)
+  if (!hasOverflow && cards.length > 0) {
+    const tr = track.getBoundingClientRect();
+    const last = cards[cards.length - 1];
+    const lr = last.getBoundingClientRect();
+    if (lr.right > tr.right - 1) hasOverflow = true;
+  }
+
+  wrapper.classList.toggle('has-overflow', hasOverflow);
+
+  if (hasOverflow) {
+    const scrollLeft = track.scrollLeft;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    prevBtn.disabled = scrollLeft <= 0;
+    nextBtn.disabled = scrollLeft >= maxScroll - 1;
+  }
+}
+
+/**
+ * Agenda o refresh do overflow para depois do layout (evita medição antes do paint).
+ */
+function scheduleRefreshPaymentMethodsOverflow() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (typeof refreshPaymentMethodsOverflow === 'function') refreshPaymentMethodsOverflow();
+    });
+  });
+}
+
+/**
  * Inicializa o slider de métodos de pagamento
- * Arrows only appear when content overflows
+ * Setas só aparecem quando há overflow (quebra nos cards).
  */
 function initPaymentMethodsSlider() {
   const wrapper = document.getElementById('paymentMethodsWrapper');
@@ -4458,40 +4166,26 @@ function initPaymentMethodsSlider() {
     return;
   }
 
-  // Check if overflow exists and toggle arrows visibility
-  function checkOverflow() {
-    const hasOverflow = track.scrollWidth > track.clientWidth;
-    wrapper.classList.toggle('has-overflow', hasOverflow);
-    if (hasOverflow) {
-      updateArrowsState();
-    }
-  }
-
-  // Update arrows disabled state
-  function updateArrowsState() {
-    const scrollLeft = track.scrollLeft;
-    const maxScroll = track.scrollWidth - track.clientWidth;
-
-    prevBtn.disabled = scrollLeft <= 0;
-    nextBtn.disabled = scrollLeft >= maxScroll - 1;
-  }
-
-  // Scroll by page
+  // Scroll por "página"
   function scrollByPage(direction) {
     const pageSize = Math.max(track.clientWidth * 0.8, 100);
     track.scrollBy({ left: direction * pageSize, behavior: 'smooth' });
   }
 
-  // Event listeners
   prevBtn.addEventListener('click', () => scrollByPage(-1));
   nextBtn.addEventListener('click', () => scrollByPage(+1));
-  track.addEventListener('scroll', updateArrowsState);
+  track.addEventListener('scroll', () => refreshPaymentMethodsOverflow());
 
-  // Initial check
-  checkOverflow();
+  // Verificação inicial após o layout estar estável
+  scheduleRefreshPaymentMethodsOverflow();
 
-  // Re-check on resize
-  window.addEventListener('resize', checkOverflow);
+  // Re-verificar no resize (debounce para evitar excesso de chamadas)
+  let resizeTimeout;
+  const onResize = () => {
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(scheduleRefreshPaymentMethodsOverflow, 120);
+  };
+  window.addEventListener('resize', onResize);
 }
 
 /**
@@ -4965,6 +4659,7 @@ document.addEventListener('DOMContentLoaded', function () {
   loadFooterPaymentMethods();
   initOrderSummarySlider();
   initFooterKeypad();
+  if (typeof initBottomSheetSystem === 'function') initBottomSheetSystem();
 });
 
 /**
@@ -5079,6 +4774,8 @@ window.updateFooterPaymentCards = updateFooterPaymentCards;
 window.selectFooterPaymentMethod = selectFooterPaymentMethod;
 window.resetFooterPaymentValues = resetFooterPaymentValues;
 window.updatePaymentStatus = updatePaymentStatus;
+window.refreshPaymentMethodsOverflow = refreshPaymentMethodsOverflow;
+window.scheduleRefreshPaymentMethodsOverflow = scheduleRefreshPaymentMethodsOverflow;
 
 /* ======= ORDER SUMMARY SLIDER ======= */
 /**
@@ -5090,17 +4787,83 @@ function initOrderSummarySlider() {
   const obsBackBtn = document.getElementById('obsBackBtn');
   const obsSubmitBtn = document.getElementById('obsSubmitBtn');
   const orderObservation = document.getElementById('orderObservation');
+  const innerSlider = document.getElementById('orderObsInnerSlider');
+  const obsTabObservacao = document.getElementById('obsTabObservacao');
+  const obsTabDesc = document.getElementById('obsTabDesc');
 
   if (!slider || !obsToggleBtn || !obsBackBtn) {
     console.warn('Order summary slider elements not found');
     return;
   }
 
-  // Toggle to OBS view
+  const orderDiscountInput = document.getElementById('orderDiscountInput');
+
+  function setObsTab(panel) {
+    if (!innerSlider || !obsTabObservacao || !obsTabDesc) return;
+    const bodyWrapper = innerSlider.parentElement; // .order-obs-body-wrapper
+    if (panel === 'desc') {
+      const offsetPx = bodyWrapper.offsetWidth;
+      innerSlider.style.transform = 'translateX(-' + offsetPx + 'px)';
+      obsTabObservacao.classList.remove('active');
+      obsTabObservacao.setAttribute('aria-selected', 'false');
+      obsTabDesc.classList.add('active');
+      obsTabDesc.setAttribute('aria-selected', 'true');
+      setTimeout(function () {
+        if (orderDiscountInput) orderDiscountInput.focus();
+      }, 350);
+    } else {
+      innerSlider.style.transform = 'translateX(0px)';
+      obsTabObservacao.classList.add('active');
+      obsTabObservacao.setAttribute('aria-selected', 'true');
+      obsTabDesc.classList.remove('active');
+      obsTabDesc.setAttribute('aria-selected', 'false');
+    }
+  }
+
+  /** Bloqueia a aba Desc. quando o tipo de documento é fatura-proforma, fatura ou orçamento.
+   *  Cadeado só aparece quando a aba está bloqueada; com Fatura-Recibo (A4 ou 80mm) o cadeado some. */
+  function updateDescTabBlockState() {
+    const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+    const blockDesc = tipo === 'fatura-proforma' || tipo === 'fatura' || tipo === 'orcamento';
+    if (obsTabDesc) {
+      obsTabDesc.classList.toggle('disabled', blockDesc);
+      obsTabDesc.setAttribute('aria-disabled', blockDesc ? 'true' : 'false');
+      // Cadeado: só inserir no DOM quando bloqueado; remover quando Fatura-Recibo
+      const lockEl = obsTabDesc.querySelector('.obs-tab-lock-icon');
+      if (blockDesc) {
+        if (!lockEl) {
+          const icon = document.createElement('i');
+          icon.className = 'fa-solid fa-lock obs-tab-lock-icon';
+          icon.setAttribute('aria-hidden', 'true');
+          icon.style.marginLeft = '4px';
+          icon.style.fontSize = '10px';
+          obsTabDesc.appendChild(icon);
+        }
+      } else {
+        if (lockEl) lockEl.remove();
+      }
+    }
+    if (blockDesc) setObsTab('obs');
+  }
+
+  if (obsTabObservacao) {
+    obsTabObservacao.addEventListener('click', function () { setObsTab('obs'); });
+  }
+  if (obsTabDesc) {
+    obsTabDesc.addEventListener('click', function () {
+      if (obsTabDesc.classList.contains('disabled')) return;
+      setObsTab('desc');
+    });
+  }
+
+  window.updateOrderSummaryDescTabState = updateDescTabBlockState;
+  updateDescTabBlockState();
+
+  // Toggle to OBS view (como em leia.txt); ao abrir, mostrar sempre a aba Observação
   obsToggleBtn.addEventListener('click', function () {
+    setObsTab('obs');
     slider.classList.add('show-obs');
-    // Focus on textarea after transition
-    setTimeout(() => {
+    setTimeout(function () {
       if (orderObservation) orderObservation.focus();
     }, 350);
   });
@@ -5110,30 +4873,78 @@ function initOrderSummarySlider() {
     slider.classList.remove('show-obs');
   });
 
+  /* Recalcular o transform do inner slider em resize APENAS se:
+     1. O painel DESC está activo (transform != 0px)
+     2. O contentor OBS está visível (slider tem classe show-obs)
+     3. O layout está estável (usa requestAnimationFrame + debounce) */
+  if (innerSlider && typeof ResizeObserver !== 'undefined') {
+    const bodyWrapper = innerSlider.parentElement;
+    let resizeTimeout;
+
+    const recalculateTransform = function () {
+      // Só recalcular se o painel DESC está visível E o contentor OBS está aberto
+      if (!slider.classList.contains('show-obs')) return;
+      if (!innerSlider.style.transform || innerSlider.style.transform === 'translateX(0px)') return;
+
+      // requestAnimationFrame garante que o DOM foi completamente renderizado
+      requestAnimationFrame(function () {
+        const newOffsetPx = bodyWrapper.offsetWidth;
+        if (newOffsetPx > 0) {
+          innerSlider.style.transform = 'translateX(-' + newOffsetPx + 'px)';
+        }
+      });
+    };
+
+    const resizeObs = new ResizeObserver(function () {
+      // Debounce: só recalcular 100ms após o último evento de resize
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(recalculateTransform, 100);
+    });
+
+    resizeObs.observe(bodyWrapper);
+  }
+
   // Submit observation
   if (obsSubmitBtn) {
     obsSubmitBtn.addEventListener('click', function () {
       const observation = orderObservation ? orderObservation.value.trim() : '';
-
-      // Store observation in global state
       window.orderObservation = observation;
-
       console.log('📝 Observação salva:', observation);
-
-      // Visual feedback
       obsSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo!';
       obsSubmitBtn.style.background = '#4caf50';
-
-      // Slide back to summary view
-      setTimeout(() => {
+      setTimeout(function () {
         slider.classList.remove('show-obs');
-
-        // Reset button after slide animation
-        setTimeout(() => {
+        setTimeout(function () {
           obsSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar';
           obsSubmitBtn.style.background = '';
         }, 400);
       }, 500);
+    });
+  }
+
+  // Input de desconto com formatação monetária (como valor pago e preço do produto)
+  if (orderDiscountInput && typeof MonetaryFormatter !== 'undefined') {
+    window.orderDiscountFormatter = new MonetaryFormatter('orderDiscountInput', {
+      locale: 'pt-AO',
+      currency: 'Kz',
+      decimals: 2,
+      allowNegative: false,
+      onValueChange: function (value) { window.orderDiscountValue = value; }
+    });
+    window.orderDiscountFormatter.enable();
+    window.orderDiscountFormatter.setValue(0);
+  }
+
+  // Aplicar desconto (valor guardado para uso no cálculo)
+  const orderDiscountApplyBtn = document.getElementById('orderDiscountApplyBtn');
+  if (orderDiscountApplyBtn && orderDiscountInput) {
+    orderDiscountApplyBtn.addEventListener('click', function () {
+      const value = window.orderDiscountFormatter ? window.orderDiscountFormatter.getValue() : parseFloat((orderDiscountInput.value || '').replace(/\s/g, '').replace(',', '.')) || 0;
+      window.orderDiscountValue = value;
+      console.log('💰 Desconto aplicado:', value);
+      if (typeof showAlert === 'function') {
+        showAlert('info', 'Desconto', value ? 'Valor de desconto definido: ' + currency.format(value) : 'Introduza um valor.', 3000);
+      }
     });
   }
 
@@ -5332,29 +5143,18 @@ function collectPaymentData() {
 let payButtonAnimationInterval = null;
 
 function startPayButtonAnimation() {
-  const payButton = document.querySelector('.keypad-pay-btn');
-  if (!payButton) return;
+  const payButtons = document.querySelectorAll('.keypad-pay-btn');
+  if (!payButtons.length) return;
   
-  // ✅ NOVO: Adiciona classe loading para estilização
-  payButton.classList.add('loading');
-  
-  // Estado inicial
+  payButtons.forEach(function (btn) { btn.classList.add('loading'); });
   let dotCount = 0;
-  
-  // Limpa animação anterior se existir
-  if (payButtonAnimationInterval) {
-    clearInterval(payButtonAnimationInterval);
-  }
-  
-  // Inicia animação (cicla a cada 400ms)
-  payButtonAnimationInterval = setInterval(() => {
-    dotCount = (dotCount % 3) + 1; // Cicla: 1, 2, 3, 1, 2, 3...
-    // ✅ NOVO: Usa bullet character (•) com espaçamento entre dots
+  if (payButtonAnimationInterval) clearInterval(payButtonAnimationInterval);
+  payButtonAnimationInterval = setInterval(function () {
+    dotCount = (dotCount % 3) + 1;
     const bulletChar = '•';
     const dots = Array(dotCount).fill(bulletChar).join(' ');
-    payButton.textContent = dots;
+    payButtons.forEach(function (btn) { btn.textContent = dots; });
   }, 400);
-  
   console.log('⏳ Animação do botão Pagar iniciada');
 }
 
@@ -5364,14 +5164,10 @@ function stopPayButtonAnimation() {
     payButtonAnimationInterval = null;
   }
   
-  const payButton = document.querySelector('.keypad-pay-btn');
-  if (payButton) {
-    // ✅ NOVO: Remove classe loading
-    payButton.classList.remove('loading');
-    // ✅ NOVO: Mantém 3 bullets ao parar (consistência visual)
-    payButton.textContent = '• • •';
-  }
-  
+  document.querySelectorAll('.keypad-pay-btn').forEach(function (btn) {
+    btn.classList.remove('loading');
+    btn.textContent = '• • •';
+  });
   console.log('⏸️ Animação do botão Pagar parada');
 }
 
@@ -5381,13 +5177,10 @@ function resetPayButtonText() {
     payButtonAnimationInterval = null;
   }
   
-  const payButton = document.querySelector('.keypad-pay-btn');
-  if (payButton) {
-    // ✅ NOVO: Remove classe loading ao resetar
-    payButton.classList.remove('loading');
-    payButton.textContent = 'Pagar'; // Restaura texto original
-  }
-  
+  document.querySelectorAll('.keypad-pay-btn').forEach(function (btn) {
+    btn.classList.remove('loading');
+    btn.textContent = 'Pagar';
+  });
   console.log('🔄 Texto do botão Pagar restaurado');
 }
 
@@ -5425,13 +5218,24 @@ async function processProformaInvoice() {
       showAlert('info', 'Processando', 'A gerar Factura Proforma...', 0);
     }
 
+    let observacao = '';
+    try {
+      if (typeof getOrderObservation === 'function') {
+        const obs = getOrderObservation();
+        observacao = (obs && typeof obs === 'string') ? obs.trim() : '';
+      }
+    } catch (e) {
+      observacao = '';
+    }
+
     const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         acao: 'fatura-proforma',
         id_cliente: idCliente,
-        tipo_documento: 'Factura-Proforma'
+        tipo_documento: 'Factura-Proforma',
+        observacao: observacao
       })
     });
 
@@ -5496,6 +5300,245 @@ async function processProformaInvoice() {
       showAlert('error', 'Erro', error.message || 'Erro ao gerar Factura Proforma.', 5000);
     } else {
       alert(error.message || 'Erro ao gerar Factura Proforma.');
+    }
+  }
+}
+
+/**
+ * Processa e imprime Orçamento (mesmo comportamento da Factura Proforma: sem pagamento, A4).
+ * Envia id_cliente e observacao ao backend, renderiza A4 e abre a janela de impressão.
+ */
+async function processOrcamentoInvoice() {
+  console.log('🚀 [ORÇAMENTO] Iniciando Orçamento...');
+
+  if (!cart || cart.size === 0 || currentCartTotal <= 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('warning', 'Carrinho Vazio', 'Adicione produtos ao carrinho antes de gerar o Orçamento.', 4000);
+    } else {
+      alert('Adicione produtos ao carrinho.');
+    }
+    return;
+  }
+
+  let idCliente;
+  try {
+    idCliente = getIdClienteForDocument();
+  } catch (e) {
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', e.message || 'Cliente inválido.');
+    } else {
+      alert(e.message);
+    }
+    return;
+  }
+
+  try {
+    startPayButtonAnimation();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'Processando', 'A gerar Orçamento...', 0);
+    }
+
+    let observacao = '';
+    try {
+      if (typeof getOrderObservation === 'function') {
+        const obs = getOrderObservation();
+        observacao = (obs && typeof obs === 'string') ? obs.trim() : '';
+      }
+    } catch (e) {
+      observacao = '';
+    }
+
+    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        acao: 'orcamento',
+        id_cliente: idCliente,
+        tipo_documento: 'Orcamento',
+        observacao: observacao
+      })
+    });
+
+    const rawText = await response.text();
+    if (rawText.trim().startsWith('<')) {
+      throw new Error('Erro no servidor. Verifique os logs do PHP.');
+    }
+    const data = JSON.parse(rawText);
+
+    if (!response.ok || !data.sucesso) {
+      throw new Error(data.erro || data.mensagem || 'Erro ao processar Orçamento');
+    }
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'A gerar documento', 'A preparar impressão A4...', 0);
+    }
+
+    await loadInvoiceAssets('A4');
+    applyInvoicePrintStyles('A4');
+
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+    if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
+
+    container80.innerHTML = '';
+    container80.style.display = 'none';
+    containerA4.style.display = 'block';
+    containerA4.style.position = 'fixed';
+    containerA4.style.top = '-9999px';
+    containerA4.style.left = '-9999px';
+    containerA4.style.zIndex = '-1';
+    containerA4.innerHTML = '';
+
+    if (typeof window.renderizarFaturaComDadosBackend !== 'function') {
+      throw new Error('Função renderizarFaturaComDadosBackend não encontrada');
+    }
+    window.renderizarFaturaComDadosBackend(data);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    if (!containerA4.innerHTML.trim()) throw new Error('Falha na renderização do Orçamento');
+
+    window.print();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    await new Promise(resolve => setTimeout(resolve, 150));
+    await clearCartAfterSale();
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('success', 'Orçamento gerado', `Documento ${data.codigo_documento} gerado com sucesso.`, 4000);
+    }
+  } catch (error) {
+    console.error('❌ [ORÇAMENTO]', error);
+    if (typeof closeAlert === 'function') closeAlert();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', error.message || 'Erro ao gerar Orçamento.', 5000);
+    } else {
+      alert(error.message || 'Erro ao gerar Orçamento.');
+    }
+  }
+}
+
+/**
+ * Processa e imprime Fatura (sem pagamento; baixa stock).
+ * Envia id_cliente e observacao ao backend, renderiza A4 e abre a janela de impressão.
+ */
+async function processFaturaInvoice() {
+  console.log('🚀 [FATURA] Iniciando Fatura...');
+
+  if (!cart || cart.size === 0 || currentCartTotal <= 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('warning', 'Carrinho Vazio', 'Adicione produtos ao carrinho antes de gerar a Fatura.', 4000);
+    } else {
+      alert('Adicione produtos ao carrinho.');
+    }
+    return;
+  }
+
+  let idCliente;
+  try {
+    idCliente = getIdClienteForDocument();
+  } catch (e) {
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', e.message || 'Cliente inválido.');
+    } else {
+      alert(e.message);
+    }
+    return;
+  }
+
+  try {
+    startPayButtonAnimation();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'Processando', 'A gerar Fatura...', 0);
+    }
+
+    let observacao = '';
+    try {
+      if (typeof getOrderObservation === 'function') {
+        const obs = getOrderObservation();
+        observacao = (obs && typeof obs === 'string') ? obs.trim() : '';
+      }
+    } catch (e) {
+      observacao = '';
+    }
+
+    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        acao: 'fatura',
+        id_cliente: idCliente,
+        observacao: observacao
+      })
+    });
+
+    const rawText = await response.text();
+    if (rawText.trim().startsWith('<')) {
+      throw new Error('Erro no servidor. Verifique os logs do PHP.');
+    }
+    const data = JSON.parse(rawText);
+
+    if (!response.ok || !data.sucesso) {
+      throw new Error(data.erro || data.mensagem || 'Erro ao processar Fatura');
+    }
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('info', 'A gerar documento', 'A preparar impressão A4...', 0);
+    }
+
+    await loadInvoiceAssets('A4');
+    applyInvoicePrintStyles('A4');
+
+    const containerA4 = document.getElementById('inv-a4-container-principal');
+    const container80 = document.getElementById('fatura80-container-inv80');
+    if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
+
+    container80.innerHTML = '';
+    container80.style.display = 'none';
+    containerA4.style.display = 'block';
+    containerA4.style.position = 'fixed';
+    containerA4.style.top = '-9999px';
+    containerA4.style.left = '-9999px';
+    containerA4.style.zIndex = '-1';
+    containerA4.innerHTML = '';
+
+    if (typeof window.renderizarFaturaComDadosBackend !== 'function') {
+      throw new Error('Função renderizarFaturaComDadosBackend não encontrada');
+    }
+    window.renderizarFaturaComDadosBackend(data);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    if (!containerA4.innerHTML.trim()) throw new Error('Falha na renderização da Fatura');
+
+    window.print();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    await new Promise(resolve => setTimeout(resolve, 150));
+    await clearCartAfterSale();
+
+    if (typeof closeAlert === 'function') closeAlert();
+    if (typeof showAlert === 'function') {
+      showAlert('success', 'Fatura gerada', `Documento ${data.codigo_documento} gerado com sucesso.`, 4000);
+    }
+  } catch (error) {
+    console.error('❌ [FATURA]', error);
+    if (typeof closeAlert === 'function') closeAlert();
+    resetPayButtonText();
+    if (typeof updateInvoiceTypeDisplay === 'function') {
+      updateInvoiceTypeDisplay(getTipoDocumentoAtual());
+    }
+    if (typeof showAlert === 'function') {
+      showAlert('error', 'Erro', error.message || 'Erro ao gerar Fatura.', 5000);
+    } else {
+      alert(error.message || 'Erro ao gerar Fatura.');
     }
   }
 }
@@ -5931,66 +5974,50 @@ function getTipoDocumentoAtual() {
  */
 function initPayButton() {
   console.log('🔧 [PAY BUTTON] Tentando inicializar botão Pagar...');
-  
-  // ✅ CRITICAL FIX: Wait for DOM to be fully ready
-  const attachListener = () => {
-    const payButton = document.querySelector('.keypad-pay-btn');
-    
-    if (!payButton) {
-      console.warn('⚠️ [PAY BUTTON] Botão ".keypad-pay-btn" não encontrado no DOM');
-      console.warn('⚠️ [PAY BUTTON] Tentando novamente em 500ms...');
-      
-      // Retry after 500ms if button not found
-      setTimeout(attachListener, 500);
+  const cartFooter = document.querySelector('.cart-footer');
+  if (!cartFooter) {
+    console.warn('⚠️ [PAY BUTTON] .cart-footer não encontrado, tentando em 500ms...');
+    setTimeout(initPayButton, 500);
+    return;
+  }
+  cartFooter.addEventListener('click', async function (e) {
+    if (!e.target || !e.target.closest('.keypad-pay-btn')) return;
+    e.preventDefault();
+    console.log('💳 [PAY BUTTON] Botão "Pagar" clicado');
+    var tipoDoc = getTipoDocumentoAtual();
+    console.log('📄 [PAY BUTTON] Tipo de documento:', tipoDoc);
+    if (tipoDoc === 'fatura-proforma') {
+      console.log('🚀 [PAY BUTTON] Chamando processProformaInvoice()...');
+      await processProformaInvoice();
       return;
     }
-    
-    console.log('✅ [PAY BUTTON] Botão encontrado:', payButton);
-    
-    // Remove old listeners (prevent duplicates)
-    const newPayButton = payButton.cloneNode(true);
-    payButton.parentNode.replaceChild(newPayButton, payButton);
-    
-    // Add new listener
-    newPayButton.addEventListener('click', async function(e) {
-      e.preventDefault();
-      
-      console.log('💳 [PAY BUTTON] Botão "Pagar" clicado');
-      
-      // Validate document type
-      const tipoDoc = getTipoDocumentoAtual();
-      
-      console.log('📄 [PAY BUTTON] Tipo de documento:', tipoDoc);
-      
-      if (tipoDoc === 'fatura-proforma') {
-        console.log('🚀 [PAY BUTTON] Chamando processProformaInvoice()...');
-        await processProformaInvoice();
-        return;
+    if (tipoDoc === 'fatura') {
+      console.log('🚀 [PAY BUTTON] Chamando processFaturaInvoice()...');
+      await processFaturaInvoice();
+      return;
+    }
+    if (tipoDoc === 'orcamento') {
+      console.log('🚀 [PAY BUTTON] Chamando processOrcamentoInvoice()...');
+      await processOrcamentoInvoice();
+      return;
+    }
+    if (tipoDoc !== 'fatura-recibo') {
+      if (typeof showAlert === 'function') {
+        showAlert(
+          'warning',
+          'Tipo Não Suportado',
+          'Este tipo de documento ainda não está implementado. Use Fatura-Recibo, Fatura Proforma ou Orçamento.',
+          4000
+        );
+      } else {
+        alert('Este tipo de documento ainda não está implementado.');
       }
-      if (tipoDoc !== 'fatura-recibo') {
-        if (typeof showAlert === 'function') {
-          showAlert(
-            'warning',
-            'Tipo Não Suportado',
-            'Este tipo de documento ainda não está implementado. Use Fatura-Recibo ou Fatura Proforma.',
-            4000
-          );
-        } else {
-          alert('Este tipo de documento ainda não está implementado.');
-        }
-        return;
-      }
-
-      // Process receipt-invoice
-      console.log('🚀 [PAY BUTTON] Chamando processReceiptInvoice()...');
-      await processReceiptInvoice();
-    });
-    
-    console.log('✅ [PAY BUTTON] Event listener attached successfully');
-  };
-  
-  // Start attachment process
-  attachListener();
+      return;
+    }
+    console.log('🚀 [PAY BUTTON] Chamando processReceiptInvoice()...');
+    await processReceiptInvoice();
+  });
+  console.log('✅ [PAY BUTTON] Event listener (delegação) attached em .cart-footer');
 }
 
 // ✅ Pay button initialization now handled in init() function
@@ -6257,41 +6284,6 @@ function onCancelAction() {
 }
 
 /**
- * Função legada para compatibilidade (usada em index.php)
- */
-function closeCheckoutModal() {
-  // Fallback legada: fecha o checkout integrado / overlay se existir
-  const wrapper = document.querySelector('.interface');
-  if (wrapper) wrapper.classList.remove('panel-open');
-  const overlay = document.getElementById('checkoutModalOverlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    overlay.classList.remove('active');
-  }
-  console.log('⚠️ [FALLBACK] closeCheckoutModal executed (legacy fallback)');
-}
-
-function showCloseConfirmation() {
-    console.log('❓ [CONFIRM] Mostrando modal de confirmação (legado)...');
-    
-    showConfirmModal({
-        title: 'Fechar Checkout?',
-        message: 'Tem certeza que deseja fechar? Todo o progresso será perdido.',
-        confirmText: 'Sim, Fechar',
-        cancelText: 'Cancelar',
-        confirmColor: 'red',
-        icon: 'warning'
-    }, closeCheckoutModal);
-}
-
-/**
- * Função legada para compatibilidade (usada em index.php)
- */
-function hideCloseConfirmation() {
-    hideConfirmModal();
-}
-
-/**
  * Inicializa os listeners dos botões da modal de confirmação
  * Liga: confirm -> onConfirmAction, cancel/close/overlay -> onCancelAction
  */
@@ -6332,9 +6324,6 @@ window.showConfirmModal = showConfirmModal;
 window.hideConfirmModal = hideConfirmModal;
 window.onConfirmAction = onConfirmAction;
 window.onCancelAction = onCancelAction;
-window.showCloseConfirmation = showCloseConfirmation;
-window.hideCloseConfirmation = hideCloseConfirmation;
-window.closeCheckoutModal = closeCheckoutModal;
 window.updateConfirmModalContent = updateConfirmModalContent;
 
 // ============================================
@@ -6353,3 +6342,313 @@ window.resetInvoiceAssetsState = resetInvoiceAssetsState;
 window.invoiceAssetsState = invoiceAssetsState;
 
 console.log('✅ [APP] Funções de pagamento e fatura exportadas globalmente');
+
+/* ===== STICKY BOTTOM MENU + MODAL BOTTOM SHEET (≤905px) ===== */
+function initBottomSheetSystem() {
+  const stickyMenu = document.getElementById('stickyBottomMenu');
+  const overlay = document.getElementById('bottomSheetOverlay');
+  const sheet = document.getElementById('bottomSheet');
+  const sheetTitle = document.getElementById('bottomSheetTitle');
+  const sheetBody = document.getElementById('bottomSheetBody');
+  const sheetClose = document.getElementById('bottomSheetClose');
+  const sheetHandle = sheet ? sheet.querySelector('.bottom-sheet-handle') : null;
+  const clientBtn = document.getElementById('stickyClientBtn');
+  const cartBtn = document.getElementById('stickyCartBtn');
+  const docTypeBtn = document.getElementById('stickyDocTypeBtn');
+  const cartBadge = document.getElementById('stickyCartBadge');
+
+  if (!sheet || !overlay || !clientBtn || !cartBtn || !docTypeBtn) {
+    console.warn('Bottom sheet elements not found');
+    return;
+  }
+
+  let currentPanel = null;
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  function openBottomSheet(title, contentHTML, panelType) {
+    currentPanel = panelType;
+    if (sheetTitle) sheetTitle.textContent = title;
+    if (panelType === 'client') {
+      sheetBody.innerHTML = '';
+      var panelBody = document.querySelector('#clientePanelSlider .panel-body-slider');
+      if (panelBody) {
+        while (panelBody.firstChild) {
+          sheetBody.appendChild(panelBody.firstChild);
+        }
+      }
+    } else if (panelType === 'doctype') {
+      sheetBody.innerHTML = '';
+      var docPanel = document.querySelector('#docTypePanelSlider .invoice-type-options-panel');
+      if (docPanel) {
+        while (docPanel.firstChild) {
+          sheetBody.appendChild(docPanel.firstChild);
+        }
+      }
+      var docHeader = document.createElement('div');
+      docHeader.className = 'bottom-sheet-doc-type-header';
+      docHeader.innerHTML = '<span class="bottom-sheet-doc-type-title">Tipo de Factura</span>' +
+        '<button type="button" class="bottom-sheet-close-btn-doc" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>';
+      sheetBody.insertBefore(docHeader, sheetBody.firstChild);
+      var docCloseBtn = docHeader.querySelector('.bottom-sheet-close-btn-doc');
+      if (docCloseBtn) docCloseBtn.addEventListener('click', closeBottomSheet);
+    } else if (panelType === 'cart') {
+      sheetBody.innerHTML = '';
+      var checkoutPanel = document.getElementById('checkoutPanel');
+      var cartHeader = checkoutPanel ? checkoutPanel.querySelector('.cart-header') : null;
+      var cartBodyWrapper = document.getElementById('cartBodyWrapper');
+      var cartContentArea = document.getElementById('cartContentArea');
+      var cartFooter = checkoutPanel ? checkoutPanel.querySelector('.cart-footer') : null;
+      if (cartHeader) sheetBody.appendChild(cartHeader);
+
+      var docTypeNames = { 'fatura-recibo': 'Fatura-Recibo', 'fatura-proforma': 'Fatura Proforma', 'fatura': 'Fatura', 'orcamento': 'Orçamento' };
+      var currentDocType = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+      var docTypeLabel = docTypeNames[currentDocType] || currentDocType || 'Factura';
+
+      var tabBar = document.createElement('div');
+      tabBar.className = 'cart-sheet-tabs';
+      tabBar.setAttribute('role', 'tablist');
+      tabBar.innerHTML = '<button type="button" class="cart-sheet-tab active" role="tab" aria-selected="true" data-cart-tab="fatura">' + docTypeLabel + '</button>' +
+        '<button type="button" class="cart-sheet-tab" role="tab" aria-selected="false" data-cart-tab="ordem">Ordem de Venda</button>';
+      sheetBody.appendChild(tabBar);
+
+      var tabPanel = document.createElement('div');
+      tabPanel.className = 'cart-sheet-tab-panel cart-sheet-tab-panel-fatura';
+      if (cartContentArea) tabPanel.appendChild(cartContentArea);
+      if (cartFooter) tabPanel.appendChild(cartFooter);
+      sheetBody.appendChild(tabPanel);
+
+      var ordemPanel = document.createElement('div');
+      ordemPanel.className = 'cart-sheet-tab-panel cart-sheet-tab-panel-ordem';
+      ordemPanel.setAttribute('hidden', '');
+      ordemPanel.innerHTML = '<div class="cart-sheet-ordem-placeholder">Ordem de Venda (em breve)</div>';
+      sheetBody.appendChild(ordemPanel);
+
+      tabBar.querySelectorAll('.cart-sheet-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var tab = this.getAttribute('data-cart-tab');
+          tabBar.querySelectorAll('.cart-sheet-tab').forEach(function (b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+          this.classList.add('active');
+          this.setAttribute('aria-selected', 'true');
+          sheetBody.querySelectorAll('.cart-sheet-tab-panel').forEach(function (p) { p.setAttribute('hidden', ''); });
+          var target = sheetBody.querySelector('.cart-sheet-tab-panel-' + tab);
+          if (target) { target.removeAttribute('hidden'); }
+        });
+      });
+
+    } else {
+      sheetBody.innerHTML = contentHTML;
+    }
+    if (panelType === 'doctype') {
+      sheet.classList.add('bottom-sheet--short');
+    } else {
+      sheet.classList.remove('bottom-sheet--short');
+    }
+    document.body.style.overflow = 'hidden';
+    overlay.classList.add('active');
+    sheet.classList.remove('closing', 'slide-up');
+    sheet.classList.add('active');
+    sheet.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        sheet.classList.add('slide-up');
+      });
+    });
+    initPanelContent(panelType);
+  }
+
+  function closeBottomSheet() {
+    if (!sheet.classList.contains('active')) return;
+
+    sheet.classList.add('closing');
+    var panelType = currentPanel;
+
+    function onTransitionEnd(e) {
+      if (e.target !== sheet || e.propertyName !== 'transform') return;
+      sheet.removeEventListener('transitionend', onTransitionEnd);
+      sheet.classList.remove('active', 'closing', 'slide-up', 'bottom-sheet--short');
+      sheet.style.transform = '';
+      sheet.setAttribute('aria-hidden', 'true');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+      currentPanel = null;
+
+      if (panelType === 'client') {
+        var panelBody = document.querySelector('#clientePanelSlider .panel-body-slider');
+        if (panelBody) {
+          while (sheetBody.firstChild) {
+            panelBody.appendChild(sheetBody.firstChild);
+          }
+        }
+      }
+      if (panelType === 'doctype') {
+        var docHeaderEl = sheetBody.querySelector('.bottom-sheet-doc-type-header');
+        if (docHeaderEl) docHeaderEl.remove();
+        var docPanel = document.querySelector('#docTypePanelSlider .invoice-type-options-panel');
+        if (docPanel) {
+          while (sheetBody.firstChild) {
+            docPanel.appendChild(sheetBody.firstChild);
+          }
+        }
+      }
+      if (panelType === 'cart') {
+        var cartHeader = sheetBody.querySelector('.cart-header');
+        var tabPanel = sheetBody.querySelector('.cart-sheet-tab-panel-fatura');
+        var cartContentArea = sheetBody.querySelector('#cartContentArea');
+        var cartFooterEl = sheetBody.querySelector('.cart-footer');
+        var checkoutPanel = document.getElementById('checkoutPanel');
+        var cartBodyWrapper = document.getElementById('cartBodyWrapper');
+        var cartBody = checkoutPanel ? checkoutPanel.querySelector('.cart-body') : null;
+        if (cartHeader && checkoutPanel && cartBody) checkoutPanel.insertBefore(cartHeader, cartBody);
+        if (cartContentArea && cartBodyWrapper) cartBodyWrapper.appendChild(cartContentArea);
+        if (cartFooterEl && checkoutPanel) checkoutPanel.appendChild(cartFooterEl);
+      }
+      setTimeout(function () {
+        sheetBody.innerHTML = '';
+      }, 50);
+    }
+
+    sheet.addEventListener('transitionend', onTransitionEnd);
+  }
+
+  function getClientPanelContent() {
+    return ''; /* Conteúdo real é o painel desktop movido para o sheet em openBottomSheet */
+  }
+
+  function getCartPanelContent() {
+    const items = [];
+    cart.forEach(function (cartItem, productId) {
+      const price = cartItem.customPrice != null ? parseFloat(cartItem.customPrice) : parseFloat(cartItem.product.price);
+      items.push({
+        id: productId,
+        name: cartItem.product.name || cartItem.product.descricao || 'Item',
+        price: price,
+        quantity: cartItem.qty
+      });
+    });
+
+    if (items.length === 0) {
+      return '<div class="empty-cart">' +
+        '<i class="fa-solid fa-cart-shopping"></i>' +
+        '<p>Carrinho vazio</p>' +
+        '<span>Adicione produtos para começar</span>' +
+        '</div>';
+    }
+
+    const itemsHTML = items.map(function (item, index) {
+      return '<div class="cart-item" data-id="' + item.id + '">' +
+        '<div class="cart-item-info">' +
+        '<span class="cart-item-name">' + (item.name || 'Item') + '</span>' +
+        '<span class="cart-item-price">' + currency.format(item.price) + '</span>' +
+        '</div>' +
+        '<div class="cart-item-qty">' +
+        '<button class="qty-btn" data-action="decrease" data-id="' + item.id + '">-</button>' +
+        '<span class="qty-value">' + item.quantity + '</span>' +
+        '<button class="qty-btn" data-action="increase" data-id="' + item.id + '">+</button>' +
+        '</div>' +
+        '<button class="cart-item-remove" data-id="' + item.id + '">' +
+        '<i class="fa-solid fa-trash"></i>' +
+        '</button>' +
+        '</div>';
+    }).join('');
+
+    let total = 0;
+    items.forEach(function (item) {
+      total += item.price * item.quantity;
+    });
+
+    return '<div class="cart-panel-content">' +
+      '<div class="cart-items-list">' + itemsHTML + '</div>' +
+      '<div class="cart-total">' +
+      '<span>Total:</span>' +
+      '<span class="cart-total-value">' + currency.format(total) + '</span>' +
+      '</div>' +
+      '</div>';
+  }
+
+  function getDocTypePanelContent() {
+    return ''; /* Limpo por agora; conteúdo será o painel desktop (como no Cliente) */
+  }
+
+  function initPanelContent(panelType) {
+    if (panelType === 'client') {
+      /* Conteúdo é o painel desktop movido para o sheet; ClientManager já está ligado aos mesmos elementos. */
+    }
+
+    if (panelType === 'cart') {
+      /* Conteúdo é o carrinho real (#cartContentArea) movido para o sheet; os cards já têm os handlers (removeCartProduct, toggleCardExpansion, etc.). */
+    }
+
+    if (panelType === 'doctype') {
+      /* Conteúdo será o painel desktop movido para o sheet (a implementar). */
+      if (sheetBody.querySelectorAll('.doc-type-item').length) {
+        sheetBody.querySelectorAll('.doc-type-item').forEach(function (item) {
+          item.addEventListener('click', function () {
+            const docType = this.getAttribute('data-doc-type');
+            tipoDocumentoAtual = docType;
+            if (typeof updateInvoiceTypeDisplay === 'function') updateInvoiceTypeDisplay(docType);
+            if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
+            if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(docType);
+            sheetBody.querySelectorAll('.doc-type-item').forEach(function (i) { i.classList.remove('active'); });
+            this.classList.add('active');
+            setTimeout(function () {
+              if (typeof closeBottomSheet === 'function') closeBottomSheet();
+            }, 300);
+          });
+        });
+      }
+    }
+  }
+
+  function updateStickyCartBadge() {
+    if (!cartBadge) return;
+    let total = 0;
+    cart.forEach(function (item) {
+      total += (item.qty || 0);
+    });
+    cartBadge.textContent = total;
+    cartBadge.style.display = total > 0 ? 'flex' : 'none';
+  }
+
+  clientBtn.addEventListener('click', function () {
+    openBottomSheet('Selecionar Cliente', getClientPanelContent(), 'client');
+  });
+  cartBtn.addEventListener('click', function () {
+    openBottomSheet('Carrinho', '', 'cart');
+  });
+  docTypeBtn.addEventListener('click', function () {
+    openBottomSheet('Tipo de Factura', getDocTypePanelContent(), 'doctype');
+  });
+
+  overlay.addEventListener('click', closeBottomSheet);
+  if (sheetClose) sheetClose.addEventListener('click', closeBottomSheet);
+
+  if (sheetHandle) {
+    sheetHandle.addEventListener('touchstart', function (e) {
+      isDragging = true;
+      startY = e.touches[0].clientY;
+      sheet.style.transition = 'none';
+    });
+    sheetHandle.addEventListener('touchmove', function (e) {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY;
+      var deltaY = currentY - startY;
+      if (deltaY > 0) sheet.style.transform = 'translateY(' + deltaY + 'px)';
+    });
+    sheetHandle.addEventListener('touchend', function () {
+      if (!isDragging) return;
+      isDragging = false;
+      sheet.style.transition = '';
+      var deltaY = currentY - startY;
+      if (deltaY > 100) closeBottomSheet();
+      else sheet.style.transform = 'translateY(0)';
+    });
+  }
+
+  updateStickyCartBadge();
+  window.updateStickyCartBadge = updateStickyCartBadge;
+  if (typeof updateStickyDocTypeLabel === 'function') updateStickyDocTypeLabel();
+  window.closeBottomSheet = closeBottomSheet;
+  window.openBottomSheet = openBottomSheet;
+}

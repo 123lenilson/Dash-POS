@@ -1,0 +1,95 @@
+/* ================================================
+   COMPONENTE: Modals
+   Ficheiro: assets/css/components/modals.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 1999;
+}
+
+.panel-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.fade-enter-confirm-dialog {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.fade-enter-active-confirm-dialog {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.25s ease;
+}
+
+.fade-exit-confirm-dialog {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fade-exit-active-confirm-dialog {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: all 0.2s ease;
+}
+
+#overlay-confirm-dialog {
+  backdrop-filter: blur(1px);
+  transition: opacity 0.3s ease;
+}
+
+#box-confirm-dialog {
+  transition: all 0.25s ease;
+  will-change: transform, opacity;
+}
+
+body.overflow-hidden {
+  overflow: hidden;
+}
+
+#cancel-confirm-dialog {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#confirm-confirm-dialog {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#box-confirm-dialog .bg-blue-100 {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#clearCart.btn.light {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4fa;
+  color: var(--warn);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s ease;
+  box-shadow: var(--shadow);
+}
+
+#clearCart.btn.light:hover {
+  background: #ffefef;
+  color: #cc2a2a;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
+#clearCart.btn.light:active {
+  transform: translateY(0);
+}

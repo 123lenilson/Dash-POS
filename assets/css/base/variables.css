@@ -1,0 +1,58 @@
+/* ================================================
+   BASE: Variables
+   Ficheiro: assets/css/base/variables.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --muted:#8b8fa3;
+  --text:#23243a;
+  --text-1:#23243a;
+  --text-2:#8b8fa3;
+  --accent:#6c5ce7;
+  --accent-2:#9b8cff;
+  --ok:#22c55e;
+  --warn:#ef4444;
+  --line:#ececf3;
+  --shadow: 0 2px 8px rgba(0,0,0,.03);  /* ✅ Mais leve e neutro */
+  --shadow-strong: 0 4px 16px rgba(0,0,0,.05);  /* ✅ Mais leve e neutro */
+  --radius: 16px;
+
+  /* 🎨 NOVO ESQUEMA DE CORES - Sistema Principal */
+  --color-selection: #222222;           /* Cor de seleção: hover, active, selecionado */
+  --color-primary: #FFCC99;             /* Cor principal: botões, destaques, CTAs */
+  --color-primary-hover: #FFB366;       /* Hover da cor principal */
+  --color-primary-shadow: rgba(255, 204, 153, 0.4);  /* Sombra da cor principal */
+
+  /* Tons de cinza (mantidos) */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* Sidebar width: clamp(min, preferred, max) */
+  --sidebar-width: clamp(280px, 22vw, 360px);
+  --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
+
+  /* ── Tipografia responsiva ─────────────────────────────── */
+  --font-xs:    clamp(9px,  0.85vw, 11px);
+  --font-sm:    clamp(11px, 1vw,    13px);
+  --font-base:  clamp(12px, 1.1vw,  14px);
+  --font-md:    clamp(13px, 1.2vw,  15px);
+  --font-lg:    clamp(14px, 1.4vw,  16px);
+
+  /* ── Espaçamentos responsivos ──────────────────────────── */
+  --space-xs:   clamp(4px,  0.5vw,  6px);
+  --space-sm:   clamp(6px,  0.7vw,  8px);
+  --space-md:   clamp(8px,  1vw,    12px);
+  --space-lg:   clamp(12px, 1.5vw,  16px);
+  --space-xl:   clamp(16px, 2vw,    20px);
+}

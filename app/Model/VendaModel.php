@@ -3,9 +3,14 @@ require_once __DIR__ . '/../config/conexao.php';
 
 class VendaModel {
     
-    public function processarFatura($id_cliente) {
+    public function processarFatura($dados) {
         error_log('===== INICIO processarFatura =====');
-        error_log('ID Cliente recebido: ' . $id_cliente);
+        error_log('Dados recebidos: ' . json_encode($dados));
+        
+        $id_cliente = (int)($dados['id_cliente'] ?? 0);
+        if ($id_cliente <= 0) {
+            throw new Exception("ID do cliente é obrigatório e deve ser maior que zero");
+        }
         
         $db = Conexao::getConexao();
         $db->autocommit(false);  // Transação básica
@@ -18,8 +23,6 @@ class VendaModel {
             $hora_atual = date('H:i:s');
             $ano_atual = date('Y');
             $codenome = 'FT';  // Código para Fatura
-
-            $id_cliente = (int)$id_cliente;
 
             // PASSO 1: SELECT Pedido com JOIN na tabela imposto
             $sql_pedido = "

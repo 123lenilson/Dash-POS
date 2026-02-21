@@ -32,9 +32,9 @@ class VendaControl {
                 return;
             }
 
-            // Chama o model para processar
+            // Chama o model para processar (passa dados completos para suportar observação)
             error_log('Chamando VendaModel->processarFatura...');
-            $resultado = (new VendaModel())->processarFatura($dados['id_cliente']);
+            $resultado = (new VendaModel())->processarFatura($dados);
             error_log('processarFatura retornou: ' . substr(json_encode($resultado), 0, 500));
 
             if ($resultado['status'] === 'SUCESSO') {

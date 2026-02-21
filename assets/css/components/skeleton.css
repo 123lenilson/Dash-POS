@@ -1,0 +1,100 @@
+/* ================================================
+   COMPONENTE: Skeleton
+   Ficheiro: assets/css/components/skeleton.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+/* Enhanced loading dots styling */
+.keypad-pay-btn {
+  letter-spacing: 0.15em;
+  font-size: 1.1em;
+}
+
+/* Optional: Pulse animation for dots */
+.keypad-pay-btn.loading {
+  animation: pulse-dots 0.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dots {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* SKELETON LOADING (estilo YouTube / Figma) */
+.app-skeleton {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 64% 36%;
+  gap: 0;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  pointer-events: auto;
+}
+.app-skeleton.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.skeleton-layout-main,
+.skeleton-layout-side {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.skeleton-layout-main {
+  padding: 16px 20px 20px;
+}
+.skeleton-layout-side {
+  background: var(--card);
+  border-left: 1px solid var(--line);
+  padding: 16px;
+}
+
+/* Bloco cinza base + shimmer */
+.skeleton-block {
+  background: linear-gradient(
+    90deg,
+    var(--gray-200) 0%,
+    var(--gray-100) 45%,
+    var(--gray-200) 55%,
+    var(--gray-200) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Alturas/larguras comuns */
+.skeleton-search { height: 44px; max-width: 100%; border-radius: 12px; }
+.skeleton-pills { height: 36px; width: 100%; border-radius: 20px; margin-bottom: 16px; }
+.skeleton-card { width: 100%; aspect-ratio: 1; border-radius: 12px; }
+.skeleton-text-sm { height: 12px; width: 70%; border-radius: 4px; margin-top: 6px; }
+.skeleton-text-xs { height: 10px; width: 50%; border-radius: 4px; margin-top: 4px; }
+.skeleton-cart-header { height: 48px; width: 100%; border-radius: 8px; margin-bottom: 12px; }
+.skeleton-cart-body { height: 120px; width: 100%; border-radius: 8px; margin-bottom: 12px; }
+.skeleton-cart-footer-row { height: 40px; width: 100%; border-radius: 8px; margin-bottom: 8px; }
+.skeleton-cart-footer-btn { height: 48px; width: 100%; border-radius: 10px; }
+.skeleton-mobile-btn { width: 56px; height: 56px; border-radius: 50%; }
+
+/* Grid de cards skeleton (produtos) */
+.skeleton-product-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  flex: 1;
+  margin-top: 12px;
+}
+.skeleton-mobile-wrap {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+}

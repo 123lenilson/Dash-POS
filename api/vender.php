@@ -150,11 +150,12 @@ switch ($method) {
             // Chama o método no controller
             error_log('Chamando api_processar_factura_proforma_orcamento...');
             try {
-                // Converter formato antigo para novo formato
+                // Converter formato antigo para novo formato (inclui observação da ordem de venda)
                 $dados_novos = [
                     'dados_cliente' => [
                         'id_cliente' => $dados['id_cliente'],
-                        'tipo_documento' => $dados['tipo_documento'] ?? 'Factura-Proforma'
+                        'tipo_documento' => $dados['tipo_documento'] ?? 'Factura-Proforma',
+                        'observacao' => isset($dados['observacao']) ? $dados['observacao'] : ''
                     ]
                 ];
                 $vendaControl->api_processar_factura_proforma_orcamento($dados_novos);
@@ -186,19 +187,30 @@ switch ($method) {
                 echo json_encode(["erro" => "Erro ao processar fatura: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
         } elseif ($acao === 'orcamento') {
-            // Validação básica: dados do cliente
-            if (!isset($dados['dados_cliente']) || !is_array($dados['dados_cliente'])) {
-                http_response_code(400);
-                echo json_encode(["erro" => "Dados do cliente são obrigatórios"], JSON_UNESCAPED_UNICODE);
-                exit;
-            }
-
-            // Chama o método no controller
-            error_log('Chamando api_processar_factura_proforma_orcamento (orcamento)...');
-            try {
-                // Converter formato para orçamento
+            // Aceita formato simples (id_cliente + observacao) ou formato com dados_cliente
+            if (isset($dados['dados_cliente']) && is_array($dados['dados_cliente'])) {
                 $dados_orcamento = $dados;
                 $dados_orcamento['dados_cliente']['tipo_documento'] = $dados['tipo_documento'] ?? 'Orcamento';
+                if (isset($dados['observacao'])) {
+                    $dados_orcamento['dados_cliente']['observacao'] = $dados['observacao'];
+                }
+            } else {
+                if (!isset($dados['id_cliente']) || empty($dados['id_cliente'])) {
+                    http_response_code(400);
+                    echo json_encode(["erro" => "ID do cliente é obrigatório"], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+                $dados_orcamento = [
+                    'dados_cliente' => [
+                        'id_cliente' => $dados['id_cliente'],
+                        'tipo_documento' => 'Orcamento',
+                        'observacao' => isset($dados['observacao']) ? $dados['observacao'] : ''
+                    ]
+                ];
+            }
+
+            error_log('Chamando api_processar_factura_proforma_orcamento (orcamento)...');
+            try {
                 $vendaControl->api_processar_factura_proforma_orcamento($dados_orcamento);
                 error_log('api_processar_factura_proforma_orcamento executado com sucesso');
             } catch (Exception $e) {

@@ -1,0 +1,133 @@
+/* ================================================
+   COMPONENTE: Client Button
+   Ficheiro: assets/css/components/client-btn.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+.cliente-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cliente-btn:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
+.cliente-btn:active {
+  transform: translateY(0);
+}
+
+.cliente-btn.panel-active {
+  background: rgba(34, 34, 34, 0.05);
+  border-color: var(--color-selection);
+  box-shadow: 0 0 0 3px rgba(34, 34, 34, 0.1);
+}
+
+.cliente-btn.panel-active > i:first-child {
+  color: var(--color-selection);
+}
+
+.cliente-btn.panel-active .cliente-label {
+  color: var(--color-selection);
+}
+
+.cliente-btn > i:first-child {
+  color: #9ca3af;
+  font-size: 20px;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.cliente-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.cliente-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.cliente-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente-name.selected {
+  color: #374151;
+}
+
+.cliente-btn > i:last-child {
+  color: #d1d5db;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.cliente-btn:hover > i:last-child {
+  transform: translateX(2px);
+}
+
+.cliente-btn.panel-active > i:last-child {
+  transform: rotate(180deg);
+  color: var(--color-selection);
+}
+
+/* Botão de tipo de documento dentro do cabeçalho do carrinho */
+.cart-header .cliente-btn {
+  width: auto;
+  max-width: 200px;
+  min-width: 0;
+  font-size: 12px;
+  padding: 5px 8px;
+  gap: 5px;
+  border-radius: 6px;
+}
+
+.cart-header .cliente-btn > i:first-child {
+  font-size: 14px;
+}
+
+.cart-header .cliente-label {
+  font-size: 9px;
+}
+
+.cart-header .cliente-name {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+}
+
+.cart-header .doc-arrow {
+  font-size: 9px;
+  color: #9ca3af;
+}
+
+.cart-header .cliente-btn > i:last-child {
+  font-size: 12px;
+}

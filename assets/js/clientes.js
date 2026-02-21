@@ -240,10 +240,14 @@ class ClientManager {
             </div>
         `;
 
-        // Atualizar também o botão no topo
+        // Atualizar também o botão no topo e o label do sticky bottom menu
         const topSelectedClient = document.getElementById('topSelectedClient');
         if (topSelectedClient) {
             topSelectedClient.textContent = client.nome;
+        }
+        const stickyClientLabel = document.getElementById('stickyClientLabel');
+        if (stickyClientLabel) {
+            stickyClientLabel.textContent = client.nome;
         }
     }
 

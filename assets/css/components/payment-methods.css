@@ -1,0 +1,76 @@
+/* ================================================
+   COMPONENTE: Payment Methods
+   Ficheiro: assets/css/components/payment-methods.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+/* LEGACY - verificar uso */
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.payment-method-btn {
+  padding: 12px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.payment-method-btn i {
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.payment-method-btn:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.payment-method-btn.active {
+  background: #eff6ff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.payment-display {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.payment-label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payment-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-methods {
+  display: none;
+}

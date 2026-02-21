@@ -1,0 +1,401 @@
+/* ================================================
+   COMPONENTE: Invoice Type
+   Ficheiro: assets/css/components/invoice-type.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+/* Invoice Format Selection */
+.invoice-format-selection {
+  transition: all 0.3s ease;
+}
+
+.invoice-format-selection .format-options {
+  background: #f8f9ff;
+  border-left: 3px solid var(--accent);
+}
+
+.invoice-format-selection .format-option label {
+  transition: all 0.2s ease;
+}
+
+.invoice-format-selection .format-option label:hover {
+  color: var(--accent);
+}
+
+.invoice-format-selection input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+/* SELETOR DE TIPO DE FATURA */
+.invoice-type-selector {
+  padding: 12px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--line);
+}
+
+.invoice-type-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.invoice-type-header i {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.invoice-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invoice-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1.5px solid #e6edf6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.invoice-radio-option:hover {
+  border-color: var(--accent);
+  background: #f8f9ff;
+  transform: translateX(2px);
+}
+
+.invoice-radio-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.invoice-radio-option input[type="radio"]:checked + .radio-custom {
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1) !important;
+}
+
+.invoice-radio-option input[type="radio"]:checked + .radio-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: #fff !important;
+  border-radius: 50%;
+}
+
+.radio-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  user-select: none;
+}
+
+.invoice-radio-option input[type="radio"]:checked ~ .radio-label {
+  font-weight: 600 !important;
+  color: var(--accent) !important;
+}
+
+.invoice-radio-option input[type="radio"]:checked {
+  animation: radioSelect 0.3s ease;
+}
+
+@keyframes radioSelect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* PAINEL TIPO DE DOCUMENTO (SLIDER ESQUERDA) */
+.doc-type-panel-slider {
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  background: #ffffff;
+  border-right: 1px solid var(--line);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
+              min-width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.doc-type-panel-slider.active {
+  width: 35%;
+  min-width: 35%;
+}
+
+.cart-body-wrapper.doc-panel-open .cart-content-area {
+  width: 65%;
+}
+
+/* OPÇÕES DE TIPO DE FATURA (TOGGLES) */
+.invoice-type-options-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: clamp(0.5rem, 0.4vw + 0.35rem, 0.875rem) clamp(0.375rem, 0.3vw + 0.25rem, 0.625rem);
+  background: #ffffff;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.invoice-option-group {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.invoice-option-group:last-child {
+  border-bottom: none;
+}
+
+.invoice-toggle-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(0.5rem, 0.4vw + 0.35rem, 0.875rem) clamp(0.5rem, 0.3vw + 0.4rem, 0.75rem);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.invoice-toggle-option:hover {
+  background: #fafafa;
+}
+
+.invoice-toggle-option.active {
+  background: #FFF8F3;
+}
+
+.toggle-label {
+  font-size: clamp(0.5rem, 0.25vw + 0.4rem, 0.75rem);
+  font-weight: 500;
+  color: #555555;
+  order: 1;
+}
+
+.invoice-toggle-option.active .toggle-label {
+  color: #8B5A2B;
+  font-weight: 600;
+}
+
+.toggle-switch-container {
+  position: relative;
+  width: clamp(1.5rem, 0.5vw + 1.1rem, 2rem);
+  height: clamp(0.75rem, 0.25vw + 0.55rem, 1rem);
+  flex-shrink: 0;
+  order: 2;
+}
+
+.toggle-switch-container input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch-visual {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d4d4d4;
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+}
+
+.toggle-switch-visual::before {
+  position: absolute;
+  content: "";
+  height: clamp(0.5rem, 0.2vw + 0.38rem, 0.75rem);
+  width: clamp(0.5rem, 0.2vw + 0.38rem, 0.75rem);
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.invoice-toggle-option.active .toggle-switch-visual {
+  background-color: #FFCBA4;
+}
+
+.invoice-toggle-option.active .toggle-switch-visual::before {
+  transform: translateX(calc(100% + 2px));
+}
+
+/* SUB-OPÇÕES DE FORMATO (A4 / 80mm) */
+.format-sub-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 16px;
+  background: #FDFCFB;
+  border-top: 1px solid #f0f0f0;
+  overflow: hidden;
+  max-height: 100px;
+  opacity: 1;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.invoice-option-group:not(:has(.invoice-toggle-option.active)) .format-sub-options {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top: none;
+}
+
+.format-toggle-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(0.375rem, 0.3vw + 0.25rem, 0.625rem) clamp(0.5rem, 0.3vw + 0.4rem, 0.75rem);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.format-toggle-option:hover {
+  background: #f9f9f9;
+}
+
+.format-toggle-option.active {
+  background: #FFF5EE;
+}
+
+.format-label {
+  font-size: clamp(0.45rem, 0.2vw + 0.35rem, 0.65rem);
+  font-weight: 500;
+  color: #777777;
+  order: 1;
+}
+
+.format-toggle-option.active .format-label {
+  color: #8B5A2B;
+  font-weight: 600;
+}
+
+.format-switch-container {
+  position: relative;
+  width: clamp(1.2rem, 0.4vw + 0.9rem, 1.6rem);
+  height: clamp(0.6rem, 0.2vw + 0.45rem, 0.8rem);
+  flex-shrink: 0;
+  order: 2;
+}
+
+.format-switch-container input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.format-switch-visual {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d4d4d4;
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+}
+
+.format-switch-visual::before {
+  position: absolute;
+  content: "";
+  height: clamp(0.4rem, 0.15vw + 0.3rem, 0.55rem);
+  width: clamp(0.4rem, 0.15vw + 0.3rem, 0.55rem);
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.format-toggle-option.active .format-switch-visual {
+  background-color: #FFCBA4;
+}
+
+.format-toggle-option.active .format-switch-visual::before {
+  transform: translateX(calc(100% + 2px));
+}
+
+/* doc-type-item */
+.doc-type-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f9f9f9;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.doc-type-item:hover { background: #f0f0f0; }
+.doc-type-item.active {
+  background: #f0f8ff;
+  border-color: #000000;
+}
+
+.doc-type-item i:first-child { font-size: 24px; color: #666; }
+.doc-type-item span { flex: 1; font-size: 14px; font-weight: 600; color: #111; }
+.doc-type-check { font-size: 18px; color: #000000; opacity: 0; transition: opacity 0.2s ease; }
+.doc-type-item.active .doc-type-check { opacity: 1; }
+
+@media (max-width: 1200px) {
+  .doc-type-panel-slider.active {
+    width: 40%;
+    min-width: 40%;
+  }
+
+  .cart-body-wrapper.doc-panel-open .cart-content-area {
+    width: 60%;
+  }
+}
+
+@media (max-width: 992px) {
+  .doc-type-panel-slider.active {
+    width: 45%;
+    min-width: 45%;
+  }
+
+  .cart-body-wrapper.doc-panel-open .cart-content-area {
+    width: 55%;
+  }
+}

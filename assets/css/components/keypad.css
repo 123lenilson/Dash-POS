@@ -1,0 +1,148 @@
+/* ================================================
+   COMPONENTE: Keypad
+   Ficheiro: assets/css/components/keypad.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+.footer-keypad {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  box-sizing: border-box;
+  gap: 2px;
+}
+
+.keypad-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 2px;
+  min-height: 0;
+}
+
+.keypad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.1s ease, border-color 0.1s ease;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.keypad-btn:hover {
+  background: #e8e8e8;
+}
+
+.keypad-btn:active {
+  background: #ddd;
+}
+
+.keypad-btn.keypad-clear {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ffcdd2;
+}
+
+.keypad-btn.keypad-clear:hover {
+  background: #ffcdd2;
+}
+
+.keypad-btn.keypad-backspace {
+  background: #fff3e0;
+  color: #e65100;
+  border-color: #ffe0b2;
+}
+
+.keypad-btn.keypad-backspace:hover {
+  background: #ffe0b2;
+}
+
+.keypad-split-cell {
+  display: flex;
+  gap: 2px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.keypad-split-cell .keypad-btn {
+  flex: 1;
+  font-size: 10px;
+}
+
+.keypad-pay-btn {
+  width: 100%;
+  height: clamp(42px, 4.5vw, 52px);
+  min-height: clamp(42px, 4.5vw, 52px);
+  flex-shrink: 0;
+  background: var(--color-selection);
+  border: none;
+  border-radius: 6px;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.keypad-pay-btn:hover {
+  opacity: 0.9;
+}
+
+.keypad-final-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.keypad-exact-btn {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: #15803d;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad-exact-btn:hover {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
+.keypad-exact-btn:active {
+  background: #86efac;
+}
+
+.keypad-exact-btn--inline {
+  display: none;
+}

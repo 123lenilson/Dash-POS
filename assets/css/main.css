@@ -1,0 +1,33 @@
+/* ================================================
+   DASH-POS — Ponto de entrada CSS
+   Ficheiro: assets/css/main.css
+   ÚNICO ficheiro que faz @import de todos os outros
+   ================================================ */
+
+/* === BASE === */
+@import './base/variables.css';
+@import './base/reset.css';
+@import './base/typography.css';
+
+/* === LAYOUT === */
+@import './layout/interface.css';
+
+/* === COMPONENTS === */
+@import './components/skeleton.css';
+@import './components/header.css';
+@import './components/search.css';
+@import './components/categories.css';
+@import './components/product-card.css';
+@import './components/cart.css';
+@import './components/cart-footer.css';
+@import './components/keypad.css';
+@import './components/payment-methods.css';
+@import './components/invoice-type.css';
+@import './components/client-btn.css';
+@import './components/client-panel.css';
+@import './components/bottom-sheet.css';
+@import './components/alerts.css';
+@import './components/modals.css';
+
+/* === RESPONSIVE (sempre por último) === */
+@import './layout/responsive.css';

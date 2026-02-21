@@ -1,0 +1,175 @@
+/* ================================================
+   COMPONENTE: Search
+   Ficheiro: assets/css/components/search.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+/* SEARCH BAR CONTAINER (Search + Cliente Button) */
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-bar-container .search-bar-inner {
+  width: 80%;
+}
+
+/* Slot no header para search + toggle em mobile (≤905px); escondido quando vazio (desktop) */
+.header-search-slot {
+  display: none;
+}
+
+/* SEARCH WRAPPER WITH INLINE TOGGLE */
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: var(--shadow);
+  gap: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.search-wrapper:focus-within {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-icon-left {
+  color: #9aa0b4;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.search-wrapper input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  font-size: 14px;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  min-width: 0;
+  box-shadow: none !important;
+}
+
+.search-wrapper input:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.search-wrapper input::placeholder {
+  color: #9aa0b4;
+}
+
+/* Toggle inline (dentro do input) */
+.barcode-toggle-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 10px;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.barcode-toggle-inline:hover {
+  background: #f9fafb;
+}
+
+.barcode-toggle-inline.active {
+  background: #fef3e8;
+}
+
+.barcode-toggle-inline input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.barcode-toggle-inline input:checked + .toggle-switch {
+  background: #E2852E;
+}
+
+.barcode-toggle-inline input:checked + .toggle-switch::before {
+  transform: translateX(14px);
+}
+
+.toggle-label-short {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.barcode-toggle-inline.active .toggle-label-short {
+  color: #E2852E;
+}
+
+.clear-btn {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  color: #9aa0b4;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.clear-btn:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* FEEDBACK VISUAL PARA CÓDIGO DE BARRAS NO SEARCH WRAPPER */
+.search-wrapper.barcode-mode {
+  border-color: #E2852E;
+  box-shadow: 0 0 0 3px rgba(226, 133, 46, 0.1);
+}
+
+.search-wrapper.barcode-success {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.search-wrapper.barcode-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
