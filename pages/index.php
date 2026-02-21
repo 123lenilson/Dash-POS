@@ -696,10 +696,35 @@
 "></div>
 
 <!-- Scripts -->
- <script src="../assets/js/fatura.js"></script>
- <script src="../assets/js/fatura80.js"></script>
-<script src="../assets/js/clientes.js"></script>
-<script src="../assets/js/monetary-formatter.js"></script>
+<script src="../assets/js/ui/invoice/fatura.js"></script>
+<script src="../assets/js/ui/invoice/fatura80.js"></script>
+<script src="../assets/js/services/cliente.service.js"></script>
+<script src="../assets/js/modules/client.module.js"></script>
+<script src="../assets/js/ui/client-panel.ui.js"></script>
+<script src="../assets/js/utils/monetary-formatter.js"></script>
+
+<!-- === NOVA ESTRUTURA APP.JS === -->
+<script src="../assets/js/state.js"></script>
+<script src="../assets/js/dom.js"></script>
+<script src="../assets/js/utils.js"></script>
+<script src="../assets/js/services/produto.service.js"></script>
+<script src="../assets/js/services/pedido.service.js"></script>
+<script src="../assets/js/services/pagamento.service.js"></script>
+<script src="../assets/js/modules/invoice-assets.module.js"></script>
+<script src="../assets/js/modules/cart.module.js"></script>
+<script src="../assets/js/modules/barcode.module.js"></script>
+<script src="../assets/js/modules/checkout.module.js"></script>
+<script src="../assets/js/ui/skeleton.ui.js"></script>
+<script src="../assets/js/ui/alerts.ui.js"></script>
+<script src="../assets/js/ui/modal.ui.js"></script>
+<script src="../assets/js/ui/products.ui.js"></script>
+<script src="../assets/js/ui/cart.ui.js"></script>
+<script src="../assets/js/ui/cart-editing.ui.js"></script>
+<script src="../assets/js/ui/payment.ui.js"></script>
+<script src="../assets/js/ui/invoice-type.ui.js"></script>
+<script src="../assets/js/ui/order-summary.ui.js"></script>
+<script src="../assets/js/ui/search.ui.js"></script>
+<script src="../assets/js/ui/bottom-sheet.ui.js"></script>
 <script src="../assets/js/app.js"></script>
 </body>
 </html>
