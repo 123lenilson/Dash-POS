@@ -5,8 +5,8 @@
    ================================================ */
 
 .category-bar{
-  margin:8px 0 10px;
-  padding:0 20px;
+  margin: var(--space-md) 0 var(--space-md);
+  padding: 0 var(--space-xl);
   position:relative;
 }
 
@@ -27,7 +27,7 @@
 .cat-track{
   display:flex;
   flex-wrap:nowrap;
-  gap:6px;
+  gap: var(--space-sm);
   padding:0;
 }
 
@@ -36,8 +36,8 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  gap: 6px;
-  padding:6px 14px;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
   border:1px solid #f5f5f5;
   background:#f5f5f5;
   border-radius:8px;
@@ -57,7 +57,7 @@
 }
 
 .category .cat-name {
-  font-size: 12px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: #444;
   white-space: nowrap;
@@ -69,11 +69,11 @@
 }
 
 .category .cat-count {
-  font-size: 10px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #888;
   background: rgba(0,0,0,0.06);
-  padding: 2px 6px;
+  padding: clamp(2px, 0.2vw, 4px) var(--space-sm);
   border-radius: 10px;
   min-width: 18px;
   text-align: center;

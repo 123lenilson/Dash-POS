@@ -45,12 +45,12 @@
   overflow: hidden;
 }
 .skeleton-layout-main {
-  padding: 16px 20px 20px;
+  padding: var(--space-lg) var(--space-xl) var(--space-xl);
 }
 .skeleton-layout-side {
   background: var(--card);
   border-left: 1px solid var(--line);
-  padding: 16px;
+  padding: var(--space-lg);
 }
 
 /* Bloco cinza base + shimmer */
@@ -73,28 +73,28 @@
 
 /* Alturas/larguras comuns */
 .skeleton-search { height: 44px; max-width: 100%; border-radius: 12px; }
-.skeleton-pills { height: 36px; width: 100%; border-radius: 20px; margin-bottom: 16px; }
+.skeleton-pills { height: 36px; width: 100%; border-radius: 20px; margin-bottom: var(--space-lg); }
 .skeleton-card { width: 100%; aspect-ratio: 1; border-radius: 12px; }
-.skeleton-text-sm { height: 12px; width: 70%; border-radius: 4px; margin-top: 6px; }
-.skeleton-text-xs { height: 10px; width: 50%; border-radius: 4px; margin-top: 4px; }
-.skeleton-cart-header { height: 48px; width: 100%; border-radius: 8px; margin-bottom: 12px; }
-.skeleton-cart-body { height: 120px; width: 100%; border-radius: 8px; margin-bottom: 12px; }
-.skeleton-cart-footer-row { height: 40px; width: 100%; border-radius: 8px; margin-bottom: 8px; }
+.skeleton-text-sm { height: 12px; width: 70%; border-radius: 4px; margin-top: var(--space-sm); }
+.skeleton-text-xs { height: 10px; width: 50%; border-radius: 4px; margin-top: var(--space-xs); }
+.skeleton-cart-header { height: 48px; width: 100%; border-radius: 8px; margin-bottom: var(--space-lg); }
+.skeleton-cart-body { height: 120px; width: 100%; border-radius: 8px; margin-bottom: var(--space-lg); }
+.skeleton-cart-footer-row { height: 40px; width: 100%; border-radius: 8px; margin-bottom: var(--space-md); }
 .skeleton-cart-footer-btn { height: 48px; width: 100%; border-radius: 10px; }
 .skeleton-mobile-btn { width: 56px; height: 56px; border-radius: 50%; }
 
 /* Grid de cards skeleton (produtos) */
 .skeleton-product-grid {
   display: grid;
-  gap: 16px;
+  gap: var(--space-lg);
   grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   flex: 1;
-  margin-top: 12px;
+  margin-top: var(--space-lg);
 }
 .skeleton-mobile-wrap {
   display: none;
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
   z-index: 10000;
 }

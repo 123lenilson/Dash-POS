@@ -70,13 +70,13 @@ body.overflow-hidden {
 #clearCart.btn.light {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
   border: none;
   border-radius: 10px;
   background: #f3f4fa;
   color: var(--warn);
-  font-size: 14px;
+  font-size: var(--font-lg);
   font-weight: 600;
   cursor: pointer;
   transition: all .15s ease;

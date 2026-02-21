@@ -9,8 +9,8 @@
 @media (min-width:350px) and (max-width:450px) {
   .product-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap:10px;
-    padding:0 12px 20px;
+    gap: var(--space-md);
+    padding: 0 var(--space-lg) var(--space-xl);
   }
   .product-grid .card { margin:0; }
 }
@@ -19,7 +19,7 @@
 @media (max-width:349px) {
   .product-grid {
     grid-template-columns: 1fr !important;
-    padding:0 10px 20px;
+    padding: 0 var(--space-md) var(--space-xl);
   }
 }
 
@@ -55,13 +55,13 @@
     place-items:center;
     cursor:pointer;
     transition: all .12s ease;
-    font-size:16px;
+    font-size: var(--font-lg);
   }
 
   .main .main-nav {
     display: flex !important;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-sm);
     align-items: flex-start;
     position: fixed;
     top: 0;
@@ -69,7 +69,7 @@
     height: 100vh;
     width: var(--mobile-nav-width);
     max-width: 100%;
-    padding: 16px 12px;
+    padding: var(--space-lg) var(--space-lg);
     box-sizing: border-box;
     background: var(--card);
     border: none;
@@ -87,12 +87,12 @@
   .main .main-nav .nav-link{
     display:flex;
     width:100%;
-    padding:8px 10px;
-    margin:2px 0;
+    padding: var(--space-md) var(--space-md);
+    margin: clamp(2px, 0.2vw, 4px) 0;
     border-radius:4px;
     justify-content:flex-start;
     text-align:left;
-    font-size: 13px;
+    font-size: var(--font-md);
   }
 
   .main-header.nav-open .main-nav {
@@ -136,7 +136,7 @@
     overflow: hidden;
   }
 
-  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); padding:0 16px 20px; }
+  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); padding: 0 var(--space-lg) var(--space-xl); }
 
   .date-time {
     display: none !important;
@@ -147,13 +147,13 @@
 /* RESPONSIVIDADE DO SEARCH BAR CONTAINER */
 @media (min-width: 761px) and (max-width: 1100px) {
   .search-bar-container {
-    margin: 10px 16px;
-    gap: 10px;
+    margin: var(--space-md) var(--space-lg);
+    gap: var(--space-md);
   }
 
   .cliente-btn {
-    padding: 12px 14px;
-    font-size: 13px;
+    padding: var(--space-lg) var(--space-lg);
+    font-size: var(--font-md);
   }
 }
 
@@ -179,13 +179,13 @@
 @media (max-width: 905px) {
   .app-skeleton { grid-template-columns: 1fr; }
   .skeleton-layout-side { display: none; }
-  .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
   .skeleton-mobile-wrap { display: block !important; }
 
   .main-header-right .header-search-slot {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-md);
     flex: 1;
     min-width: 0;
     justify-content: flex-end;
@@ -196,7 +196,7 @@
   .main-header .header-search-slot .search-bar-inner {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-md);
     min-width: 0;
   }
   .main-header .header-search-slot .search-wrapper {
@@ -208,7 +208,7 @@
     box-shadow: none;
     flex: 0 0 auto;
     min-width: 0;
-    gap: 6px;
+    gap: var(--space-sm);
   }
   .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .search-icon-left {
     width: 36px;
@@ -221,7 +221,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: var(--font-lg);
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -244,13 +244,13 @@
     background: #fff;
     border: 1px solid #d1d5db;
     border-radius: 9999px;
-    padding: 6px 10px 6px 10px;
-    gap: 6px;
+    padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
     flex: 1;
     max-width: 180px;
   }
   .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .search-icon-left {
-    font-size: 13px;
+    font-size: var(--font-md);
     flex-shrink: 0;
   }
   .main-header .header-search-slot .search-wrapper.search-wrapper--expanded input {
@@ -259,7 +259,7 @@
     opacity: 1;
     position: static;
     pointer-events: auto;
-    font-size: 13px;
+    font-size: var(--font-md);
   }
   .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .barcode-toggle-inline,
   .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .clear-btn {
@@ -274,22 +274,22 @@
   }
 
   .search-wrapper {
-    padding: 7px 12px;
-    gap: 6px;
+    padding: var(--space-sm) var(--space-lg);
+    gap: var(--space-sm);
     border-radius: 9999px;
   }
 
   .search-icon-left {
-    font-size: 13px;
+    font-size: var(--font-md);
   }
 
   .search-wrapper input {
-    font-size: 13px;
+    font-size: var(--font-md);
   }
 
   .barcode-toggle-inline {
-    padding: 3px 8px;
-    gap: 4px;
+    padding: clamp(3px, 0.3vw, 4px) var(--space-md);
+    gap: var(--space-xs);
     border-radius: 6px;
   }
 
@@ -309,32 +309,32 @@
   }
 
   .toggle-label-short {
-    font-size: 10px;
+    font-size: var(--font-sm);
   }
 
   .clear-btn {
-    font-size: 16px;
-    padding: 2px 4px;
+    font-size: var(--font-lg);
+    padding: clamp(2px, 0.2vw, 4px) var(--space-xs);
   }
 
   .invoice-type-options-panel {
-    padding: 12px 14px;
+    padding: var(--space-lg) var(--space-lg);
   }
   .invoice-toggle-option {
-    padding: 10px 12px;
+    padding: var(--space-md) var(--space-lg);
   }
   .toggle-label {
-    font-size: 14px;
+    font-size: var(--font-lg);
   }
   .format-toggle-option {
-    padding: 8px 12px;
+    padding: var(--space-md) var(--space-lg);
   }
   .format-label {
-    font-size: 13px;
+    font-size: var(--font-md);
   }
 
   .footer-amount-row {
-    gap: 8px;
+    gap: var(--space-md);
   }
   .footer-amount-row .footer-amount-wrapper {
     flex: 1;
@@ -345,12 +345,12 @@
     background: #E0E0E0;
     border: none;
     border-radius: 0;
-    padding: 3px 6px;
+    padding: clamp(3px, 0.3vw, 4px) var(--space-sm);
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-sm);
     overflow: hidden;
   }
   .footer-amount-row .footer-amount-input {
@@ -358,8 +358,8 @@
     min-width: 0;
     width: auto;
     height: 32px;
-    padding: 0 8px;
-    font-size: 13px;
+    padding: 0 var(--space-md);
+    font-size: var(--font-md);
     font-weight: 600;
     text-align: center;
     color: #333;
@@ -387,8 +387,8 @@
     flex-shrink: 0;
     height: 28px;
     min-height: 28px;
-    padding: 0 10px;
-    font-size: 11px;
+    padding: 0 var(--space-md);
+    font-size: var(--font-sm);
     font-weight: 700;
     border-radius: 4px;
     align-items: center;
@@ -433,8 +433,8 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    padding: 4px 0 0;
-    gap: 3px;
+    padding: var(--space-xs) 0 0;
+    gap: clamp(3px, 0.3vw, 4px);
     border-top: 1px solid var(--line, #e5e7eb);
   }
   .cart-sheet-tab-panel-fatura .cart-footer .payment-methods-section,
@@ -484,7 +484,7 @@
     color: #334155;
   }
   .client-panel-close-btn i {
-    font-size: 14px;
+    font-size: var(--font-lg);
   }
 }
 
@@ -511,65 +511,65 @@
   }
 
   .panel-body-slider {
-    padding: 12px 10px;
-    gap: 12px;
+    padding: var(--space-lg) var(--space-md);
+    gap: var(--space-lg);
   }
 
   .client-section {
-    gap: 7px;
+    gap: var(--space-sm);
   }
 
   .client-card {
-    padding: 9px 11px;
+    padding: var(--space-sm) var(--space-md);
   }
 
   .client-card-name {
-    font-size: 11px;
+    font-size: var(--font-sm);
   }
 
   .client-card-details {
-    font-size: 9px;
+    font-size: var(--font-xs);
   }
 
   .section-title {
-    font-size: 8px;
+    font-size: clamp(8px, 0.8vw, 10px);
     font-weight: 800;
     letter-spacing: 0.7px;
   }
 
   .client-search-input {
-    padding: 6px 10px;
-    font-size: 10px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-sm);
     border-radius: 6px !important;
     -webkit-border-radius: 6px !important;
     -moz-border-radius: 6px !important;
   }
 
   .client-search-input::placeholder {
-    font-size: 10px;
+    font-size: var(--font-sm);
     color: #94a3b8;
   }
 
   .client-card-indicator {
-    font-size: 15px;
+    font-size: var(--font-md);
   }
 
   .client-form {
-    gap: 8px;
+    gap: var(--space-md);
   }
 
   .client-form-input {
-    padding: 6px 10px;
-    font-size: 10px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-sm);
   }
 
   .client-form-input::placeholder {
-    font-size: 9px;
+    font-size: var(--font-xs);
     color: #94a3b8;
   }
 
   .client-form-submit {
-    padding: 9px 14px;
-    font-size: 11px;
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--font-sm);
   }
 }

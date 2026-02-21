@@ -15,27 +15,27 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  padding:12px 20px;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
   border-radius:0;
   box-shadow: var(--shadow);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid rgba(235,232,255,0.6);
 }
-.main-header-left{ display:flex; gap:12px; align-items:center; }
-.main-header-right{ display:flex; gap:12px; align-items:center; }
+.main-header-left{ display:flex; gap: var(--space-lg); align-items:center; }
+.main-header-right{ display:flex; gap: var(--space-lg); align-items:center; }
 
 /* main nav */
 .main .main-nav{
   display:flex;
-  gap:8px;
+  gap: var(--space-md);
   align-items:center;
   flex-wrap:wrap;
 }
 .main .main-nav .nav-link{
   border:0;
   background:transparent;
-  padding:8px 12px;
+  padding: var(--space-md) var(--space-lg);
   border-radius:12px;
   color:var(--muted);
   cursor:pointer;
@@ -44,7 +44,7 @@
   transition: all .12s ease;
   display:inline-flex;
   align-items:center;
-  gap:6px;
+  gap: var(--space-sm);
 }
 .main .main-nav .nav-link:hover{
   background:#f6f5ff;
@@ -56,13 +56,13 @@
   color:#fff;
   background: var(--color-selection);
   box-shadow: 0 8px 20px rgba(34, 34, 34, 0.18);
-  font-size: 14px;
+  font-size: var(--font-lg);
 }
 
 /* buttons / user */
-#newOrderBtn{ padding:8px 12px; border-radius:12px; font-weight:600; font-size: 14px; box-shadow: 0 8px 24px rgba(108,92,231,0.12); border:0; cursor:pointer; }
-.date-time{ color:var(--muted); font-size:11px; white-space:nowrap; min-width:120px; text-align:right; }
-.user{ display:flex; align-items:center; gap:8px; }
+#newOrderBtn{ padding: var(--space-md) var(--space-lg); border-radius:12px; font-weight:600; font-size: var(--font-lg); box-shadow: 0 8px 24px rgba(108,92,231,0.12); border:0; cursor:pointer; }
+.date-time{ color:var(--muted); font-size: var(--font-sm); white-space:nowrap; min-width:120px; text-align:right; }
+.user{ display:flex; align-items:center; gap: var(--space-md); }
 .avatar{ width: clamp(24px, 2.5vw, 32px); height: clamp(24px, 2.5vw, 32px); border-radius:50%; display:grid; place-items:center; background:#f0f1f6; color:#5b5e72; font-weight:600; font-size: var(--font-base); }
 .user-info{ display:flex; flex-direction:column; line-height:1; }
 .user-info strong{ font-size: var(--font-sm); font-weight:600; }

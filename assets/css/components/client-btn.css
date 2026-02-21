@@ -7,7 +7,7 @@
 .cliente-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-lg);
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -44,7 +44,7 @@
 
 .cliente-btn > i:first-child {
   color: #9ca3af;
-  font-size: 20px;
+  font-size: clamp(16px, 1.6vw, 20px);
   flex-shrink: 0;
   transition: color 0.2s ease;
 }
@@ -52,7 +52,7 @@
 .cliente-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: clamp(2px, 0.2vw, 4px);
   flex: 1;
   min-width: 0;
   align-items: flex-start;
@@ -60,14 +60,14 @@
 }
 
 .cliente-label {
-  font-size: 11px;
+  font-size: var(--font-sm);
   color: #9ca3af;
   font-weight: 500;
   line-height: 1;
 }
 
 .cliente-name {
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: #6b7280;
   line-height: 1.2;
@@ -82,7 +82,7 @@
 
 .cliente-btn > i:last-child {
   color: #d1d5db;
-  font-size: 16px;
+  font-size: var(--font-lg);
   flex-shrink: 0;
   transition: transform 0.3s ease, color 0.2s ease;
 }
@@ -101,33 +101,33 @@
   width: auto;
   max-width: 200px;
   min-width: 0;
-  font-size: 12px;
-  padding: 5px 8px;
-  gap: 5px;
+  font-size: var(--font-base);
+  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-sm);
   border-radius: 6px;
 }
 
 .cart-header .cliente-btn > i:first-child {
-  font-size: 14px;
+  font-size: var(--font-lg);
 }
 
 .cart-header .cliente-label {
-  font-size: 9px;
+  font-size: var(--font-xs);
 }
 
 .cart-header .cliente-name {
-  font-size: 11px;
+  font-size: var(--font-sm);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-right: 8px;
+  gap: var(--space-xs);
+  padding-right: var(--space-md);
 }
 
 .cart-header .doc-arrow {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #9ca3af;
 }
 
 .cart-header .cliente-btn > i:last-child {
-  font-size: 12px;
+  font-size: var(--font-base);
 }

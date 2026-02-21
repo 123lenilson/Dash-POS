@@ -42,17 +42,17 @@
   --sidebar-width: clamp(280px, 22vw, 360px);
   --mobile-nav-width: min(320px, 80vw); /* largura do sidebar do menu mobile */
 
-  /* ── Tipografia responsiva ─────────────────────────────── */
-  --font-xs:    clamp(9px,  0.85vw, 11px);
-  --font-sm:    clamp(11px, 1vw,    13px);
-  --font-base:  clamp(12px, 1.1vw,  14px);
-  --font-md:    clamp(13px, 1.2vw,  15px);
-  --font-lg:    clamp(14px, 1.4vw,  16px);
+  /* ── Tipografia responsiva (escala compacta) ────────────── */
+  --font-xs:    clamp(7px,  0.65vw,  9px);
+  --font-sm:    clamp(9px,  0.75vw,  11px);
+  --font-base:  clamp(10px, 0.85vw,  12px);
+  --font-md:    clamp(11px, 0.95vw,  13px);
+  --font-lg:    clamp(12px, 1.1vw,   14px);
 
-  /* ── Espaçamentos responsivos ──────────────────────────── */
-  --space-xs:   clamp(4px,  0.5vw,  6px);
-  --space-sm:   clamp(6px,  0.7vw,  8px);
-  --space-md:   clamp(8px,  1vw,    12px);
-  --space-lg:   clamp(12px, 1.5vw,  16px);
-  --space-xl:   clamp(16px, 2vw,    20px);
+  /* ── Espaçamentos responsivos (escala compacta) ───────── */
+  --space-xs:   clamp(2px,  0.3vw,  4px);
+  --space-sm:   clamp(4px,  0.45vw,  6px);
+  --space-md:   clamp(5px,  0.65vw,  8px);
+  --space-lg:   clamp(8px,  1vw,     12px);
+  --space-xl:   clamp(10px, 1.2vw,   16px);
 }

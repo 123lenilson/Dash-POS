@@ -8,8 +8,8 @@
 .search-bar-container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 12px 20px;
+  gap: var(--space-lg);
+  margin: var(--space-lg) var(--space-xl);
   width: 100%;
   box-sizing: border-box;
 }
@@ -31,9 +31,9 @@
   background: #fff;
   border: 1px solid #d1d5db;
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow);
-  gap: 10px;
+  gap: var(--space-md);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   flex: 1;
   min-width: 0;
@@ -45,7 +45,7 @@
 
 .search-icon-left {
   color: #9aa0b4;
-  font-size: 16px;
+  font-size: var(--font-lg);
   flex-shrink: 0;
 }
 
@@ -53,7 +53,7 @@
   flex: 1;
   border: 0;
   outline: 0;
-  font-size: 14px;
+  font-size: var(--font-lg);
   background: transparent;
   color: var(--text);
   padding: 0;
@@ -75,9 +75,9 @@
 .barcode-toggle-inline {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   cursor: pointer;
-  padding: 6px 10px;
+  padding: var(--space-sm) var(--space-md);
   background: #fff;
   border: none;
   border-radius: 8px;
@@ -130,7 +130,7 @@
 }
 
 .toggle-label-short {
-  font-size: 11px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #6b7280;
   white-space: nowrap;
@@ -143,10 +143,10 @@
 .clear-btn {
   border: 0;
   background: transparent;
-  font-size: 20px;
+  font-size: clamp(16px, 1.6vw, 20px);
   color: #9aa0b4;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: var(--space-xs) var(--space-sm);
   line-height: 1;
   border-radius: 4px;
   transition: all 0.15s ease;
