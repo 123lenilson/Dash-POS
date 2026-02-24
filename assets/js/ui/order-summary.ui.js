@@ -47,15 +47,15 @@ function initOrderSummarySlider() {
     }
   }
 
-  /** Bloqueia a aba Desc. quando o tipo de documento é fatura-proforma, fatura ou orçamento.
-   *  Cadeado só aparece quando a aba está bloqueada; com Fatura-Recibo (A4 ou 80mm) o cadeado some. */
+  /** Bloqueia a aba Desc. quando o tipo de documento é factura-proforma, factura ou orçamento.
+   *  Cadeado só aparece quando a aba está bloqueada; com Factura-Recibo (A4 ou 80mm) o cadeado some. */
   function updateDescTabBlockState() {
     const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
-    const blockDesc = tipo === 'fatura-proforma' || tipo === 'fatura' || tipo === 'orcamento';
+    const blockDesc = tipo === 'factura-proforma' || tipo === 'factura' || tipo === 'orcamento';
     if (obsTabDesc) {
       obsTabDesc.classList.toggle('disabled', blockDesc);
       obsTabDesc.setAttribute('aria-disabled', blockDesc ? 'true' : 'false');
-      // Cadeado: só inserir no DOM quando bloqueado; remover quando Fatura-Recibo
+      // Cadeado: só inserir no DOM quando bloqueado; remover quando Factura-Recibo
       const lockEl = obsTabDesc.querySelector('.obs-tab-lock-icon');
       if (blockDesc) {
         if (!lockEl) {

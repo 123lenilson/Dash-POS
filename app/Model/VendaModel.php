@@ -1220,7 +1220,7 @@ class VendaModel {
             $ano_atual = date('Y');
             
             // Definir código e título com base no tipo de documento
-            if ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'fatura-proforma') {
+            if ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'factura-proforma') {
                 $codenome = 'PP';  // Código para Fatura Pró-Forma
                 $titulo_documento = 'FACTURA PRÓ-FORMA';
             } else { // Orcamento
@@ -1349,7 +1349,7 @@ class VendaModel {
                 $desconto = (float)$pedido['desconto'];
                 $id_cliente_venda = (int)$id_cliente;
                 $usuario_venda = (int)$usuario;
-                $tipo_documento_venda = ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'fatura-proforma') ? 'FaturaProForma' : 'Orcamento';  // 🔹 Tipo específico para pró-forma
+                $tipo_documento_venda = ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'factura-proforma') ? 'FaturaProForma' : 'Orcamento';  // 🔹 Tipo específico para pró-forma
                 $iva_valor = '0';
                 $caixa = 1;
                 $condicao = null;
@@ -1628,7 +1628,7 @@ class VendaModel {
             // Retorno com todos os dados necessários para gerar a fatura pró-forma
             return [
                 'status' => 'SUCESSO',
-                'mensagem' => $titulo_documento . ' gerad' . ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'fatura-proforma' ? 'a' : 'o') . ' com sucesso e pedidos do usuário limpos',
+                'mensagem' => $titulo_documento . ' gerad' . ($tipo_documento === 'Factura-Proforma' || $tipo_documento === 'factura-proforma' ? 'a' : 'o') . ' com sucesso e pedidos do usuário limpos',
                 'pedidos' => $pedidos,
                 'cliente' => $cliente,
                 'n_fatura' => $n_fatura,

@@ -13,7 +13,8 @@ class MonetaryFormatter {
     this.operationMode = null;        // 'addition' | 'subtraction' | null
     this.operationBuffer = '0';       // Value being typed after operator
     this.previousValue = '0';         // Value before the operation
-    
+    this.replaceOnNextInput = false;  // When true, next digit replaces internalValue instead of appending
+
     // OPTIONAL CALLBACKS
     this.onValueChange = options.onValueChange || null;
     
@@ -134,6 +135,19 @@ class MonetaryFormatter {
   }
   
   keypadInput(value) {
+    // ✅ REPLACE MODE: Se replaceOnNextInput está activo OU se há seleção DOM real,
+    // o próximo dígito deve substituir internalValue em vez de concatenar.
+    // Cobre: auto-seleção no duplo clique, re-seleção por mouse, re-seleção por Shift+setas.
+    const hasRealDOMSelection = this.inputElement &&
+      this.inputElement.selectionStart !== undefined &&
+      this.inputElement.selectionStart !== this.inputElement.selectionEnd;
+
+    if (this.replaceOnNextInput || hasRealDOMSelection) {
+      this.internalValue = '0';
+      this.operationBuffer = '0';
+      this.replaceOnNextInput = false;
+    }
+
     // ✅ CORRECTION: If in operation mode, type in the buffer
     const targetValue = this.operationMode ? 'operationBuffer' : 'internalValue';
     

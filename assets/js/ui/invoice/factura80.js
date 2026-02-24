@@ -1,10 +1,10 @@
-/* FATURA80.JS - Sistema de Renderização para recibos térmicos 80mm */
+/* FACTURA80.JS - Sistema de Renderização para recibos térmicos 80mm */
 
 // ✅ PROTEÇÃO CONTRA CARREGAMENTO DUPLICADO
-if (window.FATURA80_JS_LOADED) {
-    console.warn('⚠️ fatura80.js já foi carregado anteriormente. Ignorando...');
+if (window.FACTURA80_JS_LOADED) {
+    console.warn('⚠️ factura80.js já foi carregado anteriormente. Ignorando...');
 } else {
-    window.FATURA80_JS_LOADED = true;
+    window.FACTURA80_JS_LOADED = true;
     
 function formatarMoeda(valor) {
     return new Intl.NumberFormat('pt-AO', {
@@ -16,7 +16,7 @@ function formatarMoeda(valor) {
 function gerarHTMLFatura80(dadosFatura) {
     // Verifica se os dados obrigatórios estão presentes
     if (!dadosFatura || !dadosFatura.produtos) {
-        console.error('❌ Dados da fatura inválidos ou incompletos');
+        console.error('❌ Dados da factura inválidos ou incompletos');
         return '';
     }
     
@@ -49,7 +49,7 @@ function gerarHTMLFatura80(dadosFatura) {
         </div>
     `).join('');
     
-    // HTML completo da fatura
+    // HTML completo da factura
     const htmlFatura = `
         <!-- Meta tags para garantir a codificação correta -->
         <meta charset="UTF-8">
@@ -198,19 +198,19 @@ function gerarHTMLFatura80(dadosFatura) {
 }
 
 function renderizarFatura80(dadosFatura) {
-    console.log('📄 Renderizando fatura 80mm');
-    console.log('📦 Dados da fatura:', dadosFatura);
+    console.log('📄 Renderizando factura 80mm');
+    console.log('📦 Dados da factura:', dadosFatura);
     
     // Verifica se o container principal existe, senão cria
-    let container = document.getElementById('fatura80-container-inv80');
+    let container = document.getElementById('factura80-container-inv80');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'fatura80-container-inv80';
+        container.id = 'factura80-container-inv80';
         container.className = 'recibo-inv80';
         document.body.appendChild(container);
     }
     
-    // Gera o HTML da fatura
+    // Gera o HTML da factura
     const htmlFatura = gerarHTMLFatura80(dadosFatura);
     
     // Insere o HTML no container
@@ -236,10 +236,10 @@ function renderizarFatura80(dadosFatura) {
         }
     }, 100);
     
-    console.log('✅ Fatura 80mm renderizada com sucesso!');
+    console.log('✅ Factura 80mm renderizada com sucesso!');
 }
 
-// Função para preparar os dados da fatura a partir do carrinho e dados do cliente
+// Função para preparar os dados da factura a partir do carrinho e dados do cliente
 function prepararDadosFatura80(cart, checkoutCustomerData, checkoutPaymentData) {
     const now = new Date();
     const numeroFatura = `FR ${now.getFullYear()}/${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
@@ -328,9 +328,9 @@ function prepararDadosFatura80(cart, checkoutCustomerData, checkoutPaymentData) 
     };
 }
 
-// ✅ NOVA FUNÇÃO: Renderizar fatura80 com dados vindos do backend
+// ✅ NOVA FUNÇÃO: Renderizar factura80 com dados vindos do backend
 function renderizarFatura80ComDadosBackend(dadosBackend) {
-    console.log('📥 [FATURA80] Recebendo dados do backend:', dadosBackend);
+    console.log('📥 [FACTURA80] Recebendo dados do backend:', dadosBackend);
     
     // ✅ TRANSFORMAR dados do backend no formato esperado pelo renderizador
     const dadosFatura = {
@@ -380,12 +380,12 @@ function renderizarFatura80ComDadosBackend(dadosBackend) {
         infoSoftware: dadosBackend.info_software || 'Ck34 -Processado por programa validado nº 466/AGT/2024 Kamba SGF'
     };
     
-    console.log('📦 [FATURA80] Dados transformados:', dadosFatura);
+    console.log('📦 [FACTURA80] Dados transformados:', dadosFatura);
     
     // ✅ CHAMAR a função de renderização
     renderizarFatura80(dadosFatura);
     
-    console.log('✅ [FATURA80] Renderização com dados do backend concluída!');
+    console.log('✅ [FACTURA80] Renderização com dados do backend concluída!');
 }
 
 // Exportar as funções
@@ -395,6 +395,6 @@ window.renderizarFatura80ComDadosBackend = renderizarFatura80ComDadosBackend;
 window.populateInvoice80 = renderizarFatura80ComDadosBackend;  // ✅ Alias para compatibilidade
 window.formatarMoeda = formatarMoeda;
 
-console.log('✅ fatura80.js carregado');
+console.log('✅ factura80.js carregado');
 
 } // Fecha o bloco de proteção contra carregamento duplicado

@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (typeof initClientPanel === 'function') initClientPanel();
   loadFooterPaymentMethods();
   initOrderSummarySlider();
-  initFooterKeypad();
+  /* initFooterKeypad() já é chamado em payment.ui.js (DOMContentLoaded) — evitar duplo registo de listeners */
   if (typeof initBottomSheetSystem === 'function') initBottomSheetSystem();
 });
 

@@ -1,10 +1,11 @@
 /* ================================================
-   COMPONENTE: Client Button
-   Ficheiro: assets/css/components/client-btn.css
-   Parte do sistema Dash-POS
+   COMPONENTE: Toggle Select Painel
+   Botão reutilizável para abrir painéis (ex.: Cliente, Tipo de Factura)
+   Modificadores: .cliente-btn | .tipoFat-btn
+   Ficheiro: assets/css/components/toggle-select-painel.css
    ================================================ */
 
-.cliente-btn {
+.toggle-select-painel {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -17,41 +18,42 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
-.cliente-btn:hover {
+.toggle-select-painel:hover {
   background: #f9fafb;
   transform: translateY(-1px);
   box-shadow: var(--shadow-strong);
 }
 
-.cliente-btn:active {
+.toggle-select-painel:active {
   transform: translateY(0);
 }
 
-.cliente-btn.panel-active {
+.toggle-select-painel.panel-active {
   background: rgba(34, 34, 34, 0.05);
   border-color: var(--color-selection);
   box-shadow: 0 0 0 3px rgba(34, 34, 34, 0.1);
 }
 
-.cliente-btn.panel-active > i:first-child {
+.toggle-select-painel.panel-active > i:first-child {
   color: var(--color-selection);
 }
 
-.cliente-btn.panel-active .cliente-label {
+.toggle-select-painel.panel-active .cliente-label {
   color: var(--color-selection);
 }
 
-.cliente-btn > i:first-child {
+.toggle-select-painel > i:first-child {
   color: #9ca3af;
   font-size: clamp(16px, 1.6vw, 20px);
   flex-shrink: 0;
   transition: color 0.2s ease;
 }
 
-.cliente-text {
+.toggle-select-painel .cliente-text {
   display: flex;
   flex-direction: column;
   gap: clamp(2px, 0.2vw, 4px);
@@ -61,14 +63,14 @@
   text-align: left;
 }
 
-.cliente-label {
+.toggle-select-painel .cliente-label {
   font-size: var(--font-sm);
   color: #9ca3af;
   font-weight: 500;
   line-height: 1;
 }
 
-.cliente-name {
+.toggle-select-painel .cliente-name {
   font-size: var(--font-md);
   font-weight: 600;
   color: #6b7280;
@@ -78,28 +80,36 @@
   white-space: nowrap;
 }
 
-.cliente-name.selected {
+.toggle-select-painel .cliente-name.selected {
   color: #374151;
 }
 
-.cliente-btn > i:last-child {
+.toggle-select-painel > i:last-child {
   color: #d1d5db;
   font-size: var(--font-lg);
   flex-shrink: 0;
   transition: transform 0.3s ease, color 0.2s ease;
 }
 
-.cliente-btn:hover > i:last-child {
+.toggle-select-painel:hover > i:last-child {
   transform: translateX(2px);
 }
 
-.cliente-btn.panel-active > i:last-child {
+.toggle-select-painel.panel-active > i:last-child {
   transform: rotate(180deg);
   color: var(--color-selection);
 }
 
-/* Botão de tipo de documento dentro do cabeçalho do carrinho */
-.cart-header .cliente-btn {
+/* Botão Cliente ao lado da search: mesma altura (padding vertical igual ao .search-wrapper) */
+.search-bar-container .toggle-select-painel.cliente-btn {
+  padding-top: var(--space-md);
+  padding-bottom: var(--space-md);
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+}
+
+/* Botão dentro do cabeçalho do carrinho (Tipo de Factura) */
+.cart-header .toggle-select-painel {
   width: auto;
   max-width: 200px;
   min-width: 0;
@@ -109,15 +119,15 @@
   border-radius: 6px;
 }
 
-.cart-header .cliente-btn > i:first-child {
+.cart-header .toggle-select-painel > i:first-child {
   font-size: var(--font-lg);
 }
 
-.cart-header .cliente-label {
+.cart-header .toggle-select-painel .cliente-label {
   font-size: var(--font-xs);
 }
 
-.cart-header .cliente-name {
+.cart-header .toggle-select-painel .cliente-name {
   font-size: var(--font-sm);
   display: flex;
   align-items: center;
@@ -130,6 +140,6 @@
   color: #9ca3af;
 }
 
-.cart-header .cliente-btn > i:last-child {
+.cart-header .toggle-select-painel > i:last-child {
   font-size: var(--font-base);
 }

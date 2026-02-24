@@ -67,7 +67,7 @@ switch ($method) {
         $acao = $dados['acao'];
         error_log('Ação: ' . $acao);
 
-        if ($acao === 'fatura-recibo') {  // ✅ ATUALIZADO: fatura -> fatura-recibo
+        if ($acao === 'factura-recibo') {
             // Validação básica dos campos obrigatórios
             if (!isset($dados['id_cliente']) || empty($dados['id_cliente'])) {
                 http_response_code(400);
@@ -105,7 +105,7 @@ switch ($method) {
                 error_log('ERRO em apiProcessarFaturaRecibo: ' . $e->getMessage());  // ✅ ATUALIZADO
                 error_log('Stack trace: ' . $e->getTraceAsString());
                 http_response_code(500);
-                echo json_encode(["erro" => "Erro ao processar fatura-recibo: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);  // ✅ ATUALIZADO
+                echo json_encode(["erro" => "Erro ao processar factura-recibo: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
         } elseif ($acao === 'factura_proforma_orcamento') {
             // Validação básica: ID do cliente e tipo de documento
@@ -139,7 +139,7 @@ switch ($method) {
                 http_response_code(500);
                 echo json_encode(["erro" => "Erro ao processar factura proforma/orcamento: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
-        } elseif ($acao === 'fatura-proforma') {
+        } elseif ($acao === 'factura-proforma') {
             // Validação básica: ID do cliente
             if (!isset($dados['id_cliente']) || empty($dados['id_cliente'])) {
                 http_response_code(400);
@@ -166,7 +166,7 @@ switch ($method) {
                 http_response_code(500);
                 echo json_encode(["erro" => "Erro ao processar factura proforma/orcamento: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
-        } elseif ($acao === 'fatura') {
+        } elseif ($acao === 'factura') {
             // Nova ação: fatura
             // Validação básica: ID do cliente
             if (!isset($dados['id_cliente']) || empty($dados['id_cliente'])) {
@@ -184,7 +184,7 @@ switch ($method) {
                 error_log('ERRO em apiProcessarFatura: ' . $e->getMessage());
                 error_log('Stack trace: ' . $e->getTraceAsString());
                 http_response_code(500);
-                echo json_encode(["erro" => "Erro ao processar fatura: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                echo json_encode(["erro" => "Erro ao processar factura: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
         } elseif ($acao === 'orcamento') {
             // Aceita formato simples (id_cliente + observacao) ou formato com dados_cliente
@@ -221,13 +221,13 @@ switch ($method) {
             }
         } else {
             http_response_code(400);
-            echo json_encode(["erro" => "Ação inválida para POST (use 'fatura-recibo', 'factura_proforma_orcamento', 'fatura' ou 'orcamento')"], JSON_UNESCAPED_UNICODE);
+            echo json_encode(["erro" => "Ação inválida para POST (use 'factura-recibo', 'factura_proforma_orcamento', 'factura' ou 'orcamento')"], JSON_UNESCAPED_UNICODE);
         }
         break;
 
     default:
         http_response_code(405);
-        echo json_encode(["erro" => "Método não permitido (apenas POST é suportado para fatura)"], JSON_UNESCAPED_UNICODE);
+        echo json_encode(["erro" => "Método não permitido (apenas POST é suportado para factura)"], JSON_UNESCAPED_UNICODE);
         break;
 }
 ?>

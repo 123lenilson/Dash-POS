@@ -43,14 +43,17 @@ function preventZero(event, input) {
     return false;
   }
 
-  // ✅ Verifica se o texto está selecionado (usando flag manual)
+  // Detecta seleção real: flag da expansão do card OU seleção DOM real (mouse/Shift+setas)
+  const hasRealSelection = quantityInputIsSelected ||
+    (input.selectionStart !== undefined && input.selectionStart !== input.selectionEnd);
+
   let newValue;
-  if (quantityInputIsSelected) {
-    // Se há texto selecionado, substitui pela nova tecla
+  if (hasRealSelection) {
+    // Há seleção activa — substitui o conteúdo seleccionado pela tecla premida
     newValue = key;
-    quantityInputIsSelected = false; // Limpa a flag após a primeira digitação
+    quantityInputIsSelected = false; // Limpa flag após usar
   } else {
-    // Se não há seleção, MODO CALCULADORA: adiciona no final
+    // Sem seleção — MODO CALCULADORA: adiciona no final
     newValue = currentValue + key;
   }
 
@@ -116,21 +119,24 @@ function startEditingQuantity() {
 
 /**
  * Desativa o modo de edição e sincroniza com a API após o usuário terminar de digitar
+ * (finishEditingTimeout e pendingSync estão em state.js)
  */
-let finishEditingTimeout = null;
-let pendingSync = null; // Armazena dados de sincronização pendente
-
 function finishEditingQuantity(productId, input) {
   const id = parseInt(productId);
   const cartItem = cart.get(id);
 
-  // Armazena os dados para sincronização
-  if (cartItem && input.value) {
-    const qty = parseInt(input.value);
-    if (!isNaN(qty) && qty >= 1) {
-      pendingSync = { id, qty };
-    }
+  // Determina a quantidade a sincronizar:
+  // se vazio, "0", NaN ou < 1 → fallback para 1
+  let qty = parseInt(input.value);
+  if (!cartItem || isNaN(qty) || qty < 1) {
+    qty = 1;
   }
+
+  // Corrige o input visualmente para o valor que vai ser sincronizado
+  input.value = qty;
+
+  // Regista para sincronização
+  pendingSync = { id, qty };
 
   // Limpa o timeout anterior se existir
   if (finishEditingTimeout) {
@@ -244,6 +250,77 @@ function validateAndUpdateQuantity(productId, input) {
   if (cartItem) {
     cartItem.qty = qty;
   }
+}
+
+/**
+ * Aplica uma tecla do teclado numérico da tela ao input de quantidade.
+ * Chamado por payment.ui.js quando o utilizador clica no keypad e o alvo é um input qty-*.
+ * value: '0'..'9', 'C' (limpar), 'back' (apagar), '.' (ignorado)
+ */
+function handleQuantityKeypadKey(input, value) {
+  if (!input || input.id == null || !input.id.startsWith('qty-')) return;
+  const productId = input.id.replace('qty-', '');
+  const id = parseInt(productId, 10);
+  const currentRaw = (input.value || '').replace(/[^0-9]/g, '');
+
+  if (value === 'C') {
+    // Esvazia o input e activa a flag de substituição.
+    // O comportamento é idêntico ao do botão 'back' quando o input fica vazio:
+    // a próxima tecla (keypad ou teclado físico) substitui em vez de concatenar.
+    input.value = '';
+    quantityInputIsSelected = true;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+  if (value === 'back') {
+    let v = currentRaw.slice(0, -1);
+    if (v === '' || v === '0') {
+      // Input ficaria vazio: deixar vazio e activar flag de substituição.
+      // A próxima tecla no keypad ou no teclado físico vai substituir,
+      // como acontece na expansão inicial do card.
+      input.value = '';
+      quantityInputIsSelected = true;
+    } else {
+      input.value = v;
+    }
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+  if (value === '.') return;
+
+  if (!/^[0-9]$/.test(value)) return;
+  if (value === '0' && (currentRaw === '' || currentRaw === '0')) return;
+
+  // Detecta seleção real: flag da expansão/back OU seleção DOM real (mouse/Shift+setas).
+  // Cobre todos os cenários: expansão do card, seleção por mouse, seleção por Shift+setas,
+  // e o caso em que back esvaziou o input e activou a flag.
+  const hasRealSelection = (typeof quantityInputIsSelected !== 'undefined' && quantityInputIsSelected) ||
+    (input.selectionStart !== undefined && input.selectionStart !== input.selectionEnd);
+
+  let newValue;
+  if (hasRealSelection) {
+    newValue = value;                // substitui o conteúdo seleccionado
+    quantityInputIsSelected = false; // limpa a flag após usar
+  } else {
+    newValue = currentRaw + value;   // comportamento normal: concatena
+  }
+  const futureQty = parseInt(newValue, 10);
+  if (isNaN(futureQty)) return;
+
+  const product = typeof PRODUCTS !== 'undefined' && PRODUCTS && PRODUCTS.find(function (p) { return p.id === id; });
+  if (product) {
+    const isServico = product.ps && String(product.ps).toUpperCase() === 'S';
+    const stockDisponivel = product.stock || 0;
+    if (!isServico && futureQty > stockDisponivel) {
+      if (typeof showCriticalAlert === 'function') {
+        showCriticalAlert(product.name + ': Quantidade máxima disponível em stock é ' + stockDisponivel + '.', 3000);
+      }
+      return;
+    }
+  }
+
+  input.value = newValue;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 /**
@@ -375,6 +452,12 @@ function startEditingPrice(productId, input) {
   
   // ✅ Foca no input
   input.focus();
+
+  // ✅ Selecciona todo o conteúdo visualmente e activa a flag de substituição.
+  // Comportamento idêntico ao input de quantidade quando o card expande:
+  // a primeira tecla (física ou keypad) substitui em vez de concatenar.
+  input.select();
+  formatter.replaceOnNextInput = true;
   
   console.log('✏️ Editando preço do produto:', productId, '- Valor:', price);
 }
@@ -393,12 +476,19 @@ function submitEditingPrice(productId, input) {
   }
   
   // Get the new price from formatter
-  const newPrice = formatter.getValue();
-  
-  console.log(`💾 [SUBMIT BLUR] Submitting price ${newPrice} for product ${productId}`);
-  
+  const rawPrice = formatter.getValue();
+
+  // Se o utilizador submeteu 0 ou vazio, reverter para o preço original do produto.
+  // O preço original é cartItem.product.price (o que veio da API quando o produto
+  // entrou no carrinho), não cartItem.customPrice (que pode já ter sido editado antes).
+  const cartItem = cart.get(id);
+  const originalProductPrice = cartItem ? parseFloat(cartItem.product.price) : 0;
+  const newPrice = (rawPrice > 0) ? rawPrice : originalProductPrice;
+
+  console.log(`💾 [SUBMIT BLUR] Submitting price ${newPrice} for product ${productId} (raw: ${rawPrice})`);
+
   // Validate price
-  if (newPrice >= 0) {
+  if (newPrice > 0) {
     // ✅ Update price
     updateCartProductPrice(id, newPrice);
     
@@ -473,9 +563,14 @@ function handlePriceKeydown(event, productId, input) {
   if (event.key === 'Enter') {
     event.preventDefault();
     
-    const newPrice = formatter.getValue();
-    
-    if (newPrice >= 0) {
+    const rawPrice = formatter.getValue();
+
+    // Se o utilizador submeteu 0 ou vazio, reverter para o preço original do produto.
+    const cartItem = cart.get(parseInt(productId));
+    const originalProductPrice = cartItem ? parseFloat(cartItem.product.price) : 0;
+    const newPrice = (rawPrice > 0) ? rawPrice : originalProductPrice;
+
+    if (newPrice > 0) {
       // ✅ Atualiza preço
       updateCartProductPrice(parseInt(productId), newPrice);
       
@@ -625,3 +720,40 @@ function handleInputKeydown(event, productId) {
   }
 }
 
+// Expõe no global para os handlers inline (onfocus/onblur) no HTML gerado por cart.ui.js
+window.startEditingQuantity = startEditingQuantity;
+window.finishEditingQuantity = finishEditingQuantity;
+window.handleQuantityKeypadKey = handleQuantityKeypadKey;
+
+/**
+ * Rastreia o input de quantidade ou preço focado para o teclado numérico da tela.
+ * payment.ui.js usa window._keypadTargetInput para enviar teclas ao input correto.
+ */
+function initKeypadTargetTracking() {
+  document.addEventListener('focusin', function (e) {
+    var el = e.target;
+    if (el && el.id && (el.id.indexOf('qty-') === 0 || el.id.indexOf('price-') === 0)) {
+      window._keypadTargetInput = el;
+    }
+  });
+  document.addEventListener('focusout', function () {
+    setTimeout(function () {
+      var a = document.activeElement;
+      // ✅ CORRECÇÃO: não apagar se o foco foi para outro input do carrinho (qty ou price).
+      // Sem esta verificação, quando o foco passa do qty para o price input,
+      // o setTimeout de 200ms apaga _keypadTargetInput porque o price input
+      // não está dentro de .footer-keypad, tornando o keypad inoperante para preços.
+      if (a && a.id && (a.id.startsWith('qty-') || a.id.startsWith('price-'))) {
+        return; // foco está num input do carrinho — manter _keypadTargetInput
+      }
+      if (!a || !a.closest || !a.closest('.footer-keypad')) {
+        window._keypadTargetInput = null;
+      }
+    }, 200);
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initKeypadTargetTracking);
+} else {
+  initKeypadTargetTracking();
+}

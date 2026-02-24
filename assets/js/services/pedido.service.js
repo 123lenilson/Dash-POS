@@ -118,16 +118,16 @@ function loadCartFromAPI() {
   // ✅ NÃO recarrega o carrinho se o usuário estiver editando a quantidade
   if (modoEdicao) {
     console.log('⏸️ loadCartFromAPI bloqueado - usuário está editando');
-    return;
+    return Promise.resolve();
   }
 
   // ✅ NÃO recarrega o carrinho durante a troca de cards
   if (isSwitchingCards) {
     console.log('⏸️ loadCartFromAPI bloqueado - trocando entre cards');
-    return;
+    return Promise.resolve();
   }
 
-  fetch("http://localhost/Dash-POS/api/pedido.php?acao=listar_pedido", {
+  return fetch("http://localhost/Dash-POS/api/pedido.php?acao=listar_pedido", {
     method: "GET",
     cache: "no-store"
   })
@@ -146,7 +146,7 @@ function loadCartFromAPI() {
         cart.clear();
         renderCart();
         if (typeof skeletonMarkCartReady === 'function') skeletonMarkCartReady();
-        return;
+        return Promise.resolve();
       }
 
       const itensDB = data.itens || [];
@@ -155,7 +155,7 @@ function loadCartFromAPI() {
       if (PRODUCTS.length === 0) {
         console.log("PRODUCTS ainda vazio, retry em 100ms...");
         setTimeout(loadCartFromAPI, 100);
-        return;
+        return Promise.resolve();
       }
 
       const newHash = itensDB.map(item => `${item.cardapio_id}:${item.qty}:${item.preco}`).join('|');

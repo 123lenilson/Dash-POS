@@ -23,7 +23,7 @@
 @import './components/keypad.css';
 @import './components/payment-methods.css';
 @import './components/invoice-type.css';
-@import './components/client-btn.css';
+@import './components/toggle-select-painel.css';
 @import './components/client-panel.css';
 @import './components/bottom-sheet.css';
 @import './components/alerts.css';

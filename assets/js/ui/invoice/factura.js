@@ -1,10 +1,10 @@
-/* FATURA.JS - Sistema de Renderização com prefixo inv-a4- */
+/* FACTURA.JS - Sistema de Renderização com prefixo inv-a4- */
 
 // ✅ PROTEÇÃO CONTRA CARREGAMENTO DUPLICADO
-if (window.FATURA_JS_LOADED) {
-    console.warn('⚠️ fatura.js já foi carregado anteriormente. Ignorando...');
+if (window.FACTURA_JS_LOADED) {
+    console.warn('⚠️ factura.js já foi carregado anteriormente. Ignorando...');
 } else {
-    window.FATURA_JS_LOADED = true;
+    window.FACTURA_JS_LOADED = true;
     
 const PRODUTOS_POR_PAGINA = 16;
 
@@ -153,7 +153,7 @@ function criarPaginaFatura(produtos, numeroPagina, totalPaginas, todasPaginas, d
             <div class="inv-a4-cabe-fatura">
                 <div class="inv-a4-titulo-fatura">
                     <div>
-                        <h4>${dadosFatura.titulo_documento || 'FATURA RECIBO'}</h4>
+                        <h4>${dadosFatura.titulo_documento || 'FACTURA RECIBO'}</h4>
                         <span style="font-family: Arial; font-size: 18px;">Original</span>
                     </div>
                 </div>
@@ -261,7 +261,7 @@ function criarPaginaFatura(produtos, numeroPagina, totalPaginas, todasPaginas, d
 }
 
 function renderizarFaturaComPaginas(dadosFatura) {
-    console.log('📄 Renderizando fatura');
+    console.log('📄 Renderizando factura');
     console.log('📦 Total de produtos:', dadosFatura.produtos.length);
     
     const todasPaginas = dividirProdutosEmPaginas(dadosFatura.produtos);
@@ -298,7 +298,7 @@ function renderizarFaturaComPaginas(dadosFatura) {
     
     container.appendChild(containerMultiplas);
     
-    console.log('✅ Fatura renderizada com', todasPaginas.length, 'página(s)');
+    console.log('✅ Factura renderizada com', todasPaginas.length, 'página(s)');
     console.log('📏 Altura do container:', container.scrollHeight, 'px');
     
     // Debug: Verifica se todas as páginas foram criadas
@@ -347,7 +347,7 @@ function prepararDadosFatura(cart, checkoutCustomerData, checkoutPaymentData) {
             subtotal: checkoutPaymentData.subtotal || 0,
             desconto: checkoutPaymentData.discount || 0,
             imposto: checkoutPaymentData.tax || 0,
-            retencao: 0,  // ✅ Para faturas do checkout local, retenção é sempre 0
+            retencao: 0,  // ✅ Para facturas do checkout local, retenção é sempre 0
             total: checkoutPaymentData.total || 0
         },
         impostos: [{
@@ -366,14 +366,14 @@ window.renderizarFaturaComPaginas = renderizarFaturaComPaginas;
 window.prepararDadosFatura = prepararDadosFatura;
 window.formatarMoeda = formatarMoeda;
 
-// ✅ NOVA FUNÇÃO: Renderizar fatura com dados vindos do backend
+// ✅ NOVA FUNÇÃO: Renderizar factura com dados vindos do backend
 function renderizarFaturaComDadosBackend(dadosBackend) {
-    console.log('📥 [FATURA] Recebendo dados do backend:', dadosBackend);
+    console.log('📥 [FACTURA] Recebendo dados do backend:', dadosBackend);
     
     // ✅ TRANSFORMAR dados do backend no formato esperado pelo renderizador
     const dadosFatura = {
         numeroFatura: dadosBackend.codigo_documento || 'F00001',
-        titulo_documento: dadosBackend.titulo_documento || 'FATURA RECIBO',
+        titulo_documento: dadosBackend.titulo_documento || 'FACTURA RECIBO',
         data: dadosBackend.data_emissao || new Date().toLocaleDateString('pt-PT'),
         hora: dadosBackend.hora_emissao || new Date().toLocaleTimeString('pt-PT'),
         empresa: {
@@ -419,7 +419,7 @@ function renderizarFaturaComDadosBackend(dadosBackend) {
         operador: dadosBackend.nome_usuario || 'SISTEMA'
     };
     
-    console.log('📦 [FATURA] Dados transformados:', dadosFatura);
+    console.log('📦 [FACTURA] Dados transformados:', dadosFatura);
     
     // ✅ Busca ou cria o container
     let container = document.getElementById('inv-a4-container-principal');
@@ -445,12 +445,12 @@ function renderizarFaturaComDadosBackend(dadosBackend) {
     // ✅ CHAMAR a função de renderização existente
     renderizarFaturaComPaginas(dadosFatura);
     
-    console.log('✅ [FATURA] Renderização com dados do backend concluída!');
+    console.log('✅ [FACTURA] Renderização com dados do backend concluída!');
 }
 
 // Exportar a nova função
 window.renderizarFaturaComDadosBackend = renderizarFaturaComDadosBackend;
 
-console.log('✅ fatura.js carregado com prefixo inv-a4-');
+console.log('✅ factura.js carregado com prefixo inv-a4-');
 
 } // Fecha o bloco de proteção contra carregamento duplicado

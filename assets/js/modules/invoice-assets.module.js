@@ -59,18 +59,18 @@ async function loadInvoiceAssets(format) {
   try {
     // Carregar ambos os CSS (como no backup) para A4 e 80mm estarem sempre disponíveis
     if (!invoiceAssetsState.css.a4) {
-      await loadCSS('../assets/css/fatura.css', 'fatura-a4-css');
+      await loadCSS('../assets/css/factura.css', 'factura-a4-css');
       invoiceAssetsState.css.a4 = true;
     }
     if (!invoiceAssetsState.css.mm80) {
-      await loadCSS('../assets/css/fatura80.css', 'fatura-80mm-css');
+      await loadCSS('../assets/css/factura80.css', 'factura-80mm-css');
       invoiceAssetsState.css.mm80 = true;
     }
     
     await new Promise(resolve => setTimeout(resolve, 100));
     
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
     if (containerA4) {
       containerA4.style.position = 'fixed';
       containerA4.style.top = '-9999px';
@@ -88,7 +88,7 @@ async function loadInvoiceAssets(format) {
     
   } catch (error) {
     console.error('❌ [ASSETS] Erro ao carregar recursos:', error);
-    throw new Error(`Falha ao carregar recursos de fatura: ${error.message}`);
+    throw new Error(`Falha ao carregar recursos de factura: ${error.message}`);
   }
 }
 
@@ -152,8 +152,8 @@ function applyInvoicePrintStyles(format) {
              z-index: 9999 !important; padding: 0 !important; margin: 0 !important;
              page-break-after: avoid !important;
            }
-           #fatura80-container-inv80 { display: none !important; }`
-        : `#fatura80-container-inv80 {
+           #factura80-container-inv80 { display: none !important; }`
+        : `#factura80-container-inv80 {
              display: block !important;
              position: absolute !important; left: 0 !important; top: 0 !important;
              width: 80mm !important;
@@ -177,7 +177,7 @@ function applyInvoicePrintStyles(format) {
       .inv-a4-sessao-cabecalho, .inv-a4-sessao-corpo-central, .inv-a4-sessao-rodape { page-break-inside: avoid !important; }
     }
     @media screen {
-      #inv-a4-container-principal, #fatura80-container-inv80 {
+      #inv-a4-container-principal, #factura80-container-inv80 {
         position: fixed !important; top: -9999px !important; left: -9999px !important;
         z-index: -1 !important;
       }

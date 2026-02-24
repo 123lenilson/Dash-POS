@@ -147,11 +147,12 @@
 /* RESPONSIVIDADE DO SEARCH BAR CONTAINER */
 @media (min-width: 761px) and (max-width: 1100px) {
   .search-bar-container {
-    margin: var(--space-md) var(--space-lg);
+    margin: var(--space-md) 0;
+    padding: 0 var(--space-lg);
     gap: var(--space-md);
   }
 
-  .cliente-btn {
+  .toggle-select-painel {
     padding: var(--space-lg) var(--space-lg);
     font-size: var(--font-md);
   }
@@ -454,7 +455,7 @@
   }
   body { padding-bottom: 60px; }
   .sticky-bottom-menu { display: flex; }
-  .search-bar-container .cliente-btn {
+  .search-bar-container .toggle-select-painel.cliente-btn {
     display: none !important;
   }
   .search-bar-container .search-wrapper {

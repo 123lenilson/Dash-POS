@@ -90,7 +90,7 @@
           </div>
 
           <!-- BOTÃO CLIENTE (20%) -->
-          <button class="cliente-btn" onclick="openPanel('clientePanel')">
+          <button class="toggle-select-painel cliente-btn" onclick="openPanel('clientePanel')">
             <i class="fa-solid fa-user"></i>
             <div class="cliente-text">
               <span class="cliente-label">Cliente</span>
@@ -217,14 +217,14 @@
 
       <!-- ===== CABEÇALHO DO CARRINHO ===== -->
       <div class="cart-header">
-        <!-- Botão Tipo de Documento (esquerda) e Botão Limpar (direita) -->
+        <!-- Botão Tipo de Factura (esquerda) e Botão Limpar (direita) -->
         <div class="cart-header-title">
-          <button class="cliente-btn" onclick="openPanel('documentoPanel')">
+          <button class="toggle-select-painel tipoFat-btn" onclick="openPanel('documentoPanel')">
             <i class="fa-solid fa-file-invoice"></i>
             <div class="cliente-text">
-              <span class="cliente-label">Tipo de Documento</span>
+              <span class="cliente-label">Tipo de Factura</span>
               <span class="cliente-name">
-                <span id="selectedDocType">Fatura-Recibo</span>
+                <span id="selectedDocType">Factura-Recibo</span>
                 <i class="fa-solid fa-arrow-right doc-arrow"></i>
                 <span id="selectedDocFormat">Formato A4</span>
               </span>
@@ -246,16 +246,16 @@
           <div class="doc-type-panel-slider" id="docTypePanelSlider">
             <div class="invoice-type-options-panel">
 
-              <!-- Opção 1: Fatura-Recibo (padrão, com sub-toggle de formato) -->
+              <!-- Opção 1: Factura-Recibo (padrão, com sub-toggle de formato) -->
               <div class="invoice-option-group">
-                <label class="invoice-toggle-option active" data-invoice-type="fatura-recibo">
-                  <span class="toggle-label">Fatura-Recibo</span>
+                <label class="invoice-toggle-option active" data-invoice-type="factura-recibo">
+                  <span class="toggle-label">Factura-Recibo</span>
                   <div class="toggle-switch-container">
-                    <input type="radio" name="invoiceTypePanel" value="fatura-recibo" checked>
+                    <input type="radio" name="invoiceTypePanel" value="factura-recibo" checked>
                     <span class="toggle-switch-visual"></span>
                   </div>
                 </label>
-                <!-- Sub-toggle para formato (visível apenas quando Fatura-Recibo está ativo) -->
+                <!-- Sub-toggle para formato (visível apenas quando Factura-Recibo está ativo) -->
                 <div class="format-sub-options" id="formatSubOptions">
                   <label class="format-toggle-option active" data-format="A4">
                     <span class="format-label">A4</span>
@@ -274,23 +274,23 @@
                 </div>
               </div>
 
-              <!-- Opção 2: Fatura Proforma -->
+              <!-- Opção 2: Factura Proforma -->
               <div class="invoice-option-group">
-                <label class="invoice-toggle-option" data-invoice-type="fatura-proforma">
-                  <span class="toggle-label">Fatura Proforma</span>
+                <label class="invoice-toggle-option" data-invoice-type="factura-proforma">
+                  <span class="toggle-label">Factura Proforma</span>
                   <div class="toggle-switch-container">
-                    <input type="radio" name="invoiceTypePanel" value="fatura-proforma">
+                    <input type="radio" name="invoiceTypePanel" value="factura-proforma">
                     <span class="toggle-switch-visual"></span>
                   </div>
                 </label>
               </div>
 
-              <!-- Opção 3: Fatura -->
+              <!-- Opção 3: Factura -->
               <div class="invoice-option-group">
-                <label class="invoice-toggle-option" data-invoice-type="fatura">
-                  <span class="toggle-label">Fatura</span>
+                <label class="invoice-toggle-option" data-invoice-type="factura">
+                  <span class="toggle-label">Factura</span>
                   <div class="toggle-switch-container">
-                    <input type="radio" name="invoiceTypePanel" value="fatura">
+                    <input type="radio" name="invoiceTypePanel" value="factura">
                     <span class="toggle-switch-visual"></span>
                   </div>
                 </label>
@@ -391,49 +391,34 @@
                     </button>
                   </div>
                   <div class="order-summary-content">
-                    <!-- Card: Total a pagar (1ª posição) -->
-                    <div class="order-card">
-                      <div class="order-card-info">
-                        <span class="order-card-label">Total a pagar:</span>
-                        <span class="order-card-value" id="summaryTotalPagar">Kz 0,00</span>
-                      </div>
-                      <div class="order-card-icon">
-                        <i class="fa-solid fa-money-bills"></i>
-                      </div>
+
+                    <!-- Linha: Total Ilíquido -->
+                    <div class="order-row">
+                      <span class="order-row-label">Total ilíquido</span>
+                      <span class="order-row-value" id="summaryNetTotal">Kz 0,00</span>
                     </div>
 
-                    <!-- Card: Total Ilíquido (2ª posição) -->
-                    <div class="order-card">
-                      <div class="order-card-info">
-                        <span class="order-card-label">Total ilíquido:</span>
-                        <span class="order-card-value" id="summaryNetTotal">Kz 0,00</span>
-                      </div>
-                      <div class="order-card-icon">
-                        <i class="fa-solid fa-receipt"></i>
-                      </div>
+                    <!-- Linha: Total Impostos -->
+                    <div class="order-row">
+                      <span class="order-row-label">Total impostos</span>
+                      <span class="order-row-value order-row-value--tax" id="summaryTaxTotal">Kz 0,00</span>
                     </div>
 
-                    <!-- Card: Total Impostos (3ª posição) -->
-                    <div class="order-card">
-                      <div class="order-card-info">
-                        <span class="order-card-label">Total impostos:</span>
-                        <span class="order-card-value" id="summaryTaxTotal">Kz 0,00</span>
-                      </div>
-                      <div class="order-card-icon">
-                        <i class="fa-solid fa-percent"></i>
-                      </div>
+                    <!-- Linha: Retenção -->
+                    <div class="order-row">
+                      <span class="order-row-label">Retenção</span>
+                      <span class="order-row-value order-row-value--retention" id="summaryRetention">Kz 0,00</span>
                     </div>
 
-                    <!-- Card: Retenção (4ª posição) -->
-                    <div class="order-card">
-                      <div class="order-card-info">
-                        <span class="order-card-label">Retenção:</span>
-                        <span class="order-card-value" id="summaryRetention">Kz 0,00</span>
-                      </div>
-                      <div class="order-card-icon">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
-                      </div>
+                    <!-- Separador antes do total -->
+                    <div class="order-total-divider"></div>
+
+                    <!-- Linha: Total a pagar — destacada -->
+                    <div class="order-row order-row--total">
+                      <span class="order-row-label">Total a pagar</span>
+                      <span class="order-row-value" id="summaryTotalPagar">Kz 0,00</span>
                     </div>
+
                   </div>
                 </div>
 
@@ -673,7 +658,7 @@
 <!-- Coloque isso no final do body, antes dos scripts -->
 <div id="alertContainer"></div>
 
-<!-- Container para Fatura A4 -->
+<!-- Container para Factura A4 -->
 <div id="inv-a4-container-principal" style="
   position: fixed;
   top: -9999px;
@@ -684,8 +669,8 @@
   display: none;
 "></div>
 
-<!-- Container para Fatura 80mm -->
-<div id="fatura80-container-inv80" class="recibo-inv80" style="
+<!-- Container para Factura 80mm -->
+<div id="factura80-container-inv80" class="recibo-inv80" style="
   position: fixed;
   top: -9999px;
   left: -9999px;
@@ -696,8 +681,8 @@
 "></div>
 
 <!-- Scripts -->
-<script src="../assets/js/ui/invoice/fatura.js"></script>
-<script src="../assets/js/ui/invoice/fatura80.js"></script>
+<script src="../assets/js/ui/invoice/factura.js"></script>
+<script src="../assets/js/ui/invoice/factura80.js"></script>
 <script src="../assets/js/services/cliente.service.js"></script>
 <script src="../assets/js/modules/client.module.js"></script>
 <script src="../assets/js/ui/client-panel.ui.js"></script>

@@ -63,7 +63,7 @@ function initBottomSheetSystem() {
       var cartFooter = checkoutPanel ? checkoutPanel.querySelector('.cart-footer') : null;
       if (cartHeader) sheetBody.appendChild(cartHeader);
 
-      var docTypeNames = { 'fatura-recibo': 'Fatura-Recibo', 'fatura-proforma': 'Fatura Proforma', 'fatura': 'Fatura', 'orcamento': 'Orçamento' };
+      var docTypeNames = { 'factura-recibo': 'Factura-Recibo', 'factura-proforma': 'Factura Proforma', 'factura': 'Factura', 'orcamento': 'Orçamento' };
       var currentDocType = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
       var docTypeLabel = docTypeNames[currentDocType] || currentDocType || 'Factura';
 

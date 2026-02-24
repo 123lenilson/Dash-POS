@@ -590,19 +590,53 @@ function initFooterKeypad() {
     });
   }
   
-  // Configura botões do keypad
+  // Configura botões do keypad (quantidade/preço no carrinho ou valor do pagamento)
   const keypadBtns = document.querySelectorAll('.keypad-btn');
   keypadBtns.forEach(btn => {
+    // CRÍTICO: preventDefault no mousedown impede que o input activo perca foco
+    // quando o utilizador clica num botão do keypad.
+    // Sem isto, o focusout dispara antes do click e apaga _keypadTargetInput.
+    btn.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+    });
+
     btn.addEventListener('click', function () {
       const value = this.dataset.value;
-      
-      if (value === 'C') {
-        clearFooterCash();
-      } else if (value === 'back') {
-        backspaceFooterCash();
-      } else {
-        footerKeypadInput(value);
+      const target = window._keypadTargetInput;
+
+      // 1. Se há um input de qty ou price em foco → envia para ele
+      if (target && document.contains(target)) {
+        if (target.id && target.id.startsWith('qty-')) {
+          if (typeof window.handleQuantityKeypadKey === 'function') {
+            window.handleQuantityKeypadKey(target, value);
+          }
+          return;
+        }
+        if (target.id && target.id.startsWith('price-')) {
+          const productId = target.id.replace('price-', '');
+          const formatter = window['priceFormatter_' + productId];
+          if (formatter) {
+            // ✅ Re-seleção manual via mouse/Shift+setas: se há seleção DOM real
+            // e a flag ainda não está activa, activá-la antes de chamar keypadInput.
+            // (Para teclado físico, MonetaryFormatter.keypadInput() já trata isto sozinho.)
+            const inputEl = formatter.inputElement;
+            if (!formatter.replaceOnNextInput &&
+                inputEl && inputEl.selectionStart !== undefined &&
+                inputEl.selectionStart !== inputEl.selectionEnd) {
+              formatter.replaceOnNextInput = true;
+            }
+            if (value === 'C') formatter.clear();
+            else if (value === 'back') formatter.backspace();
+            else formatter.keypadInput(value);
+          }
+          return;
+        }
       }
+
+      // 2. Fallback → envia para o input de pagamento
+      if (value === 'C') clearFooterCash();
+      else if (value === 'back') backspaceFooterCash();
+      else footerKeypadInput(value);
     });
   });
   

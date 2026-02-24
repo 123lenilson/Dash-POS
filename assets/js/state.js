@@ -42,8 +42,8 @@ const SSE_MAX_RECONNECT_ATTEMPTS = 5;
 const SSE_RECONNECT_DELAY = 3000; // 3 segundos
 
 /* ======= TIPO/FORMATO DE DOCUMENTO ======= */
-const tiposDesenvolvidos = ['fatura-recibo', 'fatura-proforma', 'fatura', 'orcamento']; // Tipos já implementados
-let tipoDocumentoAtual = 'fatura-recibo'; // Tipo padrão
+const tiposDesenvolvidos = ['factura-recibo', 'factura-proforma', 'factura', 'orcamento']; // Tipos já implementados
+let tipoDocumentoAtual = 'factura-recibo'; // Tipo padrão
 let formatoFaturaAtual = 'A4'; // Formato padrão
 
 /* ======= INVOICE ASSETS ======= */

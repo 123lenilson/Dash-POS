@@ -9,15 +9,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-lg);
-  margin: var(--space-lg) var(--space-xl);
+  margin: var(--space-lg) 0;
+  padding: 0 var(--space-xl);
   width: 100%;
-  min-width: 0; /* se o contentor estiver dentro de flex, pode encolher e não vazar */
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .search-bar-container .search-bar-inner {
-  width: 80%;
-  min-width: 0; /* permite encolher dentro do flex e evita o botão cliente vazar do contentor */
+  flex: 1;
+  min-width: 0;
 }
 
 /* Slot no header para search + toggle em mobile (≤905px); escondido quando vazio (desktop) */

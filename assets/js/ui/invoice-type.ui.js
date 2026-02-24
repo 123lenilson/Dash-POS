@@ -58,7 +58,7 @@ function selecionarFormatoFatura(formato) {
 
   if (typeof updateStickyDocTypeLabel === 'function') updateStickyDocTypeLabel();
 
-  // Fatura-Recibo (A4 ou 80mm): garantir que a aba Desc. e os blocos do rodapé ficam sem cadeado
+  // Factura-Recibo (A4 ou 80mm): garantir que a aba Desc. e os blocos do rodapé ficam sem cadeado
   if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
   var currentType = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
   if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(currentType);
@@ -169,7 +169,7 @@ function openPanel(panelId) {
   if (panelId === 'clientePanel') {
     const panel = document.getElementById('clientePanelSlider');
     const wrapper = document.querySelector('.products-container-wrapper');
-    const clientBtn = document.querySelector('.cliente-btn');
+    const clientBtn = document.querySelector('.toggle-select-painel.cliente-btn');
 
     if (panel && wrapper) {
       // Verifica se o painel já está aberto
@@ -195,7 +195,7 @@ function openPanel(panelId) {
   if (panelId === 'documentoPanel') {
     const panel = document.getElementById('docTypePanelSlider');
     const wrapper = document.getElementById('cartBodyWrapper');
-    const docBtn = document.querySelector('.cart-header .cliente-btn');
+    const docBtn = document.querySelector('.cart-header .toggle-select-painel');
 
     if (panel && wrapper) {
       // Verifica se o painel já está aberto
@@ -224,7 +224,7 @@ function openPanel(panelId) {
 function closeClientPanel() {
   const panel = document.getElementById('clientePanelSlider');
   const wrapper = document.querySelector('.products-container-wrapper');
-  const clientBtn = document.querySelector('.cliente-btn');
+  const clientBtn = document.querySelector('.toggle-select-painel.cliente-btn');
 
   if (panel && wrapper) {
     panel.classList.remove('active');
@@ -241,7 +241,7 @@ function closeClientPanel() {
 function closeDocPanel() {
   const panel = document.getElementById('docTypePanelSlider');
   const wrapper = document.getElementById('cartBodyWrapper');
-  const docBtn = document.querySelector('.cart-header .cliente-btn');
+  const docBtn = document.querySelector('.cart-header .toggle-select-painel');
 
   if (panel && wrapper) {
     panel.classList.remove('active');
@@ -278,7 +278,7 @@ function initInvoiceTypePanelToggles() {
 
       const formatSubOptions = document.getElementById('formatSubOptions');
       if (formatSubOptions) {
-        if (invoiceType === 'fatura-recibo') {
+        if (invoiceType === 'factura-recibo') {
           formatSubOptions.style.display = 'flex';
           console.log('✅ [TOGGLES] Sub-toggle exibido');
         } else {
@@ -287,7 +287,7 @@ function initInvoiceTypePanelToggles() {
         }
       }
 
-      if (invoiceType !== 'fatura-recibo') {
+      if (invoiceType !== 'factura-recibo') {
         closeDocPanel();
       }
     });
@@ -331,20 +331,20 @@ function initInvoiceTypePanelToggles() {
 
 /**
  * Atualiza o texto do botão Tipo Factura no sticky bottom menu (telas ≤905px).
- * Se for Fatura-Recibo, acrescenta o formato (A4 ou 80mm).
+ * Se for Factura-Recibo, acrescenta o formato (A4 ou 80mm).
  */
 function updateStickyDocTypeLabel() {
   const el = document.getElementById('stickyDocTypeLabel');
   if (!el) return;
   const typeNames = {
-    'fatura-recibo': 'Fatura-Recibo',
-    'fatura-proforma': 'Fatura Proforma',
-    'fatura': 'Fatura',
+    'factura-recibo': 'Factura-Recibo',
+    'factura-proforma': 'Factura Proforma',
+    'factura': 'Factura',
     'orcamento': 'Orçamento'
   };
   const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
   let text = typeNames[tipo] || tipo || 'Tipo Factura';
-  if (tipo === 'fatura-recibo') {
+  if (tipo === 'factura-recibo') {
     const formato = (typeof formatoFaturaAtual !== 'undefined' && formatoFaturaAtual)
       ? formatoFaturaAtual
       : (document.querySelector('input[name="invoiceFormat"]:checked')?.value || localStorage.getItem('invoiceFormat') || 'A4');
@@ -370,9 +370,9 @@ function updateInvoiceFormatDisplay(formato) {
  */
 function updateInvoiceTypeDisplay(invoiceType) {
   const typeNames = {
-    'fatura-recibo': 'Fatura-Recibo',
-    'fatura-proforma': 'Fatura Proforma',
-    'fatura': 'Fatura',
+    'factura-recibo': 'Factura-Recibo',
+    'factura-proforma': 'Factura Proforma',
+    'factura': 'Factura',
     'orcamento': 'Orçamento'
   };
   const displayElement = document.getElementById('selectedDocType');
@@ -389,19 +389,19 @@ function updateInvoiceTypeDisplay(invoiceType) {
   if (formatDisplay) formatDisplay.style.display = 'inline';
   if (arrowDisplay) arrowDisplay.style.display = 'inline';
 
-  // Para tipos diferentes de fatura-recibo, sempre mostra A4 como padrão
-  if (invoiceType !== 'fatura-recibo') {
+  // Para tipos diferentes de factura-recibo, sempre mostra A4 como padrão
+  if (invoiceType !== 'factura-recibo') {
     if (formatDisplay) formatDisplay.textContent = 'Formato A4';
   }
 
-  // Fatura Proforma, Fatura e Orçamento: bloquear métodos de pagamento e teclado; alterar texto do botão
+  // Factura Proforma, Fatura e Orçamento: bloquear métodos de pagamento e teclado; alterar texto do botão
   const cartFooter = document.querySelector('.cart-footer');
   const payBtns = document.querySelectorAll('.keypad-pay-btn');
   const setPayBtnText = function (text) { payBtns.forEach(function (btn) { btn.textContent = text; }); };
-  if (invoiceType === 'fatura-proforma') {
+  if (invoiceType === 'factura-proforma') {
     if (cartFooter) cartFooter.classList.add('document-type-proforma');
     setPayBtnText('Gerar Factura Proforma');
-  } else if (invoiceType === 'fatura') {
+  } else if (invoiceType === 'factura') {
     if (cartFooter) cartFooter.classList.add('document-type-proforma');
     setPayBtnText('Gerar Fatura');
   } else if (invoiceType === 'orcamento') {
@@ -412,17 +412,17 @@ function updateInvoiceTypeDisplay(invoiceType) {
     setPayBtnText('Pagar');
   }
 
-  // Cadeados no rodapé: mostrar só quando bloqueado (proforma/fatura/orçamento); sumir com Fatura-Recibo
+  // Cadeados no rodapé: mostrar só quando bloqueado (proforma/fatura/orçamento); sumir com Factura-Recibo
   if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(invoiceType);
 }
 
 /**
  * Adiciona ou remove o ícone de cadeado DENTRO de cada elemento bloqueado do rodapé,
  * com estilo igual ao do elemento (mesmo font-size e tom de cor).
- * @param {string} invoiceType - Tipo de documento atual (fatura-recibo, fatura-proforma, fatura, orcamento)
+ * @param {string} invoiceType - Tipo de documento atual (factura-recibo, factura-proforma, fatura, orcamento)
  */
 function updateCartFooterLockIcons(invoiceType) {
-  const blockFooter = invoiceType === 'fatura-proforma' || invoiceType === 'fatura' || invoiceType === 'orcamento';
+  const blockFooter = invoiceType === 'factura-proforma' || invoiceType === 'factura' || invoiceType === 'orcamento';
   const footer = document.querySelector('.cart-footer');
   if (!footer) return;
 
@@ -490,8 +490,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicializa visibilidade do sub-toggle de formato
   const formatSubOptions = document.getElementById('formatSubOptions');
   if (formatSubOptions) {
-    // Mostra sub-toggle apenas se fatura-recibo estiver selecionado
-    const isFaturaRecibo = tipoDocumentoAtual === 'fatura-recibo';
+    // Mostra sub-toggle apenas se factura-recibo estiver selecionado
+    const isFaturaRecibo = tipoDocumentoAtual === 'factura-recibo';
     formatSubOptions.style.display = isFaturaRecibo ? 'flex' : 'none';
   }
 

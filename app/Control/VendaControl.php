@@ -55,7 +55,7 @@ class VendaControl {
                 http_response_code(500);
                 echo json_encode([
                     'sucesso' => false,
-                    'erro' => $resultado['mensagem'] ?? 'Erro no processamento da fatura'
+                    'erro' => $resultado['mensagem'] ?? 'Erro no processamento da factura'
                 ], JSON_UNESCAPED_UNICODE);
             }
         } catch (Exception $e) {
@@ -64,7 +64,7 @@ class VendaControl {
             http_response_code(500);
             echo json_encode([
                 'sucesso' => false,
-                'erro' => 'Erro ao processar fatura: ' . $e->getMessage()
+                'erro' => 'Erro ao processar factura: ' . $e->getMessage()
             ], JSON_UNESCAPED_UNICODE);
         }
         error_log('===== FIM apiProcessarFatura =====');
@@ -110,7 +110,7 @@ class VendaControl {
                 http_response_code(500);
                 echo json_encode([
                     'sucesso' => false,
-                    'erro' => $resultado['mensagem'] ?? 'Erro no processamento da fatura'
+                    'erro' => $resultado['mensagem'] ?? 'Erro no processamento da factura'
                 ], JSON_UNESCAPED_UNICODE);
             }
         } catch (Exception $e) {
@@ -119,7 +119,7 @@ class VendaControl {
             http_response_code(500);
             echo json_encode([
                 'sucesso' => false,
-                'erro' => 'Erro ao processar fatura-recibo: ' . $e->getMessage()  // ✅ ATUALIZADO
+                'erro' => 'Erro ao processar factura-recibo: ' . $e->getMessage()
             ], JSON_UNESCAPED_UNICODE);
         }
         error_log('===== FIM apiProcessarFaturaRecibo =====');  // ✅ ATUALIZADO
@@ -169,7 +169,7 @@ class VendaControl {
             }
             
             // Validar tipo de documento
-            if (!in_array($tipo_documento, ['Factura-Proforma', 'Orcamento', 'fatura-proforma', 'orcamento'])) {
+            if (!in_array($tipo_documento, ['Factura-Proforma', 'Orcamento', 'factura-proforma', 'orcamento'])) {
                 error_log('Erro: Tipo de documento inválido');
                 http_response_code(400);
                 echo json_encode([

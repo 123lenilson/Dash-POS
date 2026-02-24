@@ -129,7 +129,7 @@ function collectPaymentData() {
   
   // 7. MONTAR PAYLOAD PARA O BACKEND
   const payload = {
-    acao: 'fatura-recibo',
+    acao: 'factura-recibo',
     metodos_pagamento: metodosPagamento,
     observacao: observacao,
     troco: troco,
@@ -236,7 +236,7 @@ async function processProformaInvoice() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        acao: 'fatura-proforma',
+        acao: 'factura-proforma',
         id_cliente: idCliente,
         tipo_documento: 'Factura-Proforma',
         observacao: observacao
@@ -262,7 +262,7 @@ async function processProformaInvoice() {
     applyInvoicePrintStyles('A4');
 
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
     if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
 
     container80.innerHTML = '';
@@ -382,7 +382,7 @@ async function processOrcamentoInvoice() {
     applyInvoicePrintStyles('A4');
 
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
     if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
 
     container80.innerHTML = '';
@@ -476,7 +476,7 @@ async function processFaturaInvoice() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        acao: 'fatura',
+        acao: 'factura',
         id_cliente: idCliente,
         observacao: observacao
       })
@@ -501,7 +501,7 @@ async function processFaturaInvoice() {
     applyInvoicePrintStyles('A4');
 
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
     if (!containerA4 || !container80) throw new Error('Containers de fatura não encontrados.');
 
     container80.innerHTML = '';
@@ -564,13 +564,13 @@ async function processReceiptInvoice() {
   
   console.log('📄 [PAYMENT] Tipo de documento:', tipoDocumento);
   
-  if (tipoDocumento !== 'fatura-recibo') {
+  if (tipoDocumento !== 'factura-recibo') {
     console.error('❌ [PAYMENT] Tipo de documento não suportado:', tipoDocumento);
     
     const nomeAmigavel = {
-      'fatura-recibo': 'Fatura-Recibo',
-      'fatura-proforma': 'Fatura Proforma',
-      'fatura': 'Fatura',
+      'factura-recibo': 'Factura-Recibo',
+      'factura-proforma': 'Factura Proforma',
+      'factura': 'Factura',
       'orcamento': 'Orçamento'
     };
     
@@ -578,7 +578,7 @@ async function processReceiptInvoice() {
     
     if (typeof showAlert === 'function') {
       showAlert('error', '❌ Tipo Não Suportado', 
-        `"${nomeDocumento}" ainda não está implementado. Apenas "Fatura-Recibo" está disponível.`, 4000);
+        `"${nomeDocumento}" ainda não está implementado. Apenas "Factura-Recibo" está disponível.`, 4000);
     } else {
       alert(`"${nomeDocumento}" ainda não está implementado.`);
     }
@@ -763,7 +763,7 @@ async function processReceiptInvoice() {
     console.log('🎨 [RENDER] Iniciando renderização...');
 
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
     if (!containerA4 || !container80) {
       throw new Error('Containers de fatura não encontrados no DOM');
     }
@@ -929,12 +929,15 @@ async function clearCartAfterSale() {
     
     // 5. Recarrega carrinho da API em background (não bloqueia; UI já está limpa)
     if (typeof loadCartFromAPI === 'function') {
-      loadCartFromAPI().then(() => console.log('✅ Carrinho recarregado da API')).catch(err => console.warn('⚠️ loadCartFromAPI:', err));
+      const loadPromise = loadCartFromAPI();
+      if (loadPromise && typeof loadPromise.then === 'function') {
+        loadPromise.then(() => console.log('✅ Carrinho recarregado da API')).catch(err => console.warn('⚠️ loadCartFromAPI:', err));
+      }
     }
     
     // ✅ LIMPA OS CONTAINERS APÓS A IMPRESSÃO (não antes!)
     const containerA4 = document.getElementById('inv-a4-container-principal');
-    const container80 = document.getElementById('fatura80-container-inv80');
+    const container80 = document.getElementById('factura80-container-inv80');
 
     if (containerA4) containerA4.innerHTML = '';
     if (container80) container80.innerHTML = '';
@@ -964,7 +967,7 @@ function closeAlert() {
  * @returns {string} Tipo do documento
  */
 function getTipoDocumentoAtual() {
-  return tipoDocumentoAtual || 'fatura-recibo';
+  return tipoDocumentoAtual || 'factura-recibo';
 }
 function initPayButton() {
   console.log('🔧 [PAY BUTTON] Tentando inicializar botão Pagar...');
@@ -980,12 +983,12 @@ function initPayButton() {
     console.log('💳 [PAY BUTTON] Botão "Pagar" clicado');
     var tipoDoc = getTipoDocumentoAtual();
     console.log('📄 [PAY BUTTON] Tipo de documento:', tipoDoc);
-    if (tipoDoc === 'fatura-proforma') {
+    if (tipoDoc === 'factura-proforma') {
       console.log('🚀 [PAY BUTTON] Chamando processProformaInvoice()...');
       await processProformaInvoice();
       return;
     }
-    if (tipoDoc === 'fatura') {
+    if (tipoDoc === 'factura') {
       console.log('🚀 [PAY BUTTON] Chamando processFaturaInvoice()...');
       await processFaturaInvoice();
       return;
@@ -995,12 +998,12 @@ function initPayButton() {
       await processOrcamentoInvoice();
       return;
     }
-    if (tipoDoc !== 'fatura-recibo') {
+    if (tipoDoc !== 'factura-recibo') {
       if (typeof showAlert === 'function') {
         showAlert(
           'warning',
           'Tipo Não Suportado',
-          'Este tipo de documento ainda não está implementado. Use Fatura-Recibo, Fatura Proforma ou Orçamento.',
+          'Este tipo de documento ainda não está implementado. Use Factura-Recibo, Factura Proforma ou Orçamento.',
           4000
         );
       } else {
@@ -1086,7 +1089,7 @@ async function testRender80mm() {
 
 // DEBUG - pode ser removido em produção
 function debug80mmContainer() {
-    const container = document.getElementById('fatura80-container-inv80');
+    const container = document.getElementById('factura80-container-inv80');
     if (!container) {
         console.log('❌ [DEBUG] Container 80mm NÃO ENCONTRADO');
         return null;

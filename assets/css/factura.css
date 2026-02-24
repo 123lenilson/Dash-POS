@@ -1,0 +1,614 @@
+/* ========= CORREÇÃO CRÍTICA PARA RENDERING DE FONTES ========= */
+#inv-a4-container-principal,
+#inv-a4-container-principal * {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-variant: normal !important;
+    font-feature-settings: normal !important;
+    letter-spacing: 0 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* ========= FORÇA FONT-WEIGHT EXPLÍCITO ========= */
+#inv-a4-container-principal {
+    font-weight: 400; /* Normal weight explícito */
+}
+
+#inv-a4-container-principal strong,
+#inv-a4-container-principal b,
+#inv-a4-container-principal th {
+    font-weight: 700 !important; /* Bold explícito apenas onde necessário */
+}
+
+/* ========= RESET ESPECÍFICO PARA FATURA COM PREFIXO inv-a4- ========= */
+#inv-a4-container-principal,
+#inv-a4-container-principal * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ========= CONTAINER PRINCIPAL ========= */
+#inv-a4-container-principal {
+    width: 100%;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    background: #f5f5f5;
+}
+
+/* Container de múltiplas páginas */
+.inv-a4-container-multiplas-paginas {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: auto;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* ========= CADA PÁGINA DA FATURA ========= */
+.inv-a4-interface-fatura,
+.inv-a4-pagina-fatura {
+    width: 210mm;
+    height: 297mm;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    background: white;
+    margin-bottom: 20px;
+}
+
+.inv-a4-pagina-fatura:last-child,
+.inv-a4-interface-fatura:last-child {
+    margin-bottom: 0;
+}
+
+/* ========= SESSÕES DA FATURA ========= */
+.inv-a4-sessao-cabecalho {
+    height: 270px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 16px;
+}
+
+.inv-a4-sessao-corpo-central {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.inv-a4-sessao-rodape {
+    height: 390px;
+    font-size: 16px;
+}
+
+/* ========= CABEÇALHO - INFORMAÇÕES DA EMPRESA ========= */
+.inv-a4-infor-empresa {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+.inv-a4-infor-empresa img {
+    width: 100px;
+    height: auto;
+    margin: 10px 0;
+}
+
+.inv-a4-infor-empresa h3 {
+    font-size: 20px;
+    color: #333;
+    margin: 5px 0;
+}
+
+.inv-a4-dados-empresa {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    color: #000;
+    font-weight: normal;
+}
+
+.inv-a4-dados-empresa span {
+    margin: 2px 0;
+}
+
+/* ========= CABEÇALHO - FATURA ========= */
+.inv-a4-cabe-fatura {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.inv-a4-cabe-fatura .inv-a4-titulo-fatura,
+.inv-a4-cabe-fatura .inv-a4-container-infor-cliente {
+    flex: 1;
+    display: flex;
+}
+
+.inv-a4-titulo-fatura {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    text-align: right;
+    padding: 10px;
+}
+
+.inv-a4-container-infor-cliente {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    text-align: right;
+    height: 100%;
+}
+
+.inv-a4-container-infor-cliente > div {
+    width: 100%;
+    height: 50%;
+    display: flex;
+}
+
+.inv-a4-infor-cliente {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+.inv-a4-codigo-barra-fatura {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px;
+}
+
+.inv-a4-qrcode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+ 
+.inv-a4-qrcode-container > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inv-a4-qrcode-container img {
+    border: 2px solid #333;
+    padding: 5px;
+    background: white;
+}
+
+.inv-a4-qrcode-text {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    letter-spacing: 1px;
+}
+
+/* ========= CORPO CENTRAL - TABELA DE CABEÇALHO ========= */
+.inv-a4-tabela-cabecalho-corpo {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.inv-a4-tabela-cabecalho-corpo table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 3px double #000;
+    table-layout: fixed;
+    text-align: left;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #333;
+    word-wrap: break-word;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+    letter-spacing: 0 !important; /* ✅ ADICIONAR */
+}
+
+.inv-a4-tabela-cabecalho-corpo tr:first-child th {
+    border-top: 2px solid #000;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.inv-a4-tabela-cabecalho-corpo th {
+    font-weight: 700; /* ✅ MUDAR de 'bold' para '700' */
+    text-transform: capitalize;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+}
+
+.inv-a4-tabela-cabecalho-corpo th:nth-child(1),
+.inv-a4-tabela-cabecalho-corpo td:nth-child(1) {
+    width: 20%;
+}
+
+.inv-a4-tabela-cabecalho-corpo th:nth-child(2),
+.inv-a4-tabela-cabecalho-corpo td:nth-child(2) {
+    width: 10%;
+}
+
+.inv-a4-tabela-cabecalho-corpo th:nth-child(3),
+.inv-a4-tabela-cabecalho-corpo td:nth-child(3) {
+    width: 30%;
+}
+
+.inv-a4-tabela-cabecalho-corpo th:nth-child(4),
+.inv-a4-tabela-cabecalho-corpo td:nth-child(4) {
+    width: 15%;
+}
+
+.inv-a4-tabela-cabecalho-corpo th:nth-child(5),
+.inv-a4-tabela-cabecalho-corpo td:nth-child(5) {
+    width: 30%;
+}
+
+/* ========= TABELA DE PRODUTOS ========= */
+.inv-a4-tabela-produtos {
+    width: 100%;
+    height: 370px;
+    margin-bottom: 12px;
+}
+
+.inv-a4-tabela-produtos table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.inv-a4-tabela-produtos thead {
+    background-color: #dad9d9;
+    border-top: 2px solid #dad9d9;
+    border-bottom: 2px solid #dad9d9;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.inv-a4-tabela-produtos th,
+.inv-a4-tabela-produtos td {
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+    letter-spacing: 0 !important; /* ✅ ADICIONAR */
+}
+
+.inv-a4-tabela-produtos th {
+    font-weight: 700; /* ✅ MUDAR de 'bold' para '700' */
+    font-size: 13px;
+}
+
+.inv-a4-tabela-produtos td {
+    font-size: 11px;
+    padding: 2px 0px;
+    font-weight: 400; /* ✅ ADICIONAR: força peso normal */
+}
+
+.inv-a4-tabela-produtos tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.inv-a4-tabela-produtos th:nth-child(1),
+.inv-a4-tabela-produtos td:nth-child(1) {
+    width: 4%;
+}
+
+.inv-a4-tabela-produtos th:nth-child(2),
+.inv-a4-tabela-produtos td:nth-child(2) {
+    width: 53%;
+    text-align: left;
+}
+
+.inv-a4-tabela-produtos th:nth-child(3),
+.inv-a4-tabela-produtos td:nth-child(3) {
+    width: 5%;
+}
+
+.inv-a4-tabela-produtos th:nth-child(4),
+.inv-a4-tabela-produtos td:nth-child(4) {
+    width: 17%;
+}
+
+.inv-a4-tabela-produtos th:nth-child(5),
+.inv-a4-tabela-produtos td:nth-child(5) {
+    width: 9%;
+}
+
+.inv-a4-tabela-produtos th:nth-child(6),
+.inv-a4-tabela-produtos td:nth-child(6) {
+    width: 9%;
+}
+
+.inv-a4-tabela-produtos th:nth-child(7),
+.inv-a4-tabela-produtos td:nth-child(7) {
+    width: 9%;
+    text-align: right;
+}
+
+/* ========= RODAPÉ ========= */
+.inv-a4-div-1,
+.inv-a4-div-3 {
+    border-bottom: 2px solid #000000;
+}
+
+.inv-a4-div-3 {
+    font-size: 14px;
+    text-align: center;
+    padding: 7px 0px;
+}
+
+.inv-a4-div-1 {
+    display: flex;
+    flex: 1;
+}
+
+.inv-a4-div-1-sub:first-child {
+    width: 20%;
+    text-align: left;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.inv-a4-div-1-sub:last-child {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+}
+
+.inv-a4-div-2 {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0px;
+    flex: 1;
+}
+
+.inv-a4-resumo-fatura {
+    width: 40%;
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.inv-a4-resumo-fatura table {
+    width: 80%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-left: auto;
+}
+
+.inv-a4-tab-1-resumo-fatura {
+    border-bottom: 1px solid #000000;
+}
+
+.inv-a4-tab-1-resumo-fatura th,
+.inv-a4-tab-2-resumo-fatura th {
+    text-align: left;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.inv-a4-tab-2-resumo-fatura {
+    margin-top: 3px;
+}
+
+.inv-a4-tab-1-resumo-fatura td {
+    text-align: right;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.inv-a4-tab-2-resumo-fatura td {
+    text-align: left;
+    padding: 0px 2px;
+    border: 1px solid #000000;
+}
+
+.inv-a4-tabela-impostos {
+    width: 60%;
+    align-self: flex-start;
+}
+
+.inv-a4-tabela-impostos table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;  /* ✅ Reduzido de 14px para 12px */
+    border: 1px solid #000;
+}
+
+.inv-a4-tabela-impostos th,
+.inv-a4-tabela-impostos td {
+    border: 1px solid #000;
+    padding: 2px;
+    text-align: center;
+    font-size: 12px;  /* ✅ Garantir 12px em todos os elementos */
+    font-family: Arial, Helvetica, sans-serif !important; /* ✅ ADICIONAR */
+}
+
+.inv-a4-tabela-impostos thead {
+    background-color: #f3f3f3;
+}
+
+.inv-a4-div-4 {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0px;
+}
+
+.inv-a4-div-4 div {
+    height: 50px;
+}
+
+.inv-a4-operador {
+    font-weight: bold;
+}
+
+.inv-a4-div-4 div:first-child {
+    font-size: 13px;
+}
+
+.inv-a4-div-4 div:first-child p {
+    padding-top: 2px;
+}
+
+.inv-a4-div-4 div:last-child {
+    display: flex;
+    align-items: flex-end;
+    font-size: 12px;
+}
+
+/* ========= ELEMENTOS ADICIONAIS ========= */
+.inv-a4-obs-fatura {
+    width: 100%;
+    margin-top: 11px;
+}
+
+.inv-a4-obs-fatura h5 {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.inv-a4-parag-obs-fatura {
+    font-size: 13px;
+}
+
+.inv-a4-transportado-valor {
+    padding: 2px 10px;
+    background-color: #fafafa;
+    border: 1px solid #fafafa;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* A TRANSPORTAR - Alinhado à DIREITA (Página 1) */
+.inv-a4-transportado-direita {
+    text-align: right;
+    justify-content: flex-end;
+}
+
+/* TRANSPORTADO - Alinhado à ESQUERDA (Páginas 2+) */
+.inv-a4-transportado-esquerda {
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.inv-a4-text-transportado-1 {
+    color: #495057;
+}
+
+.inv-a4-text-transportado-2 {
+    color: #d14b59;
+}
+
+.inv-a4-valor-extenso {
+    font-size: 13px;
+    text-align: right;
+    padding: 2px 0px;
+}
+
+.inv-a4-pagina-fatura {
+    page-break-after: always;
+}
+
+.inv-a4-pagina-fatura:last-child {
+    page-break-after: auto;
+}
+
+.inv-a4-info-pagina {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* ========= MEDIA QUERY PARA IMPRESSÃO ========= */
+@media print {
+    /* Remove cabeçalhos e rodapés padrão do navegador */
+    @page {
+        margin: 0 !important;
+        size: A4 portrait;
+    }
+
+    /* Remove margens do body/html na impressão */
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Esconde todo o conteúdo exceto a fatura */
+    body * {
+        visibility: hidden;
+    }
+
+    #inv-a4-container-principal,
+    #inv-a4-container-principal * {
+        visibility: visible;
+    }
+
+    #inv-a4-container-principal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    /* Remove espaços extras entre páginas */
+    .inv-a4-container-multiplas-paginas {
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Garante que a fatura ocupe a página corretamente */
+    .inv-a4-interface-fatura,
+    .inv-a4-pagina-fatura {
+        width: 210mm !important;
+        height: 297mm !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Remove quebra de página após a última página */
+    .inv-a4-pagina-fatura:last-child,
+    .inv-a4-interface-fatura:last-child {
+        page-break-after: auto !important;
+    }
+
+    /* Garante que seções não quebrem no meio */
+    .inv-a4-sessao-cabecalho,
+    .inv-a4-sessao-corpo-central,
+    .inv-a4-sessao-rodape {
+        page-break-inside: avoid !important;
+    }
+}
