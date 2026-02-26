@@ -503,25 +503,6 @@
   background: #ffffff;
   border-radius: 0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
-
-  /*
-   * SERRATED EDGE — Técnica mask-image
-   */
-  -webkit-mask-image:
-    radial-gradient(circle at 50% 0%, transparent 5px, #000 6px) top / 14px 8px,
-    radial-gradient(circle at 50% 100%, transparent 5px, #000 6px) bottom / 14px 8px,
-    linear-gradient(#000 0%, #000 100%) center / 100% calc(100% - 16px);
-
-  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat;
-  -webkit-mask-position: top, bottom, center;
-
-  mask-image:
-    radial-gradient(circle at 50% 0%, transparent 5px, #000 6px) top / 14px 8px,
-    radial-gradient(circle at 50% 100%, transparent 5px, #000 6px) bottom / 14px 8px,
-    linear-gradient(#000 0%, #000 100%) center / 100% calc(100% - 16px);
-
-  mask-repeat: repeat-x, repeat-x, no-repeat;
-  mask-position: top, bottom, center;
 }
 
 .order-summary-slider {
@@ -585,6 +566,38 @@
   font-size: var(--font-xs);
 }
 
+.order-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.38);
+  border: 1px solid rgba(200, 160, 100, 0.22);
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 100%;
+  box-sizing: border-box;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.order-card-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #8a6a40;
+  letter-spacing: 0.1px;
+}
+
+.order-card-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a2a10;
+}
+
+.order-card-icon i {
+  font-size: 10px;
+  color: #b8916a;
+}
+
 .order-summary-content {
   flex: 1;
   display: flex;
@@ -605,6 +618,60 @@
   padding-top: var(--space-xs);
   overflow-y: auto;
   min-height: 0;
+  position: relative;
+}
+
+/* Fundo papel cartolina com bordas serrilhadas — só no corpo dos totais */
+.order-summary-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 0;
+  background-color: #FFE8CD;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(180, 140, 90, 0.06) 2px,
+      rgba(180, 140, 90, 0.06) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(160, 120, 70, 0.03) 5px,
+      rgba(160, 120, 70, 0.03) 6px
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.10'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 25% 15%, rgba(255, 255, 235, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(210, 175, 120, 0.18) 0%, transparent 50%);
+
+  --scallop-size: 12px;
+  --scallop-radius: 5px;
+  mask-image:
+    radial-gradient(circle at center top, transparent var(--scallop-radius), black calc(var(--scallop-radius) + 0.5px)),
+    radial-gradient(circle at center bottom, transparent var(--scallop-radius), black calc(var(--scallop-radius) + 0.5px));
+  mask-size: var(--scallop-size) 100%;
+  mask-repeat: repeat-x;
+  mask-composite: intersect;
+  -webkit-mask-image:
+    radial-gradient(circle at center top, transparent var(--scallop-radius), black calc(var(--scallop-radius) + 0.5px)),
+    radial-gradient(circle at center bottom, transparent var(--scallop-radius), black calc(var(--scallop-radius) + 0.5px));
+  -webkit-mask-size: var(--scallop-size) 100%;
+  -webkit-mask-repeat: repeat-x;
+  -webkit-mask-composite: source-in;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(180, 140, 90, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.order-summary-content > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Linha genérica */
