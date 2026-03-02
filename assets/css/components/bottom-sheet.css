@@ -162,7 +162,9 @@
   left: 0;
   right: 0;
   height: 98vh;
+  height: 98dvh;
   max-height: 98vh;
+  max-height: 98dvh;
   background: #ffffff;
   border-radius: 20px 20px 0 0;
   z-index: 10001;
@@ -189,7 +191,9 @@
 
 .bottom-sheet.bottom-sheet--short {
   height: 67vh;
+  height: 67dvh;
   max-height: 67vh;
+  max-height: 67dvh;
 }
 
 .bottom-sheet .cart-header .cart-header-title .toggle-select-painel {
@@ -404,6 +408,25 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* Quando o sheet mostra o painel de clientes, o body cede espaço ao wrapper sem padding duplicado */
+.bottom-sheet-body:has(> .bottom-sheet-client-panel-body) {
+  padding: 0;
+  min-height: 0;
+}
+
+/* Conteúdo do painel de clientes no sheet: mesmo layout e scroll que no desktop */
+.bottom-sheet-body .bottom-sheet-client-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bottom-sheet-body::-webkit-scrollbar {

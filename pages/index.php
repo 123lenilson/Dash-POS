@@ -358,6 +358,7 @@
           </div>
           <!-- Wrapper do Input (em ≤905px o Exato fica dentro do wrapper, estilo search) -->
           <div class="footer-amount-wrapper">
+            <span class="footer-amount-label">Valor pago</span>
             <input
               type="text"
               id="footerCashInput"

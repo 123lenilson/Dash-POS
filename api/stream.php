@@ -1,4 +1,11 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
+
 /**
  * SSE (Server-Sent Events) Stream
  * Endpoint para comunicação em tempo real com o frontend
@@ -12,6 +19,8 @@ if (ob_get_level()) ob_end_clean();
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 header('Connection: keep-alive');
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 header('X-Accel-Buffering: no'); // Nginx
 
 // Previne timeout

@@ -35,7 +35,7 @@ const debouncedSearch = debounce(async () => {
   estaPesquisando = true;
   activeCategory = "Todos Produtos";
   try {
-    const response = await fetch(`http://localhost/Dash-POS/api/produtos.php?acao=pesquisar_prod&termo=${encodeURIComponent(searchTerm)}`);
+    const response = await fetch(`${window.location.origin}/Dash-POS/api/produtos.php?acao=pesquisar_prod&termo=${encodeURIComponent(searchTerm)}`);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }

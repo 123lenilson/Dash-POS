@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>L&P - POS Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <!-- Font Awesome Free (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+</head>
+<body>
+  <!-- Skeleton loading (estilo YouTube) - escondido quando produtos e carrinho estiverem prontos -->
+  <div class="app-skeleton" id="appSkeleton" aria-hidden="false">
+    <div class="skeleton-layout-main">
+      <div class="skeleton-block skeleton-search"></div>
+      <div class="skeleton-block skeleton-pills" style="margin-top: 14px;"></div>
+      <div class="skeleton-product-grid">
+        <?php for ($i = 0; $i < 12; $i++) { ?>
+        <div class="skeleton-block skeleton-card"></div>
+        <?php } ?>
+      </div>
+    </div>
+    <div class="skeleton-layout-side">
+      <div class="skeleton-block skeleton-cart-header"></div>
+      <div class="skeleton-block skeleton-cart-body"></div>
+      <div class="skeleton-block skeleton-cart-footer-row"></div>
+      <div class="skeleton-block skeleton-cart-footer-row"></div>
+      <div class="skeleton-block skeleton-cart-footer-btn" style="margin-top: 8px;"></div>
+    </div>
+    <div class="skeleton-mobile-wrap">
+      <div class="skeleton-block skeleton-mobile-btn"></div>
+    </div>
+  </div>
+
+  <!-- INTERFACE (pai) — contém EXATAMENTE DUAS FILHAS: main (70%) e side (30%) -->
+  <div class="interface">
+    <!-- COLUNA 60% (MAIN / PRODUTOS) - Primeiro (à esquerda) -->
+    <main class="main col-60 products-col">
+      <!-- HEADER DENTRO DO MAIN (sticky) -->
+      <div class="main-header">
+        <div class="main-header-left">
+          <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" title="Abrir menu">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+          <nav class="main-nav" aria-label="Menu principal do dashboard">
+            <button class="nav-link is-active" data-nav="home">Home</button>
+            <button class="nav-link" data-nav="orders">Order List</button>
+            <button class="nav-link" data-nav="history">History</button>
+            <button class="nav-link" data-nav="report">Report</button>
+            <button class="nav-link" data-nav="setting">Setting</button>
+          </nav>
+        </div>
+        <div class="main-header-right">
+          <!-- Slot para a search + toggle em mobile (≤905px); preenchido via JS -->
+          <div id="headerSearchSlot" class="header-search-slot" aria-hidden="true"></div>
+          <div class="date-time" id="dateTime"></div>
+          <div class="user" id="loggedUserArea" title="Clique para ver width da tela (teste)">
+            <div class="avatar">AN</div>
+            <div class="user-info">
+              <strong>Anisa Nur H.</strong>
+              <span>Cashier Staff</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- FIM HEADER DO MAIN -->
+      <div class="sticky-section-home" id="id_stickySection">
+        <!-- SEARCH BAR + BOTÃO CLIENTE (em ≤905px o #searchBarInner é movido para #headerSearchSlot) -->
+        <div class="search-bar-container">
+          <div id="searchBarInner" class="search-bar-inner">
+            <div class="search-wrapper">
+              <i class="fa-solid fa-search search-icon-left" aria-hidden="true"></i>
+              <input id="searchInput" type="text" placeholder="Procurar por produtos ou serviços" />
+
+              <!-- Toggle DENTRO do input, à direita -->
+              <label class="barcode-toggle barcode-toggle-inline">
+                <input type="checkbox" id="barcodeToggle">
+                <span class="toggle-switch"></span>
+                <span class="toggle-label-short">Código de Barras</span>
+              </label>
+
+              <button id="clearSearch" class="clear-btn" aria-label="Limpar busca">×</button>
+            </div>
+          </div>
+
+          <!-- BOTÃO CLIENTE (20%) -->
+          <button class="toggle-select-painel cliente-btn" onclick="openPanel('clientePanel')">
+            <i class="fa-solid fa-user"></i>
+            <div class="cliente-text">
+              <span class="cliente-label">Cliente</span>
+              <span class="cliente-name" id="topSelectedClient">Consumidor Final</span>
+            </div>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- LEITOR DE CÓDIGO DE BARRAS -->
+        <!-- ============================================ -->
+        
+        <!-- ============================================ -->
+        <!-- CATEGORIAS -->
+        <div id="categoryBar" class="category-bar"></div>
+      </div>
+
+      <!-- CONTAINER WRAPPER: CARDS + PAINEL CLIENTE -->
+      <div class="products-container-wrapper">
+        <!-- GRID DE PRODUTOS -->
+        <div id="productGrid" class="product-grid" aria-live="polite"></div>
+
+        <!-- PAINEL CLIENTE (SLIDER) -->
+        <div id="clientePanelSlider" class="client-panel-slider">
+          <div class="panel-header-slider">
+            <h3><i class="fa-solid fa-user"></i> Cliente</h3>
+            <button class="panel-close-slider" onclick="closeClientPanel()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+          <div class="panel-body-slider">
+
+            <!-- SEÇÃO 1: CLIENTE SELECIONADO -->
+            <div class="client-section">
+              <div class="client-section-header-row">
+                <h4 class="section-title">CLIENTE SELECIONADO</h4>
+                <button type="button" class="client-panel-close-btn" onclick="closeClientPanel()" aria-label="Fechar">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <div class="client-card active" id="selectedClientCard">
+                <div class="client-card-content">
+                  <div class="client-card-name">Consumidor Final</div>
+                  <div class="client-card-details">
+                    <span>Endereço: N/A</span> | <span>Telefone: N/A</span> | <span>NIF: N/A</span>
+                  </div>
+                </div>
+                <div class="client-card-indicator">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO 2: CAMPO DE BUSCA / NOME (Dinâmico) -->
+            <div class="client-section">
+              <h4 class="section-title" id="clientSearchTitle">PROCURA POR CLIENTES AQUI</h4>
+              <div class="client-search-wrapper">
+                <input
+                  type="text"
+                  id="clientSearchInput"
+                  class="client-search-input"
+                  placeholder="Nome ou NIF"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <!-- SEÇÃO 3: LISTA DE CLIENTES CADASTRADOS (Estado 1) -->
+            <div class="client-section" id="clientListSection">
+              <h4 class="section-title">LISTA DE CLIENTES CADASTRADOS</h4>
+              <div class="client-list-results" id="clientListPanel">
+                <!-- Clientes serão carregados aqui via JS -->
+              </div>
+            </div>
+
+            <!-- SEÇÃO 4: FORMULÁRIO DE CADASTRO (Estado 2 - Inicialmente oculto) -->
+            <div class="client-section" id="clientFormSection" style="display: none;">
+              <!-- Formulário de Cadastro (sem campo de nome, pois usa o de busca) -->
+              <form id="newClientForm" class="client-form">
+                <input
+                  type="text"
+                  id="newClientNif"
+                  class="client-form-input"
+                  placeholder="Informe o NIF"
+                />
+
+                <input
+                  type="tel"
+                  id="newClientPhone"
+                  class="client-form-input"
+                  placeholder="Informe o telefone"
+                />
+
+                <input
+                  type="email"
+                  id="newClientEmail"
+                  class="client-form-input"
+                  placeholder="Informe um Email válido"
+                />
+
+                <input
+                  type="text"
+                  id="newClientAddress"
+                  class="client-form-input"
+                  placeholder="Informe o Endereço"
+                />
+
+                <button type="submit" class="client-form-submit">
+                  Salvar Cliente como novo
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+
+        <!-- ============================================ -->
+    <!-- COLUNA 40% (CHECKOUT INTEGRADO) - Direita -->
+    <!-- ============================================ -->
+    <aside class="checkout-panel col-40" id="checkoutPanel">
+
+      <!-- ===== CABEÇALHO DO CARRINHO ===== -->
+      <div class="cart-header">
+        <!-- Botão Tipo de Factura (esquerda) e Botão Limpar (direita) -->
+        <div class="cart-header-title">
+          <button class="toggle-select-painel tipoFat-btn" onclick="openPanel('documentoPanel')">
+            <i class="fa-solid fa-file-invoice"></i>
+            <div class="cliente-text">
+              <span class="cliente-label">Tipo de Factura</span>
+              <span class="cliente-name">
+                <span id="selectedDocType">Factura-Recibo</span>
+                <i class="fa-solid fa-arrow-right doc-arrow"></i>
+                <span id="selectedDocFormat">Formato A4</span>
+              </span>
+            </div>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button class="btn-clear-cart" onclick="clearCart()" title="Limpar carrinho">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== CORPO DO CARRINHO ===== -->
+      <div class="cart-body">
+        <!-- Wrapper para painel de documento + produtos -->
+        <div class="cart-body-wrapper" id="cartBodyWrapper">
+
+          <!-- Painel de Seleção de Tipo de Fatura (Slider da esquerda) -->
+          <div class="doc-type-panel-slider" id="docTypePanelSlider">
+            <div class="invoice-type-options-panel">
+
+              <!-- Opção 1: Factura-Recibo (padrão, com sub-toggle de formato) -->
+              <div class="invoice-option-group">
+                <label class="invoice-toggle-option active" data-invoice-type="factura-recibo">
+                  <span class="toggle-label">Factura-Recibo</span>
+                  <div class="toggle-switch-container">
+                    <input type="radio" name="invoiceTypePanel" value="factura-recibo" checked>
+                    <span class="toggle-switch-visual"></span>
+                  </div>
+                </label>
+                <!-- Sub-toggle para formato (visível apenas quando Factura-Recibo está ativo) -->
+                <div class="format-sub-options" id="formatSubOptions">
+                  <label class="format-toggle-option active" data-format="A4">
+                    <span class="format-label">A4</span>
+                    <div class="format-switch-container">
+                      <input type="radio" name="invoiceFormat" value="A4" checked>
+                      <span class="format-switch-visual"></span>
+                    </div>
+                  </label>
+                  <label class="format-toggle-option" data-format="80mm">
+                    <span class="format-label">80mm</span>
+                    <div class="format-switch-container">
+                      <input type="radio" name="invoiceFormat" value="80mm">
+                      <span class="format-switch-visual"></span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Opção 2: Factura Proforma -->
+              <div class="invoice-option-group">
+                <label class="invoice-toggle-option" data-invoice-type="factura-proforma">
+                  <span class="toggle-label">Factura Proforma</span>
+                  <div class="toggle-switch-container">
+                    <input type="radio" name="invoiceTypePanel" value="factura-proforma">
+                    <span class="toggle-switch-visual"></span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Opção 3: Factura -->
+              <div class="invoice-option-group">
+                <label class="invoice-toggle-option" data-invoice-type="factura">
+                  <span class="toggle-label">Factura</span>
+                  <div class="toggle-switch-container">
+                    <input type="radio" name="invoiceTypePanel" value="factura">
+                    <span class="toggle-switch-visual"></span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Opção 4: Orçamento -->
+              <div class="invoice-option-group">
+                <label class="invoice-toggle-option" data-invoice-type="orcamento">
+                  <span class="toggle-label">Orçamento</span>
+                  <div class="toggle-switch-container">
+                    <input type="radio" name="invoiceTypePanel" value="orcamento">
+                    <span class="toggle-switch-visual"></span>
+                  </div>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Área de conteúdo do carrinho (produtos/vazio) -->
+          <div class="cart-content-area" id="cartContentArea">
+            <!-- Estado vazio do carrinho -->
+            <div class="cart-empty-state" id="cartEmptyState">
+              <div class="empty-icon">
+                <i class="fa-solid fa-cart-shopping"></i>
+              </div>
+              <h3 class="empty-title">Carrinho vazio</h3>
+              <p class="empty-message">Nenhum item selecionado</p>
+            </div>
+
+            <!-- Container de produtos do carrinho -->
+            <div class="cart-products-container" id="cartProductsContainer" style="display: none;">
+              <!-- Os cards de produtos serão inseridos aqui via JavaScript -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== RODAPÉ DO CARRINHO ===== -->
+      <div class="cart-footer">
+
+        <!-- Métodos de Pagamento -->
+        <div class="payment-methods-section">
+          <div class="payment-methods-wrapper" id="paymentMethodsWrapper">
+            <button class="pm-arrow pm-arrow-prev" id="pmArrowPrev" aria-label="Anterior" type="button">‹</button>
+            <div class="payment-methods-track" id="paymentMethodsTrack">
+              <!-- Cards renderizados via JavaScript -->
+            </div>
+            <button class="pm-arrow pm-arrow-next" id="pmArrowNext" aria-label="Próximo" type="button">›</button>
+          </div>
+        </div>
+
+        <!-- Input de Valor Recebido + Status de Pagamento (paralelos) -->
+        <div class="footer-amount-row">
+          <!-- Elemento de Status (Troco / Falta / Completo) -->
+          <div class="payment-status-element" id="paymentStatusElement">
+            <svg class="status-icon" id="statusIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="status-text">
+              <span class="status-label" id="statusLabel">Troco</span>
+              <span class="status-value" id="statusValue">Kz 0,00</span>
+            </div>
+          </div>
+          <!-- Wrapper do Input (em ≤905px o Exato fica dentro do wrapper, estilo search) -->
+          <div class="footer-amount-wrapper">
+            <span class="footer-amount-label">Valor pago</span>
+            <input
+              type="text"
+              id="footerCashInput"
+              inputmode="numeric"
+              placeholder="Kz 0"
+              class="footer-amount-input"
+              value="Kz 0"
+            />
+            <button class="keypad-exact-btn keypad-exact-btn--inline" type="button" onclick="fillExactAmount()">Exato</button>
+          </div>
+          <!-- Célula do botão Pagar (só visível ≤905px; em linha com o input: 80% + 20%) -->
+          <div class="footer-pay-cell">
+            <button class="keypad-pay-btn keypad-pay-btn--mobile">Pagar</button>
+          </div>
+        </div>
+
+        <!-- Terceira Div: Área de Ações -->
+        <div class="footer-actions-row">
+          <div class="footer-actions-left">
+            <!-- Order Summary Component with Slider -->
+            <div class="order-summary-wrapper">
+              <!-- Slide Container (holds both views) -->
+              <div class="order-summary-slider" id="orderSummarySlider">
+
+                <!-- View 1: Order Summary (Default) -->
+                <div class="order-summary-view" id="orderSummaryView">
+                  <div class="order-summary-header">
+                    <span class="order-summary-title">Ordem de Venda</span>
+                    <button class="obs-toggle-btn" id="obsToggleBtn" type="button">
+                      OBS | Desc. <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                  </div>
+                  <div class="order-summary-content">
+
+                    <!-- Linha: Total Ilíquido -->
+                    <div class="order-row">
+                      <span class="order-row-label">Total ilíquido</span>
+                      <span class="order-row-value" id="summaryNetTotal">Kz 0,00</span>
+                    </div>
+
+                    <!-- Linha: Total Impostos -->
+                    <div class="order-row">
+                      <span class="order-row-label">Total impostos</span>
+                      <span class="order-row-value order-row-value--tax" id="summaryTaxTotal">Kz 0,00</span>
+                    </div>
+
+                    <!-- Linha: Retenção -->
+                    <div class="order-row">
+                      <span class="order-row-label">Retenção</span>
+                      <span class="order-row-value order-row-value--retention" id="summaryRetention">Kz 0,00</span>
+                    </div>
+
+                    <!-- Separador antes do total -->
+                    <div class="order-total-divider"></div>
+
+                    <!-- Linha: Total a pagar — destacada -->
+                    <div class="order-row order-row--total">
+                      <span class="order-row-label">Total a pagar</span>
+                      <span class="order-row-value" id="summaryTotalPagar">Kz 0,00</span>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- View 2: Observação (oculta por defeito) -->
+                <div class="order-obs-view" id="orderObsView">
+                  <div class="order-obs-header">
+                    <div class="order-obs-tabs">
+                      <button type="button" class="order-obs-tab active" id="obsTabObservacao" aria-selected="true">Observação</button>
+                      <button type="button" class="order-obs-tab" id="obsTabDesc" aria-selected="false">Desc.</button>
+                    </div>
+                    <button class="obs-back-btn" id="obsBackBtn" type="button">
+                      <i class="fa-solid fa-arrow-left"></i> Voltar
+                    </button>
+                  </div>
+                  <!-- Corpo: viewport + segundo contentor deslizante (200%), por agora sem funcionalidade de deslize -->
+                  <div class="order-obs-body-wrapper">
+                    <div class="order-obs-inner-track" id="orderObsInnerSlider">
+                      <div class="order-obs-panel" id="orderObsPanelObs">
+                        <div class="order-obs-content">
+                          <textarea
+                            class="obs-textarea"
+                            id="orderObservation"
+                            placeholder="Adicione uma observação ao pedido..."
+                            rows="4"
+                          ></textarea>
+                          <button class="obs-submit-btn" id="obsSubmitBtn" type="button">
+                            <i class="fa-solid fa-check"></i> Confirmar
+                          </button>
+                        </div>
+                      </div>
+                      <div class="order-desc-panel" id="orderObsPanelDesc">
+                        <div class="order-desc-content">
+                          <label class="order-desc-label" for="orderDiscountInput">Desconto (valor ou %)</label>
+                          <input
+                            type="text"
+                            id="orderDiscountInput"
+                            class="order-desc-input"
+                            placeholder="Ex: 500 ou 10%"
+                            inputmode="decimal"
+                          />
+                          <button class="order-desc-apply-btn" id="orderDiscountApplyBtn" type="button">
+                            <i class="fa-solid fa-percent"></i> Aplicar desconto
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          <div class="footer-actions-right">
+            <!-- Keypad numérico -->
+            <div class="footer-keypad">
+              <div class="keypad-grid">
+                <button class="keypad-btn" data-value="1">1</button>
+                <button class="keypad-btn" data-value="2">2</button>
+                <button class="keypad-btn" data-value="3">3</button>
+                <button class="keypad-btn" data-value="4">4</button>
+                <button class="keypad-btn" data-value="5">5</button>
+                <button class="keypad-btn" data-value="6">6</button>
+                <button class="keypad-btn" data-value="7">7</button>
+                <button class="keypad-btn" data-value="8">8</button>
+                <button class="keypad-btn" data-value="9">9</button>
+                <button class="keypad-btn" data-value=".">.</button>
+                <button class="keypad-btn" data-value="0">0</button>
+                <div class="keypad-split-cell">
+                  <button class="keypad-btn keypad-clear" data-value="C">C</button>
+                  <button class="keypad-btn keypad-backspace" data-value="back">⌫</button>
+                </div>
+              </div>
+              
+              <!-- Exato + Pagar no desktop (≥906px); em ≤905px o Pagar está em footer-amount-row) -->
+              <div class="keypad-final-row">
+                <button class="keypad-exact-btn" onclick="fillExactAmount()">Exato</button>
+                <button class="keypad-pay-btn keypad-pay-btn--desktop">Pagar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+  </div>
+  
+  <!-- Sticky Bottom Menu (apenas ≤905px) -->
+  <div class="sticky-bottom-menu" id="stickyBottomMenu">
+    <button class="sticky-menu-btn" id="stickyClientBtn" type="button" aria-label="Selecionar Cliente">
+      <i class="fa-solid fa-user"></i>
+      <span class="sticky-menu-label" id="stickyClientLabel">Consumidor Final</span>
+    </button>
+    <button class="sticky-menu-btn sticky-menu-btn-primary" id="stickyCartBtn" type="button" aria-label="Ver Carrinho">
+      <i class="fa-solid fa-cart-shopping"></i>
+      <span class="sticky-cart-badge" id="stickyCartBadge">0</span>
+    </button>
+    <button class="sticky-menu-btn" id="stickyDocTypeBtn" type="button" aria-label="Tipo de Factura">
+      <i class="fa-solid fa-file-invoice"></i>
+      <span class="sticky-menu-label" id="stickyDocTypeLabel">Tipo Factura</span>
+    </button>
+  </div>
+
+  <!-- Modal Bottom Sheet (abre ao clicar nos botões do Sticky Menu) -->
+  <div class="bottom-sheet-overlay" id="bottomSheetOverlay"></div>
+  <div class="bottom-sheet" id="bottomSheet" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-body" id="bottomSheetBody"></div>
+  </div>
+
+
+
+
+
+
+
+
+
+<!-- Modal Confirm Dialog -->
+<div id="modal-confirm-dialog" class="fixed inset-0 flex items-center justify-center hidden z-[99999]" aria-hidden="true">
+  <!-- Overlay -->
+  <div id="overlay-confirm-dialog" class="fixed inset-0 bg-black/30 opacity-0 transition-opacity duration-300 z-[99998]"></div>
+
+  <!-- Caixa da Modal -->
+  <div id="box-confirm-dialog"
+       class="bg-white w-[360px] rounded-2xl shadow-xl p-6 relative text-center fade-enter-confirm-dialog z-[99999]"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="title-confirm-dialog"
+       aria-describedby="desc-confirm-dialog"
+       tabindex="0">
+
+    <!-- Botão Fechar -->
+    <button id="close-confirm-dialog"
+            type="button"
+            class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-lg"
+            aria-label="Fechar">
+      &times;
+    </button>
+
+    <!-- Ícone -->
+    <div class="flex justify-center mb-4">
+      <div class="bg-blue-100 p-3 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-6 w-6 text-blue-600"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+          <path stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Título -->
+    <h2 id="title-confirm-dialog" class="text-lg font-semibold text-gray-900 mb-1">
+      Are you sure?
+    </h2>
+
+    <!-- Texto -->
+    <p id="desc-confirm-dialog" class="text-gray-500 text-sm mb-6">
+      This action can’t be undone. Please confirm if you want to proceed.
+    </p>
+
+    <!-- Botões -->
+    <div class="flex justify-center gap-3">
+      <button id="cancel-confirm-dialog"
+              type="button"
+              class="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+        Cancel
+      </button>
+      <button id="confirm-confirm-dialog"
+              type="button"
+              class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- SIDE PANEL: SELEÇÃO DE CLIENTE (ANTIGO - COMENTADO) -->
+<!-- Substituído pelo novo painel slider dentro da área de produtos -->
+<!-- ============================================ -->
+<!--
+<div class="side-panel" id="clientePanel">
+  <div class="panel-header">
+    <h3>
+      <i class="fa-solid fa-user"></i>
+      Selecionar Cliente
+    </h3>
+    <button class="panel-close" onclick="closePanel('clientePanel')">
+      <i class="fa-solid fa-times"></i>
+    </button>
+  </div>
+
+  <div class="panel-body">
+    <div class="panel-search">
+      <i class="fa-solid fa-search"></i>
+      <input
+        type="text"
+        id="panelClientSearch"
+        placeholder="Buscar por nome, telefone ou email..."
+        oninput="searchClientePanel(this.value)"
+      />
+    </div>
+
+    <div id="panelClientList" class="client-list">
+    </div>
+
+    <button class="btn-new-client" onclick="openNewClientForm()">
+      <i class="fa-solid fa-plus"></i>
+      Cadastrar Novo Cliente
+    </button>
+
+    <div id="newClientForm" class="new-client-form" style="display: none;">
+      <h4>Novo Cliente</h4>
+      <input type="text" placeholder="Nome Completo *" id="newClientName" required />
+      <input type="tel" placeholder="Telefone *" id="newClientPhone" required />
+      <input type="email" placeholder="Email *" id="newClientEmail" required />
+      <input type="text" placeholder="Endereço" id="newClientAddress" />
+      <input type="text" placeholder="NIF (opcional)" id="newClientNIF" />
+
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="cancelNewClient()">Cancelar</button>
+        <button class="btn-save" onclick="saveNewClient()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- Alert Container (pode ficar no body) -->
+<!-- Coloque isso no final do body, antes dos scripts -->
+<div id="alertContainer"></div>
+
+<!-- Container para Factura A4 -->
+<div id="inv-a4-container-principal" style="
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 210mm;
+  background: white;
+  z-index: -1;
+  display: none;
+"></div>
+
+<!-- Container para Factura 80mm -->
+<div id="factura80-container-inv80" class="recibo-inv80" style="
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 80mm;
+  background: white;
+  z-index: -1;
+  display: none;
+"></div>
+
+<!-- Scripts -->
+<script src="../assets/js/ui/invoice/factura.js"></script>
+<script src="../assets/js/ui/invoice/factura80.js"></script>
+<script src="../assets/js/services/cliente.service.js"></script>
+<script src="../assets/js/modules/client.module.js"></script>
+<script src="../assets/js/ui/client-panel.ui.js"></script>
+<script src="../assets/js/utils/monetary-formatter.js"></script>
+
+<!-- === NOVA ESTRUTURA APP.JS === -->
+<script src="../assets/js/state.js"></script>
+<script src="../assets/js/dom.js"></script>
+<script src="../assets/js/utils.js"></script>
+<script src="../assets/js/services/produto.service.js"></script>
+<script src="../assets/js/services/pedido.service.js"></script>
+<script src="../assets/js/services/pagamento.service.js"></script>
+<script src="../assets/js/modules/invoice-assets.module.js"></script>
+<script src="../assets/js/modules/cart.module.js"></script>
+<script src="../assets/js/modules/barcode.module.js"></script>
+<script src="../assets/js/modules/checkout.module.js"></script>
+<script src="../assets/js/ui/skeleton.ui.js"></script>
+<script src="../assets/js/ui/alerts.ui.js"></script>
+<script src="../assets/js/ui/modal.ui.js"></script>
+<script src="../assets/js/ui/products.ui.js"></script>
+<script src="../assets/js/ui/cart.ui.js"></script>
+<script src="../assets/js/ui/cart-editing.ui.js"></script>
+<script src="../assets/js/ui/payment.ui.js"></script>
+<script src="../assets/js/ui/invoice-type.ui.js"></script>
+<script src="../assets/js/ui/order-summary.ui.js"></script>
+<script src="../assets/js/ui/search.ui.js"></script>
+<script src="../assets/js/ui/bottom-sheet.ui.js"></script>
+<script src="../assets/js/app.js"></script>
+</body>
+</html>
+/* ================================================
+   COMPONENTE: Bottom Sheet
+   Ficheiro: assets/css/components/bottom-sheet.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+.sticky-bottom-menu {
+  display: none;
+  position: fixed;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96%;
+  max-width: 100%;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 224, 224, 0.4);
+  border-radius: 9999px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  z-index: 9999;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 0;
+}
+
+.sticky-menu-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 4px 8px;
+  box-sizing: border-box;
+}
+
+.sticky-menu-btn:not(.sticky-menu-btn-primary) {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 48%;
+  border-radius: 9999px;
+  align-self: center;
+}
+
+.sticky-menu-btn i {
+  font-size: 13px;
+  color: rgba(102, 102, 102, 0.85);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.sticky-menu-label {
+  position: static;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: rgba(136, 136, 136, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+  pointer-events: none;
+  line-height: 1.1;
+}
+
+.sticky-menu-btn-primary {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #000000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  align-self: center;
+  transform: translateY(-6px);
+}
+
+.sticky-menu-btn-primary i {
+  font-size: 18px;
+  color: #ffffff;
+  margin-bottom: 0;
+}
+
+.sticky-menu-btn-primary .sticky-menu-label {
+  display: none;
+}
+
+.sticky-cart-badge {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 1px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sticky-menu-btn:not(.sticky-menu-btn-primary):hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+  border-radius: 9999px;
+}
+
+.sticky-menu-btn:not(.sticky-menu-btn-primary):hover i,
+.sticky-menu-btn:not(.sticky-menu-btn-primary):hover .sticky-menu-label {
+  color: #000000;
+}
+
+.sticky-menu-btn-primary:hover {
+  background: #1a1a1a;
+  transform: translateY(-6px) scale(1.05);
+}
+
+.sticky-menu-btn:active {
+  transform: scale(0.95);
+}
+
+.bottom-sheet-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.bottom-sheet-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+.bottom-sheet {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 98vh;
+  max-height: 98vh;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  z-index: 10001;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.bottom-sheet.active {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.bottom-sheet.active.slide-up {
+  transform: translateY(0);
+}
+
+.bottom-sheet.active.closing {
+  transform: translateY(100%);
+}
+
+.bottom-sheet.bottom-sheet--short {
+  height: 67vh;
+  max-height: 67vh;
+}
+
+.bottom-sheet .cart-header .cart-header-title .toggle-select-painel {
+  display: none !important;
+}
+
+.bottom-sheet .bottom-sheet-body:has(> .cart-header) {
+  padding-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-sheet-tabs {
+  display: flex;
+  gap: 0;
+  border-radius: 0;
+  background: #eee;
+  padding: 2px 12px;
+  width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.cart-sheet-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.cart-sheet-tab:hover {
+  color: #333;
+}
+.cart-sheet-tab.active {
+  background: #fff;
+  color: var(--color-selection, #333);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.cart-sheet-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 12px 12px;
+  box-sizing: border-box;
+}
+.cart-sheet-tab-panel[hidden] {
+  display: none !important;
+}
+
+.cart-sheet-tab-panel-fatura {
+  display: flex;
+  flex-direction: column;
+}
+.cart-sheet-tab-panel-fatura #cartContentArea {
+  flex: 0 0 80%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.cart-sheet-tab-panel-fatura .cart-footer {
+  flex: 0 0 20%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0 0;
+  gap: 4px;
+  border-top: 1px solid var(--line, #e5e7eb);
+}
+
+.bottom-sheet .bottom-sheet-body .cart-header {
+  flex: none;
+  padding: 5px 12px;
+  min-height: 0;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+}
+.bottom-sheet .bottom-sheet-body .cart-header .cart-header-title {
+  min-height: 0;
+}
+.bottom-sheet .bottom-sheet-body .cart-header .btn-clear-cart {
+  padding: 4px 8px;
+  min-height: 26px;
+}
+.bottom-sheet .bottom-sheet-body .cart-header .btn-clear-cart i {
+  font-size: 13px;
+}
+
+.bottom-sheet .cart-footer .footer-actions-row {
+  display: none !important;
+}
+
+.cart-sheet-ordem-placeholder {
+  padding: 24px;
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #d0d0d0;
+  border-radius: 2px;
+  margin: 12px auto 8px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.bottom-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.bottom-sheet-doc-type-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+.bottom-sheet-doc-type-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+}
+.bottom-sheet-close-btn-doc {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.bottom-sheet-close-btn-doc:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+.bottom-sheet-close-btn-doc i {
+  font-size: 14px;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.bottom-sheet-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+
+.bottom-sheet-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f5f5f5;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.bottom-sheet-close:hover {
+  background: #e8e8e8;
+}
+
+.bottom-sheet-close i {
+  font-size: 18px;
+}
+
+.bottom-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bottom-sheet-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bottom-sheet-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bottom-sheet-body::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+}
+/* ================================================
+   COMPONENTE: Toggle Select Painel
+   Botão reutilizável para abrir painéis (ex.: Cliente, Tipo de Factura)
+   Modificadores: .cliente-btn | .tipoFat-btn
+   Ficheiro: assets/css/components/toggle-select-painel.css
+   ================================================ */
+
+.toggle-select-painel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  font-size: var(--font-base);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.toggle-select-painel:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
+.toggle-select-painel:active {
+  transform: translateY(0);
+}
+
+.toggle-select-painel.panel-active {
+  background: rgba(34, 34, 34, 0.05);
+  border-color: var(--color-selection);
+  box-shadow: 0 0 0 3px rgba(34, 34, 34, 0.1);
+}
+
+.toggle-select-painel.panel-active > i:first-child {
+  color: var(--color-selection);
+}
+
+.toggle-select-painel.panel-active .cliente-label {
+  color: var(--color-selection);
+}
+
+.toggle-select-painel > i:first-child {
+  color: #9ca3af;
+  font-size: clamp(16px, 1.6vw, 20px);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.toggle-select-painel .cliente-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.2vw, 4px);
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.toggle-select-painel .cliente-label {
+  font-size: var(--font-sm);
+  color: #9ca3af;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.toggle-select-painel .cliente-name {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggle-select-painel .cliente-name.selected {
+  color: #374151;
+}
+
+.toggle-select-painel > i:last-child {
+  color: #d1d5db;
+  font-size: var(--font-lg);
+  flex-shrink: 0;
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.toggle-select-painel:hover > i:last-child {
+  transform: translateX(2px);
+}
+
+.toggle-select-painel.panel-active > i:last-child {
+  transform: rotate(180deg);
+  color: var(--color-selection);
+}
+
+/* Botão Cliente ao lado da search: mesma altura (padding vertical igual ao .search-wrapper) */
+.search-bar-container .toggle-select-painel.cliente-btn {
+  padding-top: var(--space-md);
+  padding-bottom: var(--space-md);
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+}
+
+/* Botão dentro do cabeçalho do carrinho (Tipo de Factura) */
+.cart-header .toggle-select-painel {
+  width: auto;
+  max-width: 200px;
+  min-width: 0;
+  font-size: var(--font-base);
+  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-sm);
+  border-radius: 6px;
+}
+
+.cart-header .toggle-select-painel > i:first-child {
+  font-size: var(--font-lg);
+}
+
+.cart-header .toggle-select-painel .cliente-label {
+  font-size: var(--font-xs);
+}
+
+.cart-header .toggle-select-painel .cliente-name {
+  font-size: var(--font-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-right: var(--space-md);
+}
+
+.cart-header .doc-arrow {
+  font-size: var(--font-xs);
+  color: #9ca3af;
+}
+
+.cart-header .toggle-select-painel > i:last-child {
+  font-size: var(--font-base);
+}
+/* ================================================
+   COMPONENTE: Client Panel
+   Ficheiro: assets/css/components/client-panel.css
+   Parte do sistema Dash-POS
+   ================================================ */
+
+/* Painel Cliente Slider */
+.client-panel-slider {
+  width: 400px;
+  min-width: 400px;
+  height: 100%;
+  background: var(--card);
+  border-left: 1px solid var(--line);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.client-panel-slider.active {
+  transform: translateX(0);
+}
+
+.products-container-wrapper.panel-open .product-grid {
+  margin-right: 400px;
+}
+
+.panel-header-slider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--card);
+  flex-shrink: 0;
+}
+
+.panel-header-slider h3 {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.8;
+}
+
+.panel-header-slider h3 i {
+  font-size: 9px;
+  color: var(--text-2);
+  opacity: 0.6;
+}
+
+.panel-close-slider {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+.panel-close-slider:hover {
+  background: var(--line);
+  color: var(--text-1);
+  opacity: 1;
+}
+
+.panel-body-slider {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-body-slider::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-body-slider::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.panel-body-slider::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.panel-body-slider::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.client-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.client-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.section-title {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #475569;
+  margin: 0;
+  padding: 0 2px;
+  line-height: 1.5;
+}
+
+.section-title strong {
+  font-weight: 800;
+  color: #334155;
+}
+
+.client-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 10px;
+}
+
+.client-card:hover {
+  background: #ebebeb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.client-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.client-card-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  line-height: 1.2;
+}
+
+.client-card-details {
+  font-size: 9.5px;
+  color: #64748b;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.client-card-details span {
+  white-space: nowrap;
+}
+
+.client-card-indicator {
+  flex-shrink: 0;
+  font-size: 17px;
+  color: #f97316;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-card:not(.active) .client-card-indicator {
+  display: none;
+}
+
+.client-search-wrapper {
+  width: 100%;
+}
+
+.client-search-input {
+  width: 100%;
+  padding: 7px 11px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  font-size: 11px;
+  color: #334155;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.client-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.client-search-input:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1) !important;
+  border-radius: 6px !important;
+}
+
+.client-list-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.client-form-input {
+  width: 100%;
+  padding: 7px 11px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  font-size: 11px;
+  color: #334155;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.client-form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+  font-size: 10px;
+}
+
+.client-form-input:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1) !important;
+  border-radius: 6px !important;
+}
+
+.client-form-input[required]::placeholder {
+  color: #94a3b8;
+}
+
+.client-form-submit {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-selection);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.client-form-submit:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-primary-shadow);
+}
+
+.client-form-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px var(--color-primary-shadow);
+}
+
+/* LISTA DE CLIENTES */
+.client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.client-item {
+  padding: 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.client-item:hover {
+  background: #f3f4f6;
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.client-item.selected {
+  background: #eff6ff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.client-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.client-details {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.btn-new-client {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+  margin-bottom: 20px;
+}
+
+.btn-new-client:hover {
+  background: var(--accent-2);
+  transform: translateY(-1px);
+}
+
+.new-client-form {
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.new-client-form h4 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.new-client-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.new-client-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-cancel,
+.btn-save {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-save {
+  background: var(--color-primary);
+  color: var(--color-selection);
+}
+
+.btn-save:hover {
+  background: var(--color-primary-hover);
+}
+/* ================================================
+   LAYOUT: Responsive
+   Ficheiro: assets/css/layout/responsive.css
+   Parte do sistema Dash-POS
+   TODOS os @media queries globais do sistema
+   ================================================ */
+
+/* 2 colunas entre 350px e 450px */
+@media (min-width:350px) and (max-width:450px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-md);
+    padding: 0 var(--space-lg) var(--space-xl);
+  }
+  .product-grid .card { margin:0; }
+}
+
+/* phones < 350px: 1 coluna */
+@media (max-width:349px) {
+  .product-grid {
+    grid-template-columns: 1fr !important;
+    padding: 0 var(--space-md) var(--space-xl);
+  }
+}
+
+/* Botão menu mobile - base (escondido por defeito) */
+.main-header .mobile-menu-btn,
+.header .mobile-menu-btn,
+.navbar .mobile-menu-btn {
+  display: none !important;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+@media (max-width: 890px) {
+  .main .main-nav { display:none !important; }
+  .controls { display:none !important; }
+  .date-time { display:none !important; }
+
+  .main-header .mobile-menu-btn,
+  .header .mobile-menu-btn,
+  .navbar .mobile-menu-btn {
+    display: inline-grid !important;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    width:36px;
+    height:36px;
+    border-radius:6px;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    place-items:center;
+    cursor:pointer;
+    transition: all .12s ease;
+    font-size: var(--font-lg);
+  }
+
+  .main .main-nav {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--mobile-nav-width);
+    max-width: 100%;
+    padding: var(--space-lg) var(--space-lg);
+    box-sizing: border-box;
+    background: var(--card);
+    border: none;
+    border-radius: 0;
+    box-shadow: 0 18px 50px rgba(10,10,40,0.12);
+    transform: translateX(-110%);
+    transition: transform .28s cubic-bezier(.2,.9,.2,1);
+    z-index: 1200;
+    visibility: hidden;
+    pointer-events: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main .main-nav .nav-link{
+    display:flex;
+    width:100%;
+    padding: var(--space-md) var(--space-md);
+    margin: clamp(2px, 0.2vw, 4px) 0;
+    border-radius:4px;
+    justify-content:flex-start;
+    text-align:left;
+    font-size: var(--font-md);
+  }
+
+  .main-header.nav-open .main-nav {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .cart-body-wrapper {
+    flex-direction: column;
+  }
+
+  .cart-body-wrapper:not(.doc-panel-open) .doc-type-panel-slider {
+    flex: 0 0 0;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .cart-body-wrapper:not(.doc-panel-open) .cart-content-area {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .cart-body-wrapper.doc-panel-open .doc-type-panel-slider.active {
+    width: 100%;
+    min-width: 100%;
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .cart-body-wrapper.doc-panel-open .cart-content-area {
+    flex: 0 0 0;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .product-grid{ grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); padding: 0 var(--space-lg) var(--space-xl); }
+
+  .date-time {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* RESPONSIVIDADE DO SEARCH BAR CONTAINER */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .search-bar-container {
+    margin: var(--space-md) 0;
+    padding: 0 var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .toggle-select-painel {
+    padding: var(--space-lg) var(--space-lg);
+    font-size: var(--font-md);
+  }
+}
+
+@media (min-width: 906px) {
+  .footer-amount-row .footer-amount-wrapper {
+    flex: 1 1 auto;
+    min-width: 80px;
+  }
+  .footer-amount-row .footer-pay-cell {
+    display: none !important;
+  }
+
+  .bottom-sheet-overlay,
+  .bottom-sheet {
+    display: none !important;
+  }
+
+  .client-panel-close-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 905px) {
+  .app-skeleton { grid-template-columns: 1fr; }
+  .skeleton-layout-side { display: none; }
+  .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+  .skeleton-mobile-wrap { display: block !important; }
+
+  .main-header-right .header-search-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+  .main-header-right .date-time {
+    display: none;
+  }
+  .main-header .header-search-slot .search-bar-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    min-width: 0;
+  }
+  .main-header .header-search-slot .search-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: var(--space-sm);
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .search-icon-left {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    background: #E0E0E0;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-lg);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed input,
+  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .clear-btn {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    pointer-events: none;
+    position: absolute;
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .barcode-toggle-inline {
+    flex-shrink: 0;
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 9999px;
+    padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+    flex: 1;
+    max-width: 180px;
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .search-icon-left {
+    font-size: var(--font-md);
+    flex-shrink: 0;
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded input {
+    width: 100%;
+    min-width: 0;
+    opacity: 1;
+    position: static;
+    pointer-events: auto;
+    font-size: var(--font-md);
+  }
+  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .barcode-toggle-inline,
+  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .clear-btn {
+    width: auto;
+    min-width: 0;
+    opacity: 1;
+    position: static;
+    pointer-events: auto;
+  }
+  .sticky-section-home .search-bar-container {
+    display: none;
+  }
+
+  .search-wrapper {
+    padding: var(--space-sm) var(--space-lg);
+    gap: var(--space-sm);
+    border-radius: 9999px;
+  }
+
+  .search-icon-left {
+    font-size: var(--font-md);
+  }
+
+  .search-wrapper input {
+    font-size: var(--font-md);
+  }
+
+  .barcode-toggle-inline {
+    padding: clamp(3px, 0.3vw, 4px) var(--space-md);
+    gap: var(--space-xs);
+    border-radius: 6px;
+  }
+
+  .toggle-switch {
+    width: 26px;
+    height: 14px;
+    border-radius: 7px;
+  }
+
+  .toggle-switch::before {
+    width: 10px;
+    height: 10px;
+  }
+
+  .barcode-toggle-inline input:checked + .toggle-switch::before {
+    transform: translateX(12px);
+  }
+
+  .toggle-label-short {
+    font-size: var(--font-sm);
+  }
+
+  .clear-btn {
+    font-size: var(--font-lg);
+    padding: clamp(2px, 0.2vw, 4px) var(--space-xs);
+  }
+
+  .invoice-type-options-panel {
+    padding: var(--space-lg) var(--space-lg);
+  }
+  .invoice-toggle-option {
+    padding: var(--space-md) var(--space-lg);
+  }
+  .toggle-label {
+    font-size: var(--font-lg);
+  }
+  .format-toggle-option {
+    padding: var(--space-md) var(--space-lg);
+  }
+  .format-label {
+    font-size: var(--font-md);
+  }
+
+  .footer-amount-row {
+    gap: var(--space-md);
+  }
+  .footer-amount-row .footer-amount-wrapper {
+    flex: 1;
+    min-width: 0;
+    align-self: stretch;
+    box-sizing: border-box;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: clamp(2px, 0.3vw, 5px);
+    padding: 0 var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  .footer-amount-row .footer-amount-wrapper:focus-within {
+    border-color: #000000;
+    border-width: 1px;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+  .footer-amount-row .footer-amount-input {
+    flex: unset;
+    min-width: 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    /* 20pt Word ≈ 26.67px; em mobile mantém grande com clamp */
+    font-size: clamp(20px, 2.5vw, 28px);
+    font-weight: 700;
+    text-align: center;
+    color: #111111;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    caret-color: #6b7280;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 1;
+  }
+  .footer-amount-row .footer-amount-input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .footer-amount-row .footer-amount-input::placeholder {
+    color: #888;
+  }
+  .footer-amount-row .footer-amount-wrapper .keypad-exact-btn--inline {
+    display: flex;
+    flex-shrink: 0;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 var(--space-md);
+    font-size: var(--font-sm);
+    font-weight: 700;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+  }
+  .keypad-final-row .keypad-exact-btn {
+    display: none !important;
+  }
+  .footer-amount-row .footer-pay-cell {
+    flex: 0 0 20%;
+    width: 20%;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+  }
+  .footer-pay-cell .keypad-pay-btn {
+    flex: 1;
+    width: 100%;
+    height: 38px;
+    min-height: 38px;
+  }
+  .keypad-pay-btn--desktop {
+    display: none !important;
+  }
+
+  .cart-sheet-tab-panel-fatura {
+    padding-bottom: 8px;
+    box-sizing: border-box;
+  }
+  .cart-sheet-tab-panel-fatura #cartContentArea {
+    flex: 0 0 80%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .cart-sheet-tab-panel-fatura .cart-footer {
+    flex: 0 0 20%;
+    min-height: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-xs) 0 0;
+    gap: clamp(3px, 0.3vw, 4px);
+    border-top: 1px solid var(--line, #e5e7eb);
+  }
+  .cart-sheet-tab-panel-fatura .cart-footer .payment-methods-section,
+  .cart-sheet-tab-panel-fatura .cart-footer .footer-amount-row {
+    flex-shrink: 0;
+    min-height: 0;
+  }
+
+  .interface{
+    grid-template-columns: 1fr !important;
+  }
+  .interface.panel-open {
+    grid-template-columns: 1fr !important;
+  }
+  .checkout-panel{
+    display: none !important;
+  }
+  body { padding-bottom: 64px; }
+  .sticky-bottom-menu { display: flex; }
+  .search-bar-container .toggle-select-painel.cliente-btn {
+    display: none !important;
+  }
+  .search-bar-container .search-wrapper {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .main .product-grid {
+    padding-bottom: 0;
+  }
+
+  .sticky-section-home {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg, #fff);
+    padding-bottom: 0;
+  }
+
+  .main.col-60.products-col {
+    height: auto;
+    min-height: 0;
+    overflow-x: hidden;
+  }
+
+  .products-container-wrapper {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .client-panel-close-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .client-panel-close-btn:hover {
+    background: #e2e8f0;
+    color: #334155;
+  }
+  .client-panel-close-btn i {
+    font-size: var(--font-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  #alertContainer {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    max-width: none;
+  }
+
+  .alert {
+    min-width: auto;
+    max-width: none;
+  }
+
+  .client-panel-slider {
+    width: 320px;
+    min-width: 320px;
+  }
+
+  .products-container-wrapper.panel-open .product-grid {
+    margin-right: 320px;
+  }
+
+  .panel-body-slider {
+    padding: var(--space-lg) var(--space-md);
+    gap: var(--space-lg);
+  }
+
+  .client-section {
+    gap: var(--space-sm);
+  }
+
+  .client-card {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .client-card-name {
+    font-size: var(--font-sm);
+  }
+
+  .client-card-details {
+    font-size: var(--font-xs);
+  }
+
+  .section-title {
+    font-size: clamp(8px, 0.8vw, 10px);
+    font-weight: 800;
+    letter-spacing: 0.7px;
+  }
+
+  .client-search-input {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-sm);
+    border-radius: 6px !important;
+    -webkit-border-radius: 6px !important;
+    -moz-border-radius: 6px !important;
+  }
+
+  .client-search-input::placeholder {
+    font-size: var(--font-sm);
+    color: #94a3b8;
+  }
+
+  .client-card-indicator {
+    font-size: var(--font-md);
+  }
+
+  .client-form {
+    gap: var(--space-md);
+  }
+
+  .client-form-input {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-sm);
+  }
+
+  .client-form-input::placeholder {
+    font-size: var(--font-xs);
+    color: #94a3b8;
+  }
+
+  .client-form-submit {
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--font-sm);
+  }
+}

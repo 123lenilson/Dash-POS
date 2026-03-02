@@ -56,6 +56,7 @@ const invoiceAssetsState = {
 
 /* ======= CLIENTE ======= */
 let idClientePadrao = null; // Será preenchido via API
+let nomeClientePadrao = null; // Será preenchido via API
 
 /* ======= CART EDITING ======= */
 let lastCategoriesKey = null; /* guarda a key das categorias para evitar rebuild desnecessário */

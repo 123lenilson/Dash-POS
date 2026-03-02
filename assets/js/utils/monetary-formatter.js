@@ -1,3 +1,11 @@
+
+/* ================================================
+   MÓDULO: Monetary-formatter.js
+   Ficheiro: assets/js/utils/monetary-formatter.js
+   Parte do sistema Dash-POS
+   ================================================ */
+
+
 class MonetaryFormatter {
   constructor(inputId, options = {}) {
     // PRIVATE PROPERTIES

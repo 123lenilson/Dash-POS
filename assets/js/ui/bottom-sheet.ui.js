@@ -35,26 +35,170 @@ function initBottomSheetSystem() {
       sheetBody.innerHTML = '';
       var panelBody = document.querySelector('#clientePanelSlider .panel-body-slider');
       if (panelBody) {
-        while (panelBody.firstChild) {
-          sheetBody.appendChild(panelBody.firstChild);
+        var clone = panelBody.cloneNode(true);
+        clone.className = 'panel-body-slider bottom-sheet-client-panel-body';
+        sheetBody.appendChild(clone);
+
+        clone.querySelectorAll('.client-card').forEach(function (card) {
+          card.addEventListener('click', function () {
+            var clientId = parseInt(card.dataset.clientId);
+            if (typeof ClientModule !== 'undefined') ClientModule.selectClientById(clientId);
+          });
+        });
+
+        var clonedSearch = clone.querySelector('#clientSearchInput');
+        if (clonedSearch) {
+          clonedSearch.id = 'clientSearchInput_sheet';
+          clonedSearch.addEventListener('input', function (e) {
+            var term = e.target.value;
+            var allClients = (typeof ClientModule !== 'undefined') ? ClientModule.getAllClients() : [];
+            var results = term.trim()
+              ? ((typeof ClientModule !== 'undefined') ? ClientModule.filterClients(term) : [])
+              : allClients;
+            var listPanel = clone.querySelector('#clientListPanel');
+            var listSec = clone.querySelector('#clientListSection');
+            var formSec = clone.querySelector('#clientFormSection');
+            var titleEl = clone.querySelector('#clientSearchTitle');
+            if (!results.length && term.trim()) {
+              if (listSec) listSec.style.display = 'none';
+              if (formSec) formSec.style.display = 'block';
+              if (titleEl) titleEl.textContent = 'NOME DO CLIENTE';
+              return;
+            }
+            if (listSec) listSec.style.display = 'block';
+            if (formSec) formSec.style.display = 'none';
+            if (titleEl) titleEl.textContent = 'PROCURA POR CLIENTES AQUI';
+            if (!listPanel) return;
+            listPanel.innerHTML = results.slice(0, 6).map(function (c) {
+              var esc = (typeof ClientModule !== 'undefined') ? ClientModule.escapeHtml : function (t) { return t; };
+              return '<div class="client-card" data-client-id="' + c.idcliente + '">' +
+                '<div class="client-card-content"><div class="client-card-name">' + esc(c.nome) + '</div>' +
+                '<div class="client-card-details">' +
+                '<span>Endereço: ' + esc(c.morada || 'N/A') + '</span> | ' +
+                '<span>Telefone: ' + esc(c.telefone || 'N/A') + '</span> | ' +
+                '<span>NIF: ' + esc(c.nif || 'N/A') + '</span>' +
+                '</div></div></div>';
+            }).join('');
+            listPanel.querySelectorAll('.client-card').forEach(function (card) {
+              card.addEventListener('click', function () {
+                if (typeof ClientModule !== 'undefined') ClientModule.selectClientById(parseInt(card.dataset.clientId));
+              });
+            });
+          });
+        }
+
+        var clonedForm = clone.querySelector('#newClientForm');
+        if (clonedForm) {
+          clonedForm.id = 'newClientForm_sheet';
+          clonedForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var nameInput = clone.querySelector('#clientSearchInput_sheet') || clone.querySelector('[id^="clientSearchInput"]');
+            var nifInput = clone.querySelector('#newClientNif');
+            var phoneInput = clone.querySelector('#newClientPhone');
+            var emailInput = clone.querySelector('#newClientEmail');
+            var addressInput = clone.querySelector('#newClientAddress');
+            var formData = {
+              nome: nameInput ? nameInput.value.trim() : '',
+              nif: nifInput ? nifInput.value.trim() : '',
+              telefone: phoneInput ? phoneInput.value.trim() : '',
+              email: emailInput ? emailInput.value.trim() : '',
+              endereco: addressInput ? addressInput.value.trim() : ''
+            };
+            if (typeof ClientModule !== 'undefined') {
+              var success = await ClientModule.saveNewClient(formData);
+              if (success) {
+                if (nameInput) nameInput.value = '';
+                if (nifInput) nifInput.value = '';
+                if (phoneInput) phoneInput.value = '';
+                if (emailInput) emailInput.value = '';
+                if (addressInput) addressInput.value = '';
+                var listSec = clone.querySelector('#clientListSection');
+                var formSec = clone.querySelector('#clientFormSection');
+                if (listSec) listSec.style.display = 'block';
+                if (formSec) formSec.style.display = 'none';
+              }
+            }
+          });
         }
       }
     } else if (panelType === 'doctype') {
       sheetBody.innerHTML = '';
-      var docPanel = document.querySelector('#docTypePanelSlider .invoice-type-options-panel');
-      if (docPanel) {
-        while (docPanel.firstChild) {
-          sheetBody.appendChild(docPanel.firstChild);
-        }
+      var invoicePanel = document.querySelector('#docTypePanelSlider .invoice-type-options-panel');
+      if (invoicePanel) {
+        var docClone = invoicePanel.cloneNode(true);
+        sheetBody.appendChild(docClone);
+
+        // Handlers para selecção do tipo de factura
+        docClone.querySelectorAll('.invoice-toggle-option').forEach(function (option) {
+          option.addEventListener('click', function () {
+            var invoiceType = this.getAttribute('data-invoice-type');
+            if (!invoiceType) return;
+
+            tipoDocumentoAtual = invoiceType;
+
+            // Sincroniza painel original (radio + active)
+            invoicePanel.querySelectorAll('.invoice-toggle-option').forEach(function (o) { o.classList.remove('active'); });
+            var origOption = invoicePanel.querySelector('[data-invoice-type="' + invoiceType + '"]');
+            if (origOption) {
+              origOption.classList.add('active');
+              var origRadio = origOption.querySelector('input[type="radio"]');
+              if (origRadio) origRadio.checked = true;
+            }
+
+            // Actualiza visuais do clone
+            docClone.querySelectorAll('.invoice-toggle-option').forEach(function (o) { o.classList.remove('active'); });
+            this.classList.add('active');
+
+            // Actualiza UI do dashboard
+            if (typeof updateInvoiceTypeDisplay === 'function') updateInvoiceTypeDisplay(invoiceType);
+            if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
+            if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(invoiceType);
+
+            setTimeout(function () { closeBottomSheet(); }, 250);
+          });
+        });
+
+        // Handlers para selecção de formato (A4 / 80mm)
+        docClone.querySelectorAll('.format-toggle-option').forEach(function (option) {
+          option.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var format = this.getAttribute('data-format');
+            if (!format) return;
+
+            formatoFaturaAtual = format;
+
+            // Sincroniza painel original
+            invoicePanel.querySelectorAll('.format-toggle-option').forEach(function (o) { o.classList.remove('active'); });
+            var origFormat = invoicePanel.querySelector('[data-format="' + format + '"]');
+            if (origFormat) {
+              origFormat.classList.add('active');
+              var origRadio = origFormat.querySelector('input[type="radio"]');
+              if (origRadio) origRadio.checked = true;
+            }
+
+            // Actualiza visuais do clone
+            docClone.querySelectorAll('.format-toggle-option').forEach(function (o) { o.classList.remove('active'); });
+            this.classList.add('active');
+
+            if (typeof updateInvoiceTypeDisplay === 'function') updateInvoiceTypeDisplay(tipoDocumentoAtual);
+          });
+        });
       }
-      var docHeader = document.createElement('div');
-      docHeader.className = 'bottom-sheet-doc-type-header';
-      docHeader.innerHTML = '<span class="bottom-sheet-doc-type-title">Tipo de Factura</span>' +
-        '<button type="button" class="bottom-sheet-close-btn-doc" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>';
-      sheetBody.insertBefore(docHeader, sheetBody.firstChild);
-      var docCloseBtn = docHeader.querySelector('.bottom-sheet-close-btn-doc');
-      if (docCloseBtn) docCloseBtn.addEventListener('click', closeBottomSheet);
     } else if (panelType === 'cart') {
+      // Restauração de segurança: elementos presos no sheetBody (transitionend falhou anteriormente)
+      (function () {
+        var _strandedHeader = sheetBody.querySelector('.cart-header');
+        var _strandedArea = sheetBody.querySelector('#cartContentArea');
+        var _strandedFooter = sheetBody.querySelector('.cart-footer');
+        if (_strandedHeader || _strandedArea || _strandedFooter) {
+          var _cp = document.getElementById('checkoutPanel');
+          var _cbw = document.getElementById('cartBodyWrapper');
+          var _cb = _cp ? _cp.querySelector('.cart-body') : null;
+          if (_strandedHeader && _cp && _cb) _cp.insertBefore(_strandedHeader, _cb);
+          if (_strandedArea && _cbw) _cbw.appendChild(_strandedArea);
+          if (_strandedFooter && _cb) _cb.appendChild(_strandedFooter);
+        }
+      })();
       sheetBody.innerHTML = '';
       var checkoutPanel = document.getElementById('checkoutPanel');
       var cartHeader = checkoutPanel ? checkoutPanel.querySelector('.cart-header') : null;
@@ -122,55 +266,48 @@ function initBottomSheetSystem() {
   function closeBottomSheet() {
     if (!sheet.classList.contains('active')) return;
 
-    sheet.classList.add('closing');
     var panelType = currentPanel;
+    currentPanel = null;
+    sheet.classList.add('closing');
 
-    function onTransitionEnd(e) {
-      if (e.target !== sheet || e.propertyName !== 'transform') return;
-      sheet.removeEventListener('transitionend', onTransitionEnd);
+    var _closeDone = false;
+    var _fallbackTimer = null;
+
+    function _doClose() {
+      if (_closeDone) return;
+      _closeDone = true;
+      clearTimeout(_fallbackTimer);
+      sheet.removeEventListener('transitionend', _onTransitionEnd);
       sheet.classList.remove('active', 'closing', 'slide-up', 'bottom-sheet--short');
       sheet.style.transform = '';
       sheet.setAttribute('aria-hidden', 'true');
       overlay.classList.remove('active');
       document.body.style.overflow = '';
-      currentPanel = null;
 
-      if (panelType === 'client') {
-        var panelBody = document.querySelector('#clientePanelSlider .panel-body-slider');
-        if (panelBody) {
-          while (sheetBody.firstChild) {
-            panelBody.appendChild(sheetBody.firstChild);
-          }
-        }
-      }
-      if (panelType === 'doctype') {
-        var docHeaderEl = sheetBody.querySelector('.bottom-sheet-doc-type-header');
-        if (docHeaderEl) docHeaderEl.remove();
-        var docPanel = document.querySelector('#docTypePanelSlider .invoice-type-options-panel');
-        if (docPanel) {
-          while (sheetBody.firstChild) {
-            docPanel.appendChild(sheetBody.firstChild);
-          }
-        }
-      }
+      // client + doctype: conteúdo são clones — destruídos pelo innerHTML = '' abaixo.
       if (panelType === 'cart') {
         var cartHeader = sheetBody.querySelector('.cart-header');
-        var tabPanel = sheetBody.querySelector('.cart-sheet-tab-panel-fatura');
         var cartContentArea = sheetBody.querySelector('#cartContentArea');
         var cartFooterEl = sheetBody.querySelector('.cart-footer');
-        var checkoutPanel = document.getElementById('checkoutPanel');
-        var cartBodyWrapper = document.getElementById('cartBodyWrapper');
-        var cartBody = checkoutPanel ? checkoutPanel.querySelector('.cart-body') : null;
-        if (cartHeader && checkoutPanel && cartBody) checkoutPanel.insertBefore(cartHeader, cartBody);
-        if (cartContentArea && cartBodyWrapper) cartBodyWrapper.appendChild(cartContentArea);
-        if (cartFooterEl && checkoutPanel) checkoutPanel.appendChild(cartFooterEl);
+        var checkoutPanelEl = document.getElementById('checkoutPanel');
+        var cartBodyWrapperEl = document.getElementById('cartBodyWrapper');
+        var cartBodyEl = checkoutPanelEl ? checkoutPanelEl.querySelector('.cart-body') : null;
+        if (cartHeader && checkoutPanelEl && cartBodyEl) checkoutPanelEl.insertBefore(cartHeader, cartBodyEl);
+        if (cartContentArea && cartBodyWrapperEl) cartBodyWrapperEl.appendChild(cartContentArea);
+        if (cartFooterEl && cartBodyEl) cartBodyEl.appendChild(cartFooterEl);
       }
-      setTimeout(function () {
-        sheetBody.innerHTML = '';
-      }, 50);
+
+      setTimeout(function () { sheetBody.innerHTML = ''; }, 50);
     }
 
-    sheet.addEventListener('transitionend', onTransitionEnd);
+    function _onTransitionEnd(e) {
+      if (e.target !== sheet || e.propertyName !== 'transform') return;
+      _doClose();
+    }
+
+    // Fallback: garante limpeza/restauração mesmo que transitionend não dispare
+    _fallbackTimer = setTimeout(_doClose, 500);
+    sheet.addEventListener('transitionend', _onTransitionEnd);
   }
 
   function getClientPanelContent() {
@@ -235,6 +372,25 @@ function initBottomSheetSystem() {
   function initPanelContent(panelType) {
     if (panelType === 'client') {
       /* Conteúdo é o painel desktop movido para o sheet; ClientManager já está ligado aos mesmos elementos. */
+
+      // Fechar o bottom sheet quando um cliente for selecionado.
+      // O listener é de uso único: remove-se a si próprio após disparar.
+      function _onClientSelectedInSheet() {
+        document.removeEventListener('clientSelected', _onClientSelectedInSheet);
+        closeBottomSheet();
+      }
+      document.addEventListener('clientSelected', _onClientSelectedInSheet);
+
+      // Garantir que os botões de fechar que vieram do painel desktop
+      // também fechem o bottom sheet (em vez de apenas o painel slider).
+      sheetBody.querySelectorAll(
+        '.panel-close-slider, .client-panel-close-btn'
+      ).forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeBottomSheet();
+        });
+      });
     }
 
     if (panelType === 'cart') {
@@ -242,23 +398,7 @@ function initBottomSheetSystem() {
     }
 
     if (panelType === 'doctype') {
-      /* Conteúdo será o painel desktop movido para o sheet (a implementar). */
-      if (sheetBody.querySelectorAll('.doc-type-item').length) {
-        sheetBody.querySelectorAll('.doc-type-item').forEach(function (item) {
-          item.addEventListener('click', function () {
-            const docType = this.getAttribute('data-doc-type');
-            tipoDocumentoAtual = docType;
-            if (typeof updateInvoiceTypeDisplay === 'function') updateInvoiceTypeDisplay(docType);
-            if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
-            if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(docType);
-            sheetBody.querySelectorAll('.doc-type-item').forEach(function (i) { i.classList.remove('active'); });
-            this.classList.add('active');
-            setTimeout(function () {
-              if (typeof closeBottomSheet === 'function') closeBottomSheet();
-            }, 300);
-          });
-        });
-      }
+      /* Handlers já ligados ao clone em openBottomSheet — nada a fazer aqui. */
     }
   }
 

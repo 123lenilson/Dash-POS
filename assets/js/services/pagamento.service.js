@@ -16,7 +16,7 @@ function loadFooterPaymentMethods() {
 
   console.log('🔄 [FOOTER] Carregando métodos de pagamento...');
 
-  fetch("../api/pagamento.php?acao=listar_pagamento", {
+  fetch(window.location.origin + "/Dash-POS/api/pagamento.php?acao=listar_pagamento", {
     method: "GET",
     cache: "no-store"
   })

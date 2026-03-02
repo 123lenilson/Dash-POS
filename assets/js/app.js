@@ -60,6 +60,13 @@ function init() {
   carregarClientePadrao()
     .then(() => {
       console.log('✅ App inicializado com cliente padrão');
+      if (typeof window.handleClientSelection === 'function') {
+        window.handleClientSelection(
+          idClientePadrao,
+          nomeClientePadrao || 'Consumidor Final',
+          { id: idClientePadrao, nome: nomeClientePadrao || 'Consumidor Final' }
+        );
+      }
       carregarProdutos();
       loadCartFromAPI();
       updateDateTime();
@@ -97,7 +104,7 @@ function initSSE() {
   console.log('🔗 SSE: Iniciando conexão com api/stream.php');
 
   try {
-    sseConnection = new EventSource('http://localhost/Dash-POS/api/stream.php');
+    sseConnection = new EventSource(window.location.origin + "/Dash-POS/api/stream.php");
 
     sseConnection.addEventListener('connected', (e) => {
       const data = JSON.parse(e.data);

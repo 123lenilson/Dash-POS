@@ -38,7 +38,7 @@ function syncToAPI(id, qtyOverride = null, priceOverride = null) {
   console.log("Payload enviado:", JSON.stringify(payload, null, 2));
   console.log("==================");
 
-  fetch("http://localhost/Dash-POS/api/pedido.php?acao=adicionar_pedido", {
+  fetch(window.location.origin + "/Dash-POS/api/pedido.php?acao=adicionar_pedido", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -127,7 +127,7 @@ function loadCartFromAPI() {
     return Promise.resolve();
   }
 
-  return fetch("http://localhost/Dash-POS/api/pedido.php?acao=listar_pedido", {
+  return fetch(window.location.origin + "/Dash-POS/api/pedido.php?acao=listar_pedido", {
     method: "GET",
     cache: "no-store"
   })

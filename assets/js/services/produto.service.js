@@ -5,7 +5,7 @@
    ================================================ */
 
 function carregarProdutos() {
-  fetch("http://localhost/Dash-POS/api/produtos.php?acao=listar_prod", {
+  fetch(window.location.origin + "/Dash-POS/api/produtos.php?acao=listar_prod", {
     method: "GET",
     cache: "no-store"
   })

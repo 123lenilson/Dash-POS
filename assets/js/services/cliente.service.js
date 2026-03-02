@@ -12,7 +12,7 @@ async function carregarClientePadrao() {
   console.log('🔍 Buscando cliente padrão (Consumidor Final)...');
   
   try {
-    const response = await fetch('http://localhost/Dash-POS/api/cliente.php?acao=buscar_consumidor_final', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/cliente.php?acao=buscar_consumidor_final", {
       method: 'GET',
       cache: 'no-store'
     });
@@ -25,9 +25,10 @@ async function carregarClientePadrao() {
     
     if (data.sucesso && data.cliente && data.cliente.idcliente) {
       idClientePadrao = parseInt(data.cliente.idcliente);
+      nomeClientePadrao = data.cliente.nome || 'Consumidor Final';
       console.log('✅ Cliente padrão carregado:', {
         id: idClientePadrao,
-        nome: data.cliente.nome || 'Consumidor Final'
+        nome: nomeClientePadrao
       });
     } else {
       console.error('❌ Cliente padrão não encontrado no banco');
@@ -59,7 +60,7 @@ async function listarClientes() {
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const response = await fetch('../api/cliente.php?acao=listar_cliente', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/cliente.php?acao=listar_cliente", {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -91,7 +92,7 @@ async function listarClientes() {
  */
 async function verificarOuCriarCliente(dadosCliente) {
   try {
-    const response = await fetch('../api/cliente.php', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/cliente.php", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

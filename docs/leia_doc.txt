@@ -1,0 +1,1177 @@
+assets-js-modulos.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Módulos JavaScript em `assets/js` (exceto app.js)
+
+Este documento descreve os ficheiros JavaScript em `assets/js` que **não** são o `app.js`: o que fazem, qual o seu objetivo no sistema e como se integram com o resto do POS. O `app.js` é o núcleo do dashboard (produtos, carrinho, checkout, SSE) e está documentado separadamente.
+
+---
+
+## Índice
+
+1. [Visão geral](#1-visão-geral)
+2. [clientes.js](#2-clientesjs)
+3. [monetary-formatter.js](#3-monetary-formatterjs)
+4. [fatura.js](#4-faturajs)
+5. [fatura80.js](#5-fatura80js)
+6. [Integração entre módulos](#6-integração-entre-módulos)
+7. [Referência rápida (API exposta)](#7-referência-rápida-api-exposta)
+
+---
+
+## 1. Visão geral
+
+| Ficheiro | Objetivo principal | Usado por |
+|----------|--------------------|-----------|
+| **clientes.js** | Gestão do painel de clientes: listar, pesquisar, selecionar e cadastrar clientes. | app.js (painel lateral, checkout) |
+| **monetary-formatter.js** | Formatação e edição do valor monetário no input de “valor recebido” (teclado, operações +/−). | app.js (keypad, footer do carrinho) |
+| **fatura.js** | Renderização da fatura em formato **A4** para impressão (múltiplas páginas, QR por página). | app.js (após venda; dados locais ou backend) |
+| **fatura80.js** | Renderização do recibo em formato **80mm** (térmico) para impressão. | app.js (após venda; dados locais ou backend) |
+
+Todos estes ficheiros são carregados na página principal (`pages/index.php`) e expõem funções ou objetos no `window` para o `app.js` (e eventualmente outros scripts) utilizarem.
+
+---
+
+## 2. clientes.js
+
+### Objetivo
+
+Módulo de **gestão de clientes** no POS: carregar a lista de clientes da API, pesquisar em tempo real, exibir resultados no painel lateral, selecionar um cliente para a venda e cadastrar novo cliente quando a pesquisa não encontra resultados.
+
+### O que faz
+
+- **Classe `ClientManager`** (singleton após `DOMContentLoaded`):
+  - **Inicialização:** faz cache dos elementos do DOM do painel de clientes (`#clientListPanel`, `#clientSearchInput`, `#selectedClientCard`, formulário de novo cliente, etc.) e associa os eventos.
+  - **API:** usa `../api/cliente.php` com:
+    - `GET ?acao=listar_cliente` — carrega todos os clientes (timeout 5s).
+    - `POST` com `acao: 'verificar_cliente'` — cria ou encontra cliente (nome obrigatório; telefone, email, endereco, nif opcionais).
+  - **Pesquisa:** no `input` da pesquisa, filtra em tempo real por `nome` ou `nif`. Se houver resultados, mostra a lista (máx. 6 cards); se não houver, mostra o formulário para “Nome do cliente” e cadastro.
+  - **Lista:** renderiza cards (`.client-card`) com nome, morada, telefone, NIF. Limita a 6 itens e indica “+N cliente(s) não exibido(s)”.
+  - **Seleção:** ao clicar num card, guarda o cliente selecionado, atualiza o card de “cliente selecionado”, fecha o painel (se existir `closeClientPanel()`), chama `window.handleClientSelection(id, nome, dados)` para o checkout e emite o evento `clientSelected` no `document`.
+  - **Novo cliente:** submete o formulário com validação (nome obrigatório; email com regex se preenchido). Após sucesso, recarrega a lista, seleciona o cliente criado, limpa o formulário e mostra mensagem de sucesso via `showAlert` (se existir).
+  - **Utilitários:** `escapeHtml` (anti-XSS), `showError` / `showSuccess` (alertas), `getSelectedClient()` para outros módulos.
+
+### Integração com o sistema
+
+- O **app.js** deve garantir que existam no DOM os IDs esperados (painel, input, formulário, etc.) e que as funções globais `closeClientPanel`, `showAlert` e `handleClientSelection` estejam definidas.
+- `handleClientSelection` é a ponte para o checkout integrado: recebe o cliente escolhido para associar à venda.
+- Acesso global: `window.ClientManager`, `window.getClientManager()`.
+
+---
+
+## 3. monetary-formatter.js
+
+### Objetivo
+
+Controlar o **campo de valor monetário** (ex.: “valor recebido”) usado no keypad do POS: formatação em locale (pt-AO, Kz), entrada apenas via teclado/teclado numérico, e suporte a **operações de soma e subtração** no próprio campo (ex.: “Kz 100 + Kz 50” e Enter para obter 150).
+
+### O que faz
+
+- **Classe `MonetaryFormatter`** (instanciada com `inputId` e `options`):
+  - **Configuração:** `locale` (default `pt-AO`), `currency` (default `Kz`), `decimals` (default 2), `allowNegative` (default false). Callback opcional `onValueChange`.
+  - **Estado interno:** `internalValue` (valor atual), e em modo operação: `operationMode` (`'addition'` ou `'subtraction'`), `operationBuffer` (valor digitado após +/−), `previousValue` (valor antes do operador).
+  - **Entrada:** `keypadInput(value)` — dígitos e ponto decimal; limita casas decimais. Em modo operação, escreve no `operationBuffer`; caso contrário, no `internalValue`.
+  - **Teclado:** `handleKeyboard(event)` — trata `+` (inicia soma), `-` (inicia subtração), `Enter` (executa operação), `Escape` (cancela operação), dígitos, `,`/`.`/`Decimal`, `Backspace`, `Delete`/`Clear`. Em subtração, se `allowNegative === false` e o resultado fosse negativo, cancela a operação.
+  - **Operações:** `startOperation(operation)`, `executeOperation()`, `cancelOperation()`. Após executar, o resultado passa a ser o novo valor e o modo operação é limpo.
+  - **Formatação:** o input é mostrado como “Kz X,XX” ou “Kz A + Kz B” / “Kz A − Kz B” em modo operação. O elemento é tratado como `readonly` na lógica de formatação; a edição real é feita pelos handlers.
+  - **DOM:** `_refreshInputReference()` — atualiza a referência ao `input` por ID (útil quando o elemento é recriado, ex.: bottom sheet). `enable()` / `disable()` ligam/desligam os listeners de `keydown`, `input` e `paste` (paste é bloqueado). `destroy()` remove listeners e referências.
+  - **API:** `getValue()`, `setValue(newValue)`, `backspace()`, `clear()`.
+
+### Integração com o sistema
+
+- O **app.js** cria uma instância de `MonetaryFormatter` associada ao input do valor recebido (ex.: `#footerAmountInput` ou id usado no checkout), chama `enable()` quando o campo está ativo e pode usar `getValue()` para obter o valor numérico e `onValueChange` para atualizar troco/estado de pagamento.
+- Não expõe construtor no `window` de forma explícita no ficheiro; o app.js usa a classe se estiver no scope (script carregado antes do app.js).
+
+---
+
+## 4. fatura.js
+
+### Objetivo
+
+Renderizar a **fatura em formato A4** para impressão: múltiplas páginas (16 produtos por página), cabeçalho com dados da empresa e do cliente, tabela de produtos, “transportado”/“a transportar” entre páginas, resumo de impostos, total por extenso em kwanzas, formas de pagamento e QR Code por página. Funciona tanto com dados montados no frontend (carrinho + checkout) como com dados devolvidos pelo backend após processar a venda.
+
+### O que faz
+
+- **Proteção:** evita carregamento duplicado (`window.FATURA_JS_LOADED`).
+- **Números por extenso:** `numeroParaExtenso` (PT) e `numeroParaExtensoAOA` (kwanzas/cêntimos) para o total pago.
+- **Paginação:** `PRODUTOS_POR_PAGINA = 16`. `dividirProdutosEmPaginas(produtos)`, `calcularTotalPagina`, `calcularTransportado` para valores “transportado” e “a transportar” entre páginas.
+- **Formatação:** `formatarMoeda(valor)` com `Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`.
+- **Renderização por página:** `criarPaginaFatura(produtos, numeroPagina, totalPaginas, todasPaginas, dadosFatura)` gera o HTML de uma página A4 (classe `inv-a4-interface-fatura`): cabeçalho (logo, empresa, título “FATURA RECIBO”, cliente, QR); corpo (tabela data/hora/contribuinte/telefone/endereço; tabela de produtos; transportado/a transportar); rodapé (resumo de impostos, totais, valor por extenso, formas de pagamento, operador, “Pag X de Y”). Gera QR Code com a lib `QRCode` após inserir no DOM.
+- **Container:** `renderizarFaturaComPaginas(dadosFatura)` limpa `#inv-a4-container-principal`, cria um wrapper para múltiplas páginas e acrescenta uma página por cada “fatia” de produtos.
+- **Dados a partir do carrinho:** `prepararDadosFatura(cart, checkoutCustomerData, checkoutPaymentData)` monta o objeto `dadosFatura` (numeroFatura, data, hora, cliente, produtos, totais, impostos, formasPagamento, observação, operador) para uso local. Usa `window.getActivePaymentMethods` se existir para as formas de pagamento.
+- **Dados a partir do backend:** `renderizarFaturaComDadosBackend(dadosBackend)` transforma a resposta da API (ex.: após `vender.php`) no formato esperado por `renderizarFaturaComPaginas` (empresa, cliente, produtos_fatura, totais, resumo_impostos, formas_pagamento, etc.), garante que exista `#inv-a4-container-principal` (cria e esconde fora da tela se necessário) e chama `renderizarFaturaComPaginas(dadosFatura)`.
+
+### Integração com o sistema
+
+- O **app.js** (ou fluxo de venda) decide se a impressão é A4 ou 80mm; para A4 carrega `fatura.css` e usa `renderizarFaturaComPaginas` (dados locais) ou `renderizarFaturaComDadosBackend` (dados do backend). O container A4 fica tipicamente fora da vista (`position: fixed; top: -9999px`) e é enviado para a impressora.
+- Funções expostas: `window.renderizarFaturaComPaginas`, `window.prepararDadosFatura`, `window.formatarMoeda`, `window.renderizarFaturaComDadosBackend`.
+
+---
+
+## 5. fatura80.js
+
+### Objetivo
+
+Renderizar o **recibo térmico 80mm** para impressão: uma única “página” com logo, empresa, cliente, tabela de produtos, totais (total a pagar, valor pago, troco), formas de pagamento, resumo de impostos, rodapé legal e QR Code. Funciona com dados montados no frontend ou com dados do backend.
+
+### O que faz
+
+- **Proteção:** evita carregamento duplicado (`window.FATURA80_JS_LOADED`).
+- **Formatação:** `formatarMoeda(valor)` em pt-AO (igual ao fatura.js).
+- **HTML do recibo:** `gerarHTMLFatura80(dadosFatura)` gera o HTML completo com classes `inv80`/`-inv80`: logo, dados da empresa, bloco cliente (exmo sr(a), data emissão, NIF, contacto, número fatura, “ORIGINAL”), tabela de produtos (Desc, Qtd, Preço Uni., Desc.(%), Taxa(%), Total), totais (total a pagar, valor pago, troco), meio de pagamento (linhas metodo/valor), rodapé de software, resumo de impostos, rodapé legal, agradecimento e container para QR Code.
+- **Renderização:** `renderizarFatura80(dadosFatura)` obtém ou cria o elemento `#fatura80-container-inv80`, define `innerHTML` com o resultado de `gerarHTMLFatura80`, e após um pequeno delay gera o QR Code em `#qrcode-inv80` com a lib `QRCode`.
+- **Dados a partir do carrinho:** `prepararDadosFatura80(cart, checkoutCustomerData, checkoutPaymentData)` monta o objeto com produtos, totais (subtotal, desconto, imposto, valorAPagar, pago, troco), impostos, formasPagamento (array de `{ metodo, valor }`), empresa e cliente. Usa valores default para empresa (Hélio Trading, etc.) e operador.
+- **Dados a partir do backend:** `renderizarFatura80ComDadosBackend(dadosBackend)` mapeia a resposta da API para o formato esperado por `renderizarFatura80` (codigo_documento, dados_empresa, cliente, produtos_fatura, totais, resumo_impostos, formas_pagamento, etc.) e chama `renderizarFatura80(dadosFatura)`.
+
+### Integração com o sistema
+
+- O **app.js** (ou fluxo de venda) carrega `fatura80.css` e usa `renderizarFatura80` ou `renderizarFatura80ComDadosBackend` conforme a origem dos dados. O container 80mm é tipicamente posicionado para impressão térmica.
+- Funções expostas: `window.renderizarFatura80`, `window.prepararDadosFatura80`, `window.renderizarFatura80ComDadosBackend`, `window.populateInvoice80` (alias), `window.formatarMoeda`.
+
+---
+
+## 6. Integração entre módulos
+
+- **app.js** é o orquestrador: usa o painel de clientes (e `handleClientSelection`), o formatador monetário no input de valor recebido, e após concluir a venda escolhe fatura A4 ou 80mm e chama as funções de renderização correspondentes (com dados locais ou com resposta do backend).
+- **clientes.js** depende de: `api/cliente.php`, DOM do painel de clientes, e (opcionalmente) `closeClientPanel`, `showAlert`, `handleClientSelection` definidos no app ou noutro script.
+- **monetary-formatter.js** é usado pelo app.js numa instância por input; não depende de outros módulos.
+- **fatura.js** e **fatura80.js** dependem da biblioteca **QRCode** (global) e de um container no DOM; recebem dados no formato definido por cada um (preparados localmente ou transformados a partir do backend). Não dependem um do outro; o app decide qual usar conforme o tipo de documento/impressora.
+
+---
+
+## 7. Referência rápida (API exposta)
+
+| Módulo | No `window` | Uso típico |
+|--------|-------------|------------|
+| **clientes.js** | `ClientManager`, `getClientManager()` | Obter instância do gestor; `getClientManager().getSelectedClient()` |
+| **clientes.js** | (esperado pelo módulo) `closeClientPanel()`, `showAlert()`, `handleClientSelection(id, nome, dados)` | Fechar painel; alertas; passar cliente ao checkout |
+| **monetary-formatter.js** | Classe `MonetaryFormatter` (se script carregado no mesmo scope) | `new MonetaryFormatter('idInput', { onValueChange })` + `enable()` / `getValue()` |
+| **fatura.js** | `renderizarFaturaComPaginas(dadosFatura)`, `prepararDadosFatura(cart, customer, payment)`, `renderizarFaturaComDadosBackend(dadosBackend)`, `formatarMoeda` | Renderizar A4 com dados locais ou backend |
+| **fatura80.js** | `renderizarFatura80(dadosFatura)`, `prepararDadosFatura80(cart, customer, payment)`, `renderizarFatura80ComDadosBackend(dadosBackend)`, `populateInvoice80`, `formatarMoeda` | Renderizar 80mm com dados locais ou backend |
+
+---
+
+*Documento criado com base na leitura dos ficheiros em `assets/js` (exceto app.js) — Dash-POS.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+breakpoints-media-queries.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Regra: Um breakpoint = Um bloco `@media`
+
+Este documento serve de **lembrete e referência** para quem modificar os ficheiros CSS do dashboard em tudo o que diz respeito a **breakpoints** e **media queries**.
+
+---
+
+## Arquitetura CSS do dashboard (refatorada)
+
+O CSS do dashboard **não** está num único `styles.css`. Está dividido em:
+
+- **Ponto de entrada:** `assets/css/main.css` (único CSS do dashboard referenciado no `index.php`).
+- **Media queries de layout global:** **`assets/css/layout/responsive.css`** — contém todos os blocos `@media` que afetam o layout geral ou vários componentes. **É aqui** que deves adicionar ou editar regras por breakpoint quando o impacto for global.
+- **Componentes:** `assets/css/components/*.css` — cada um pode ter os seus próprios `@media` internos quando o override é específico desse componente (ex.: `client-panel.css`).
+
+Para saber em que ficheiro fazer cada tipo de alteração, usar **`docs/mapa-css-dash-pos.md`**.
+
+---
+
+## Regra principal
+
+**Sempre que tiveres de modificar ou adicionar estilos por breakpoint, coloca o código dentro do bloco `@media` que já existe para esse breakpoint.**
+
+- **Um breakpoint** (ex.: `max-width: 905px`) deve existir **uma única vez** no ficheiro.
+- Todo o CSS que dependa desse mesmo breakpoint deve estar **dentro desse único bloco**.
+- **Não** criar um novo `@media (max-width: 905px) { ... }` noutro sítio do ficheiro só porque estás a trabalhar noutra secção (search, footer, modal, etc.).
+
+---
+
+## Porquê?
+
+1. **Manutenção** — É mais fácil encontrar e alterar tudo o que acontece num dado breakpoint quando está num só sítio.
+2. **Evitar duplicados** — Vários blocos iguais (ex.: vários `@media (max-width: 905px)`) poluem o ficheiro e aumentam o risco de regras em conflito ou esquecidas.
+3. **Ordem da cascata** — Se o mesmo selector aparecer em dois blocos do mesmo breakpoint, o que vier mais abaixo no ficheiro ganha. Ter um único bloco por breakpoint torna essa ordem explícita e controlada.
+4. **Consistência** — O `layout/responsive.css` (e, quando aplicável, os componentes) segue a regra de um breakpoint = um bloco; mantê-la evita duplicados e conflitos.
+
+---
+
+## O que fazer na prática
+
+### Quando adicionas estilos para um breakpoint
+
+1. **Descobre qual é o breakpoint** (ex.: `max-width: 905px`, `min-width: 906px`).
+2. **Escolhe o ficheiro:** se a regra afetar layout global ou vários componentes → **`layout/responsive.css`**; se for só um componente → ficheiro em **`components/`** (ver `docs/mapa-css-dash-pos.md`).
+3. **Procura no ficheiro** o bloco `@media` que usa esse breakpoint (só deve haver um por breakpoint nesse ficheiro).
+4. **Adiciona as novas regras dentro desse bloco**, na posição que fizer sentido (por exemplo agrupado por componente ou por secção do layout).
+
+### Quando crias um breakpoint “novo”
+
+- Se o breakpoint for realmente novo (ex.: `max-width: 600px` ainda não existe), podes criar um novo bloco `@media`.
+- Antes de criar, **confirma** que não existe já um bloco com a mesma condição (com ou sem espaços, ex.: `max-width:905px` e `max-width: 905px` são o mesmo).
+
+### O que evitar
+
+- **Não** abrir um segundo `@media (max-width: 905px) { ... }` mais abaixo no ficheiro para “organizar” ou “deixar perto do componente”.
+- **Não** duplicar a condição do media com pequenas variações (ex.: `905px` n um sítio e `906px` noutro) sem necessidade de lógica diferente.
+- **Não** deixar blocos `@media` vazios; se mudaste regras de sítio, remove o bloco que ficou vazio.
+
+---
+
+## Breakpoints usados no projeto (referência)
+
+No **`layout/responsive.css`** (e, quando aplicável, em componentes) cada condição de breakpoint deve aparecer **uma vez** por ficheiro:
+
+| Condição | Uso principal |
+|----------|----------------|
+| `max-width: 349px` | Telefones muito pequenos |
+| `min-width: 350px) and (max-width: 450px)` | Product grid 2 colunas |
+| `max-width: 420px` | Modais (pm-, pay-) em ecrãs muito estreitos |
+| `max-width: 640px` | Alert crítico full width |
+| `max-width: 760px` | Mobile: skeleton, interface, pay modal, search bar |
+| `min-width: 761px) and (max-width: 1100px)` | Search bar / cliente (tablet) |
+| `max-width: 768px` | Alert container, painel cliente slider |
+| `max-width: 890px` | Nav principal, menu mobile, controles |
+| `max-width: 905px` | Mobile/carrinho: search compacto, tipo factura, footer pay, interface, sticky menu, botão fechar painel cliente |
+| `min-width: 906px` | Desktop: footer amount, bottom sheet escondido, botão fechar painel escondido |
+| `max-width: 992px` | Painel tipo documento (largura) |
+| `max-width: 1100px` | Cart body wrapper, product-grid, date-time |
+| `max-width: 1155px` | Cabeçalho OBS (coluna) |
+| `max-width: 1200px` | Painel tipo documento (largura) |
+
+Ao adicionar ou alterar estilos para um destes tamanhos de ecrã, usar **sempre** o bloco `@media` correspondente já existente.
+
+---
+
+## Resumo em uma frase
+
+**Um breakpoint = um único bloco `@media` no ficheiro; todo o código desse breakpoint fica dentro dele.**
+
+---
+
+*Documento criado como referência após consolidação dos blocos `@media` duplicados. A arquitetura CSS do dashboard está em `assets/css/` (base/, layout/, components/); ver `docs/mapa-css-dash-pos.md`.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+mapa-css-dash-pos.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Mapa CSS — Dash-POS
+
+**Objetivo:** Sempre que fores fazer modificações nos estilos do sistema, usa este mapa para saber **em que ficheiro** deves atuar. O CSS do dashboard está dividido por responsabilidade; o ponto de entrada é **`assets/css/main.css`** (único ficheiro referenciado no `index.php`).
+
+---
+
+## 1. Onde está o quê (estrutura atual)
+
+```
+assets/css/
+├── main.css                    ← Ponto de entrada (NÃO editar estilos aqui; só @import)
+│
+├── base/
+│   ├── variables.css           ← Tokens globais
+│   ├── reset.css               ← Reset e scrollbars globais
+│   └── typography.css          ← Tipografia global (minimal)
+│
+├── layout/
+│   ├── interface.css           ← Grid principal, .main, .side, .checkout-panel
+│   └── responsive.css          ← TODOS os @media do sistema (layout global)
+│
+└── components/
+    ├── skeleton.css            ← Loading skeleton
+    ├── header.css              ← Cabeçalho, nav, user, avatar
+    ├── search.css              ← Barra de pesquisa, toggle código de barras
+    ├── categories.css          ← Barra de categorias, setas
+    ├── product-card.css        ← Grid de produtos, cards
+    ├── cart.css                ← Carrinho: header, body, itens, empty state
+    ├── cart-footer.css         ← Rodapé do carrinho, resumo, OBS, desconto
+    ├── keypad.css              ← Teclado numérico, botão Pagar
+    ├── payment-methods.css     ← Métodos de pagamento (cards, setas, input valor)
+    ├── invoice-type.css        ← Tipo de documento, painel A4/80mm
+    ├── client-btn.css          ← Botão Cliente (header e carrinho)
+    ├── client-panel.css         ← Painel lateral de clientes
+    ├── bottom-sheet.css        ← Menu sticky inferior, modal bottom sheet
+    ├── alerts.css              ← Alertas e alerta crítico
+    └── modals.css              ← Overlay, diálogo de confirmação
+```
+
+**Nota:** `fatura.css` e `fatura80.css` continuam na pasta `assets/css/` e **não fazem parte** desta árvore; são carregados dinamicamente para impressão.
+
+---
+
+## 2. Guia rápido: “Quero modificar…”
+
+| O que queres modificar | Ficheiro onde deves atuar |
+|------------------------|----------------------------|
+| Cores, fontes, espaçamentos globais, sidebar width | `base/variables.css` |
+| Reset (box-sizing, body, overflow) ou scrollbars de .main/.side | `base/reset.css` |
+| Grid da página (colunas main/side), .interface, .checkout-panel, .sticky-section-home | `layout/interface.css` |
+| **Qualquer @media** que afete layout global ou vários componentes | `layout/responsive.css` |
+| Skeleton de loading | `components/skeleton.css` |
+| Cabeçalho, menu nav, data/hora, utilizador, avatar | `components/header.css` |
+| Barra de pesquisa, input, toggle código de barras, clear | `components/search.css` |
+| Barra de categorias, pills, setas | `components/categories.css` |
+| Grid de produtos, cards, preço, stock, quick-add | `components/product-card.css` |
+| Cabeçalho do carrinho, corpo, lista de itens, estado vazio, cart-product-card | `components/cart.css` |
+| Rodapé do carrinho, métodos de pagamento, input valor, keypad, resumo, OBS, desconto | `components/cart-footer.css` |
+| Teclado numérico, botão Pagar, botão Exato | `components/keypad.css` |
+| Cards de métodos de pagamento, setas, status de pagamento | `components/payment-methods.css` |
+| Seletor de tipo de documento (fatura/recibo/proforma), painel A4/80mm | `components/invoice-type.css` |
+| Botão Cliente (texto, label, nome) no header ou no carrinho | `components/client-btn.css` |
+| Painel deslizante de clientes, lista, formulário | `components/client-panel.css` |
+| Menu sticky inferior (mobile), bottom sheet, abas do carrinho no sheet | `components/bottom-sheet.css` |
+| Alertas (#alertContainer, #criticalAlertContainer) | `components/alerts.css` |
+| Overlay escuro, diálogo de confirmação, botão limpar carrinho (estilo) | `components/modals.css` |
+
+---
+
+## 3. Regras importantes
+
+1. **Nunca** editar `main.css` para acrescentar estilos — só contém `@import`. Coloca sempre o CSS no ficheiro correto da tabela acima.
+2. **Breakpoints:** Novos `@media` que afetem o layout geral → `layout/responsive.css`. Um breakpoint = um bloco (ver `docs/breakpoints-media-queries.md`).
+3. **Variáveis:** Para font-size e espaçamentos responsivos, usar `var(--font-*)` e `var(--space-*)` definidos em `base/variables.css` (ver `docs/responsividade-regras-e-referencia.md`).
+4. **Ordem de carregamento:** `main.css` importa na ordem: base → layout (interface) → components → layout (responsive). O `responsive.css` fica por último de propósito.
+
+---
+
+## 4. Documentos relacionados
+
+- **Responsividade e breakpoints:** `docs/responsividade-regras-e-referencia.md`, `docs/breakpoints-media-queries.md`
+- **Modificações só para um breakpoint:** `docs/modificacoes-estruturais-responsivas.md`
+- **Plano original da refatoração:** `PLANO-CSS-DASH-POS.md` (na raiz do projeto)
+
+---
+
+*Mapa criado após refatoração CSS Dash-POS — arquitetura por ficheiros em base/, layout/ e components/.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+mapa-js-dash-pos.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Mapa JavaScript — Dash-POS
+
+**Objetivo:** Referência da arquitetura da pasta `assets/js` após a refatoração. Descreve todos os ficheiros, o que fazem em poucas linhas e como se ligam entre si. Usar sempre que fores modificar ou adicionar lógica no frontend do POS.
+
+---
+
+## 1. Estrutura e ordem de carregamento
+
+Os scripts são carregados no `pages/index.php` **nesta ordem**. A ordem é crítica: cada ficheiro pode depender de variáveis/funções definidas nos anteriores.
+
+```
+assets/js/
+├── (suporte — carregados primeiro)
+│   ├── ui/invoice/
+│   │   ├── fatura.js
+│   │   └── fatura80.js
+│   ├── services/cliente.service.js
+│   ├── modules/client.module.js
+│   ├── ui/client-panel.ui.js
+│   └── utils/
+│       └── monetary-formatter.js
+│
+├── (núcleo do app refatorado)
+│   ├── state.js
+│   ├── dom.js
+│   └── utils.js
+│
+├── services/          ← Chamadas ao backend (fetch)
+│   ├── cliente.service.js   (também carregado no bloco suporte)
+│   ├── produto.service.js
+│   ├── pedido.service.js
+│   └── pagamento.service.js
+│
+├── modules/           ← Lógica de negócio (sem DOM direto)
+│   ├── client.module.js     (também carregado no bloco suporte)
+│   ├── invoice-assets.module.js
+│   ├── cart.module.js
+│   ├── barcode.module.js
+│   └── checkout.module.js
+│
+├── ui/                ← DOM, renderização e eventos
+│   ├── invoice/             (faturas A4 e 80mm)
+│   │   ├── fatura.js
+│   │   └── fatura80.js
+│   ├── client-panel.ui.js    (também carregado no bloco suporte)
+│   ├── skeleton.ui.js
+│   ├── alerts.ui.js
+│   ├── modal.ui.js
+│   ├── products.ui.js
+│   ├── cart.ui.js
+│   ├── cart-editing.ui.js
+│   ├── payment.ui.js
+│   ├── invoice-type.ui.js
+│   ├── order-summary.ui.js
+│   ├── search.ui.js
+│   └── bottom-sheet.ui.js
+│
+├── utils/             ← Utilitários (pasta; distinto do ficheiro utils.js)
+│   └── monetary-formatter.js
+│
+└── app.js             ← Orquestrador (init, SSE, bridges, DOMContentLoaded)
+```
+
+**Notas:**
+- Existe `app.js.bak` (backup do app monolítico original); não é carregado pela página.
+- A **pasta** `utils/` contém apenas `monetary-formatter.js`; o ficheiro **utils.js** na raiz de `assets/js` é o núcleo (helpers, debounce, connectMonetaryInput).
+
+---
+
+## 2. Ficheiros de suporte (carregados antes do núcleo)
+
+Estes scripts são carregados **antes** de state/dom/utils no `index.php`.
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **ui/invoice/fatura.js** | Renderiza fatura **A4** (múltiplas páginas, QR, total por extenso). Expõe `renderizarFaturaComPaginas`, `renderizarFaturaComDadosBackend`, `prepararDadosFatura`, `formatarMoeda`. | Usado por **checkout.module.js** após venda; carrega CSS via **invoice-assets.module**. |
+| **ui/invoice/fatura80.js** | Renderiza recibo **80mm** (térmico). Expõe `renderizarFatura80`, `renderizarFatura80ComDadosBackend`, `prepararDadosFatura80`, `formatarMoeda`. | Usado por **checkout.module.js** após venda; CSS via **invoice-assets.module**. |
+| **services/cliente.service.js** | Chamadas à API de clientes: `listarClientes`, `verificarOuCriarCliente`, etc. | **client.module.js** e **client-panel.ui.js** usam para listar e cadastrar. |
+| **modules/client.module.js** | Lógica de cliente: estado do painel, seleção, `getSelectedClient`, `selectClient`, `clearClient`, `openPanel`, `closePanel`. | **client-panel.ui.js** renderiza; **app.js** define `window.handleClientSelection`; **invoice-type.ui.js** abre painel. |
+| **ui/client-panel.ui.js** | UI do painel de clientes: lista, pesquisa, botão cadastrar, emissão de `clientSelected`. | **client.module.js** fornece dados e ações; **checkout.module.js** usa cliente selecionado. |
+| **utils/monetary-formatter.js** | Classe `MonetaryFormatter`: formata input monetário (Kz, pt-AO), keypad, operações +/−. | **utils.js** usa `connectMonetaryInput` (instancia `MonetaryFormatter`); **payment.ui.js** usa para o input de valor recebido. |
+
+---
+
+## 3. Núcleo (state, dom, utils)
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **state.js** | Estado global: `PRODUCTS`, `currency`, `cart` (Map), `activeCategory`, `searchTerm`, variáveis de edição, pagamento (`footerPaymentMethods`, `footerValoresPorMetodo`, `footerCashAmount`), SSE (`sseConnection`, constantes), tipo/formato de documento, `invoiceAssetsState`, `idClientePadrao`, `lastCartHash`, `lastExpandedProductId`, `finishEditingTimeout`, `pendingSync`. | Quase todos os módulos e UI leem/escrevem aqui. |
+| **dom.js** | Referências a elementos do DOM: `dateTimeEl`, `categoryBar`, `productGrid`, `searchInput`, `clearSearch`, lista e overlays do carrinho, `clearCartBtn`. | UI e módulos usam estas constantes para não repetir `getElementById`. |
+| **utils.js** | `connectMonetaryInput`, `debounce`, `nowFancy`, `placeholderIMG`, `isMobileView()` (905px). Funções puras/helpers. | **app.js** usa `nowFancy`; **search.ui.js** usa `debounce`; **payment.ui.js** e outros usam `connectMonetaryInput` / `isMobileView`. |
+
+---
+
+## 4. Services (backend)
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **cliente.service.js** | `carregarClientePadrao()` — fetch ao `api/cliente.php?acao=buscar_consumidor_final`, preenche `idClientePadrao`. Em erro chama `showCriticalAlert`. | Chamado em **app.js** `init()`; **checkout.module.js** usa `idClientePadrao`. |
+| **produto.service.js** | `carregarProdutos()` — fetch `api/produtos.php?acao=listar_prod`, chama `atualizarProdutos(produtos)`. `atualizarProdutos` atualiza `PRODUCTS` e chama `buildCategories` + `renderProducts`. | **app.js** chama no init; **products.ui.js** fornece `buildCategories` e `renderProducts`. |
+| **pedido.service.js** | `syncToAPI(id, qtyOverride, priceOverride)` — POST para `api/pedido.php?acao=adicionar_pedido`; em sucesso chama `loadCartFromAPI()`. `loadCartFromAPI()` — GET pedido atual e atualiza carrinho + UI. | **cart.module.js** chama `syncToAPI`; **cart.ui.js** usa `renderCart` (chamado após loadCartFromAPI). |
+| **pagamento.service.js** | `loadFooterPaymentMethods()` — fetch métodos de pagamento, preenche `footerPaymentMethods`, chama `renderFooterPaymentCards` e `generatePaymentSlug`. | Chamado em **app.js** DOMContentLoaded; depende de **payment.ui.js** para render e slug. |
+
+---
+
+## 5. Modules (lógica de negócio)
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **client.module.js** | Lógica de cliente: estado do painel (aberto/fechado), cliente selecionado, `getSelectedClient`, `selectClient`, `clearClient`, `openPanel`, `closePanel`. Coordena com **cliente.service** e **client-panel.ui**. | Carregado no bloco suporte; **client-panel.ui.js** e **invoice-type.ui.js** usam. |
+| **invoice-assets.module.js** | Carrega CSS de faturas (`loadCSS`), `loadInvoiceAssets(format)`, `areInvoiceAssetsLoaded`, `resetInvoiceAssetsState`, `applyInvoicePrintStyles(format)`. Estado em `invoiceAssetsState`. | **checkout.module.js** chama antes de renderizar A4/80mm. |
+| **cart.module.js** | `addToCart`, `removeFromCart`, `showRemoveConfirmation`, `removeCartProduct`, `clearCart`, `showRemoveAllConfirmation`. Usa `cart`, `syncToAPI`, `renderCart`, `updateCartDisplay`, `showAlert`, `showConfirmModal`, `resetFooterPaymentValues`. | **products.ui.js** (add); **cart.ui.js** (render, clear, remove); **modal.ui.js** (confirmações). |
+| **barcode.module.js** | Config e estado do scanner; `toggleBarcodeScanner`, `processBarcode`, `showBarcodeStatus`, `showBarcodeLastScan`, `playBeepSound`, `showBarcodeStats`. Listener global de teclado para scanner; DOMContentLoaded para toggle. | **search.ui.js** pode usar `processBarcodeFromSearch`; UI da barra de pesquisa mostra modo barcode. |
+| **checkout.module.js** | `getIdClienteForDocument`, `collectPaymentData`, animação do botão Pagar, `processProformaInvoice`, `processOrcamentoInvoice`, `processFaturaInvoice`, `processReceiptInvoice`, `clearCartAfterSale`, `initPayButton`. Carrega assets de fatura, chama `renderizarFaturaComDadosBackend` / `renderizarFatura80ComDadosBackend`. Inclui versão LEGACY de `closeAlert` e duplicado de `getTipoDocumentoAtual`; funções DEBUG (testRender80mm, etc.). | Usa **invoice-assets**, **fatura.js**, **fatura80.js**, **alerts.ui.js**, **invoice-type.ui.js** (tipo doc), **payment.ui.js** (dados de pagamento), cliente via **client.module**. |
+
+---
+
+## 6. UI (renderização e eventos)
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **client-panel.ui.js** | UI do painel de clientes: lista, pesquisa, botão cadastrar, emissão de `clientSelected`. Renderiza e liga eventos ao **client.module** e **cliente.service**. | Carregado no bloco suporte; **invoice-type.ui.js** abre o painel; **app.js** define `handleClientSelection`. |
+| **skeleton.ui.js** | `skeletonMarkProductsReady`, `skeletonMarkCartReady`, `skeletonTryHide` — esconder o loading skeleton. | **app.js** init e **produto.service** / **pedido.service** quando dados estão prontos. |
+| **alerts.ui.js** | `showAlert(type, title, message, duration)`, `closeAlert(alertId)`, `showCriticalAlert`, `closeCriticalAlert`. | Chamado por quase todos os módulos e services para feedback. |
+| **modal.ui.js** | Modal de confirmação: `showConfirmModal`, `updateConfirmModalContent`, `hideConfirmModal`, `onConfirmAction`, `onCancelAction`, `initConfirmModalListeners`. | **cart.module.js** (confirmar limpar/remover); outros para ações destrutivas. |
+| **products.ui.js** | `buildCategories`, `getSoftColor`, `renderProducts`, `updateProductSelections`. Preenche `productGrid` e barra de categorias. | **produto.service.js** chama após carregar produtos; **cart.module** (add) pode marcar seleção. |
+| **cart.ui.js** | `renderCart`, `formatCurrencyInput`, `renderCartProductCard`, `updateCartDisplay`, `toggleCardExpansion`. Liga cliques em “checkout” a `checkout()` e “clear” a `showRemoveAllConfirmation`. | **pedido.service** (após loadCartFromAPI); **cart.module**; **cart-editing.ui.js** (expansão/edição). |
+| **cart-editing.ui.js** | Edição inline: quantidade (start/finish/validate), preço (start/submit/cancel/blur/keydown), `updateCartProductQuantity`, `updateCartProductPrice`, `forceSyncPendingEdit`, etc. | Usa **cart** (state), **syncToAPI**, **renderCart**, **updateCartDisplay**; eventos em elementos renderizados por **cart.ui.js**. |
+| **payment.ui.js** | Footer de pagamento: `renderFooterPaymentCards`, keypad (input, backspace, clear, exact, confirm), `updatePaymentStatus`, `showPaymentMissing`, `resetFooterPaymentValues`, `getSelectedPaymentMethod`, `getFooterCashAmount`, etc. | **pagamento.service** chama render; **checkout.module** usa dados de pagamento e keypad; usa **MonetaryFormatter** (utils/monetary-formatter.js). |
+| **invoice-type.ui.js** | Tipo/formato de documento: `getTipoDocumentoAtual`, `getInvoiceFormat`, `selecionarFormatoFatura`, `initInvoiceFormat`, painéis (open/close client, doc), `initInvoiceTypePanelToggles`, `updateStickyDocTypeLabel`, `updateCartFooterLockIcons`, etc. | **checkout.module** lê tipo/formato; **client.module** e **client-panel.ui** para painel cliente; **bottom-sheet** mostra painel tipo doc. |
+| **order-summary.ui.js** | `initOrderSummarySlider`, `updateOrderSummaryFooter`, `getOrderObservation`. Slider resumo/OBS no rodapé do carrinho. | **app.js** chama init; **checkout.module** usa observação e totais. |
+| **search.ui.js** | `debouncedSearch`, `processBarcodeFromSearch`, listeners em `searchInput` e `clearSearch`, IIFE `setupHeaderSearchToggle` (mover search para header em mobile). | Usa **state** (searchTerm, PRODUCTS), **dom** (searchInput, clearSearch); **barcode** pode integrar. |
+| **bottom-sheet.ui.js** | `initBottomSheetSystem()`: abre/fecha sheet móvel, conteúdo “Carrinho” / “Cliente” / “Tipo de Factura”, abas, injeção do painel desktop. Expõe `openBottomSheet`. | **app.js** chama init e define `checkout()` que abre sheet do carrinho; **invoice-type** e **client-panel** são mostrados no sheet. |
+
+---
+
+## 7. Orquestrador
+
+| Ficheiro | Resumo | Ligações |
+|----------|--------|----------|
+| **app.js** | Inicialização única: listener `clearCartBtn` → `clearCart`; nav (`.nav-link`); `updateDateTime`, `updateResponsiveUI`; `init()` (carregarClientePadrao → carregarProdutos, loadCartFromAPI, SSE, initInvoiceFormat, initPayButton); `initSSE`, `closeSSE`; IIFE menu responsivo; DOMContentLoaded (fullNameInput, `clientSelected`, wrapper de `renderCart` + `cartChanged`); DOMContentLoaded final (loadFooterPaymentMethods, initOrderSummarySlider, initFooterKeypad, initBottomSheetSystem). Define `window.handleClientSelection` e `window.checkout`. | Depende de todos os services, modules e ui; não contém lógica de negócio, só “cola” e ordem de execução. |
+
+---
+
+## 8. Fluxo resumido (quem chama quem)
+
+- **Início:** `app.js` → `init()` → `carregarClientePadrao` → `carregarProdutos` + `loadCartFromAPI` + `initSSE` + `initInvoiceFormat` + `initPayButton`.
+- **Produtos:** `produto.service` → `atualizarProdutos` → `buildCategories` + `renderProducts` (products.ui).
+- **Carrinho:** utilizador adiciona → **cart.module** `addToCart` → **pedido.service** `syncToAPI` → `loadCartFromAPI` → **cart.ui** `renderCart`.
+- **Pagamento:** **payment.ui** (keypad, métodos); ao clicar Pagar → **checkout.module** (collectPaymentData, process*Invoice) → **invoice-assets** (load) → **fatura.js** ou **fatura80.js** (render) → **clearCartAfterSale**.
+- **Cliente:** **client-panel.ui** + **client.module** selecionam cliente → `clientSelected` / `handleClientSelection` (app.js) → atualiza labels; **checkout.module** usa `getIdClienteForDocument` (idClientePadrao ou cliente escolhido).
+- **Mobile:** **bottom-sheet.ui** abre com conteúdo cart/cliente/tipo doc; **app.js** `checkout()` abre sheet “Carrinho”; **search.ui** move barra de pesquisa para o header (≤905px).
+
+---
+
+## 9. Onde fazer o quê (referência rápida)
+
+| Queres… | Ficheiro(s) |
+|--------|--------------|
+| Alterar estado global (carrinho, pagamento, SSE, tipo doc) | `state.js` |
+| Alterar referências a elementos do DOM | `dom.js` |
+| Novos helpers / debounce / isMobileView | `utils.js` |
+| Chamadas à API de clientes/produtos/pedidos/pagamentos | `services/*.js` (cliente.service, produto.service, etc.) |
+| Lógica de cliente (seleção, painel) | `modules/client.module.js` |
+| Formatação monetária (classe global) | `utils/monetary-formatter.js` |
+| Carregar CSS de fatura ou estilos de impressão | `modules/invoice-assets.module.js` |
+| Render de fatura A4 / recibo 80mm | `ui/invoice/fatura.js`, `ui/invoice/fatura80.js` |
+| Lógica de adicionar/remover/limpar carrinho | `modules/cart.module.js` |
+| Código de barras / scanner | `modules/barcode.module.js` |
+| Fluxo de pagamento e fatura (processar venda, A4/80mm) | `modules/checkout.module.js` |
+| Skeleton de loading | `ui/skeleton.ui.js` |
+| Alertas e alerta crítico | `ui/alerts.ui.js` |
+| Modal de confirmação | `ui/modal.ui.js` |
+| Grelha de produtos e categorias | `ui/products.ui.js` |
+| Render do carrinho e cartões de produto | `ui/cart.ui.js` |
+| Edição de quantidade/preço no carrinho | `ui/cart-editing.ui.js` |
+| Rodapé de pagamento (keypad, métodos, valor) | `ui/payment.ui.js` |
+| Tipo/formato de documento e painéis cliente/doc | `ui/invoice-type.ui.js` |
+| Painel de clientes (lista, pesquisa, cadastro) | `ui/client-panel.ui.js` |
+| Resumo e OBS no rodapé | `ui/order-summary.ui.js` |
+| Pesquisa e clear | `ui/search.ui.js` |
+| Bottom sheet (mobile) | `ui/bottom-sheet.ui.js` |
+| Ordem de init, SSE, bridges, menu responsivo | `app.js` |
+
+---
+
+*Mapa criado após refatoração JS (PLANO-JS-DASH-POS). Arquitetura atual de `assets/js` — Dash-POS.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+modificacoes-estruturais-responsivas.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Regra: Modificações estruturais e responsividade
+
+Este documento define como devem ser feitas **alterações estruturais** (layout, posição de elementos, contentores) quando o pedido afeta **apenas alguns breakpoints** e não a estrutura base do sistema.
+
+---
+
+## Arquitetura CSS do dashboard (refatorada)
+
+O CSS do dashboard está dividido em ficheiros por responsabilidade. O ponto de entrada é **`assets/css/main.css`** (referenciado no `index.php`).
+
+- **Estrutura base (layout “normal”):** regras fora de `@media` estão em **`layout/interface.css`** (grid, .main, .side, .checkout-panel) ou no ficheiro do **componente** correspondente em `assets/css/components/*.css`.
+- **Comportamento por breakpoint:** regras dentro de `@media` que afetam o layout global estão em **`layout/responsive.css`**. Alguns componentes têm os seus próprios `@media` internos no respetivo ficheiro em `components/`.
+
+Para saber em que ficheiro editar (interface, responsive ou qual componente), usar **`docs/mapa-css-dash-pos.md`**.
+
+---
+
+## Princípio fundamental
+
+**A estrutura base (o CSS que não está dentro de `@media`) define o layout “padrão” do sistema.**  
+Quando pedimos uma mudança que só deve aplicar em certos tamanhos de ecrã (ex.: abaixo de 905px), essa mudança **não pode alterar a base**. Deve aplicar-se **apenas dentro do bloco `@media`** correspondente.
+
+- **Estrutura base** = regras CSS fora de media queries. É o comportamento “normal” em ecrãs grandes / desktop.
+- **Comportamento por breakpoint** = regras dentro de `@media (…)`. Alteram layout/comportamento só para esse intervalo de largura.
+
+Se a modificação for “só para telas abaixo de 905px”, então **toda** a alteração estrutural (contentores, flex, posição dos botões, etc.) deve existir **apenas** dentro do bloco `@media` desse breakpoint. A base permanece intacta.
+
+---
+
+## Exemplo concreto
+
+### Situação inicial (estrutura base)
+
+- Existe um **contentor** (ex.: `.meu-contentor`).
+- Dentro dele há **dois botões** alinhados numa só linha com `display: flex`.
+- Isto está definido no CSS **sem** media query — é a estrutura base.
+
+```css
+.meu-contentor {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.meu-contentor .btn-1 { }
+.meu-contentor .btn-2 { }
+```
+
+### Pedido
+
+> “Em telas abaixo de 905px, quero que um dos botões saia deste contentor e fique noutro contentor (ou simplesmente fora deste contentor).”
+
+### O que deve acontecer
+
+1. **Ecrãs acima de 905px (e quando não há media aplicável)**  
+   - Continua igual à estrutura base: o contentor com os dois botões numa linha em flex.  
+   - Nada no CSS base é alterado para “preparar” o comportamento mobile.
+
+2. **Ecrãs abaixo de 905px**  
+   - Dentro do bloco `@media (max-width: 905px) { ... }` (um único bloco, conforme a regra dos breakpoints):
+     - Pode-se alterar o layout do contentor (ex.: flex-direction, esconder um botão do fluxo).
+     - O botão que “sai” pode ser posicionado noutro contentor (ex.: via ordem no DOM e CSS, ou movido com flex/position apenas nesse breakpoint).
+     - Ou pode ser estilizado como “fora” do contentor visualmente (ex.: position absolute, ou colocando-o noutro wrapper que só existe no HTML e é mostrado/estilizado nesse breakpoint).
+   - Toda essa lógica fica **só** dentro do `@media (max-width: 905px)`.
+
+### O que não deve acontecer
+
+- **Não** alterar a estrutura base (o CSS fora de `@media`) para que “já fique preparado” para mobile (ex.: mudar o flex ou os contentores de forma que o desktop deixe de ser “dois botões numa linha dentro do contentor”).
+- **Não** criar uma única estrutura que “funcione para os dois” de forma que o desktop deixe de ser o layout original. O desktop deve continuar a ser exatamente o que a base define.
+- **Não** duplicar o breakpoint; usar o bloco `@media (max-width: 905px)` já existente (conforme `breakpoints-media-queries.md`).
+
+---
+
+## Regras práticas
+
+### 1. Identificar o âmbito do pedido
+
+- O pedido fala em “em telas abaixo de X px” ou “em mobile” ou “em ecrãs pequenos”?  
+  → A alteração é **só para esse(s) breakpoint(s)**.
+- Nesse caso: **estrutura base = intocada**. Toda a mudança estrutural (contentores, flex, posição, visibilidade) vai **dentro do(s) bloco(s) `@media`** correspondente(s).
+
+### 2. Onde escrever o código
+
+- **Estrutura base:** CSS fora de qualquer `@media`. Define o layout “normal” (tipicamente desktop / ecrã grande).
+- **Mudança só para um breakpoint:**  
+  - Localizar o bloco `@media` já existente para esse breakpoint (ex.: `max-width: 905px`) — em **`layout/responsive.css`** para layout global, ou no ficheiro do componente em `components/` se for override só desse componente.  
+  - Inserir **só aí** as regras que mudam contentores, ordem dos elementos, um botão “fora” do contentor, etc.
+
+### 3. HTML / DOM
+
+- Se for preciso um contentor extra ou mover um elemento “para fora” só em certo breakpoint:
+  - Preferir soluções que não mudem a estrutura base do HTML para todos os ecrãs (ex.: usar ordem visual com CSS no `@media`, ou um wrapper que só tem impacto visual dentro do breakpoint).
+  - Se for necessário um elemento extra no DOM (ex.: contentor só para mobile), esse elemento pode ser mostrado/estilizado **apenas** dentro do `@media`; na base, não deve afetar o layout dos dois botões no contentor original.
+
+### 4. Consistência com a regra dos breakpoints
+
+- Continuar a seguir a regra **um breakpoint = um bloco `@media`** (ver `breakpoints-media-queries.md`).
+- As modificações estruturais responsivas são **conteúdo** desses blocos, não novos blocos duplicados.
+
+---
+
+## Resumo em poucas linhas
+
+- **Base** = CSS fora de `@media` → define o layout padrão (ex.: contentor com dois botões em flex numa linha).  
+- **Pedido “só abaixo de 905px”** (ou outro breakpoint) → toda a alteração estrutural (botão fora do contentor, novo contentor, etc.) fica **apenas** dentro do `@media` desse breakpoint.  
+- **Acima desse breakpoint** → a estrutura base mantém-se exatamente como está; nada na base é alterado para “servir” o comportamento das telas pequenas.
+
+Assim, uma modificação estrutural que deve mudar só em alguns pontos (breakpoints) **não altera a base toda** — altera apenas o que se vê nesses breakpoints, dentro dos respetivos blocos `@media`.
+
+---
+
+*Documento de referência do projeto Dash-POS. Deve ser seguido sempre que se pedirem mudanças de responsividade que afetem estrutura (contentores, posição de elementos) apenas em certos tamanhos de ecrã.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+responsividade-regras-e-referencia.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Responsividade Dash-POS — Regras e Referência para Modificações Futuras
+
+**Baseado no:** Plano de Correcções de Responsividade v1.0 (2026-02-21)  
+**Ficheiros envolvidos:** `pages/index.php` · **CSS do dashboard** (ver abaixo) · `assets/js/app.js`  
+**Objectivo deste documento:** Especificar como as modificações **daqui em diante** devem ser feitas quando o assunto for responsividade conforme esse plano — sem alterar funcionalidade existente e mantendo consistência.
+
+---
+
+## Arquitetura CSS do dashboard (refatorada)
+
+O CSS do dashboard **não** está num único `styles.css`. Está dividido em:
+
+- **Ponto de entrada:** `assets/css/main.css` (único ficheiro referenciado no `index.php`).
+- **Variáveis e tokens:** `assets/css/base/variables.css` — é aqui que estão `:root`, `--font-*`, `--space-*`, etc.
+- **Media queries de layout global:** `assets/css/layout/responsive.css` — todos os `@media` que afetam o layout geral.
+- **Estilos de componentes:** `assets/css/components/*.css` (cada componente pode ter os seus próprios `@media` internos).
+
+Para saber **em que ficheiro** fazer cada tipo de alteração, usar **`docs/mapa-css-dash-pos.md`**.
+
+---
+
+## 1. O que o plano faz (resumo)
+
+O plano **elimina inconsistências** em três frentes:
+
+| Frente | O que foi feito |
+|--------|------------------|
+| **Breakpoints** | Um único ponto de viragem para mobile: **905px**. O valor **760px** deixou de existir; o JS (`isMobileView()`) e o CSS passaram a usar só 905px. Evita que entre 761px e 905px o layout seja mobile no CSS mas “desktop” no JS (setas da category bar, scroll, etc.). |
+| **Dimensões e tipografia** | Valores fixos (px) em fontes, botões, avatares e grid foram substituídos por **variáveis CSS** (`--font-*`, `--space-*`) e **`clamp()`** para escalar com o viewport sem quebrar em ecrãs muito pequenos ou grandes. |
+| **Duplicados** | Remoção de meta viewport duplicado no HTML, de listener duplicado no `clearSearch` (app.js) e do bloco **`@media (max-width: 760px)`** no CSS, cuja lógica foi consolidada no bloco **`@media (max-width: 905px)`** (incluindo regras de skeleton). |
+
+Ou seja: **um único breakpoint de mobile (905px), tipografia e espaçamentos escaláveis, e zero duplicação** entre HTML, CSS e JS.
+
+---
+
+## 2. Breakpoints oficiais — usar apenas estes
+
+Estes são os **breakpoints canónicos**. Qualquer novo `@media` deve usar um destes valores. **Não adicionar novos breakpoints.**
+
+| Nome | Valor | Uso |
+|------|--------|-----|
+| Extra large | `1200px` | Layout grande, ajustes de painel |
+| Large | `1155px` | obs-header empilha verticalmente |
+| Medium-large | `1100px` | cartBodyWrapper empilha; date-time oculto |
+| Medium | `992px` | doc-type panel 45% |
+| **Mobile principal** | **`905px`** | **Ponto de viragem: ocultar coluna checkout, sticky menu e bottom sheet** |
+| Menu hamburguer | `890px` | Menu lateral com hamburguer |
+| Tablet | `768px` | Tipografia/padding menores; client panel 320px |
+| Small mobile | `640px` | Critical alert full width |
+| Extra small | `450px` | Product grid 2 colunas |
+| Tiny | `349px` | Product grid 1 coluna |
+
+- **Regra:** `905px` = breakpoint de mobile. `890px` é só para o menu hamburguer; são diferentes por design.
+- **Obsoleto e proibido:** `760px` — não voltar a usar. Toda a lógica que dependia de 760px está no bloco `905px`.
+
+---
+
+## 3. Variáveis CSS de tipografia e espaçamento
+
+No `:root` de **`assets/css/base/variables.css`** existem variáveis que **devem ser usadas** em alterações futuras quando se tratar de tamanhos de fonte e espaçamentos responsivos:
+
+### Tipografia (`:root`)
+
+```css
+--font-xs:    clamp(9px,  0.85vw, 11px);
+--font-sm:    clamp(11px, 1vw,    13px);
+--font-base:  clamp(12px, 1.1vw,  14px);
+--font-md:    clamp(13px, 1.2vw,  15px);
+--font-lg:    clamp(14px, 1.4vw,  16px);
+```
+
+### Espaçamentos (`:root`)
+
+```css
+--space-xs:   clamp(4px,  0.5vw,  6px);
+--space-sm:   clamp(6px,  0.7vw,  8px);
+--space-md:   clamp(8px,  1vw,    12px);
+--space-lg:   clamp(12px, 1.5vw,  16px);
+--space-xl:   clamp(16px, 2vw,    20px);
+```
+
+- **Regra para modificações futuras:** Ao adicionar ou alterar `font-size` ou espaçamentos (padding/margin/gap) em elementos que precisem de escalar, preferir **`var(--font-*)`** ou **`var(--space-*)`** em vez de valores fixos em px. Se for necessário um valor fora desta escala, usar **`clamp(min, preferido_vw, max)`** no mesmo espírito (ex.: `--sidebar-width`, `--mobile-nav-width` já existem com `clamp`/`min`).
+
+---
+
+## 4. Dimensões de componentes (botões, avatares, grid)
+
+O plano introduziu **`clamp()`** para largura/altura em elementos interactivos e no grid de produtos:
+
+- **Regra para modificações futuras:** Ao criar ou alterar dimensões de botões, ícones, avatares ou colunas de grid, evitar valores únicos em px (ex.: `30px`). Usar **`clamp(min_px, vw, max_px)`** para que escalem em ecrãs pequenos e grandes. Exemplos já aplicados no plano:
+  - Avatar: `clamp(24px, 2.5vw, 32px)`
+  - Botões de quantidade / iconbtn: `clamp(24px, 2.2vw, 30px)` ou `clamp(26px, 2.5vw, 32px)`
+  - Keypad pay btn: `clamp(42px, 4.5vw, 52px)`
+  - Product grid: `minmax(clamp(130px, 28vw, 175px), 1fr)` (os media 450px e 349px continuam a sobrepor para 2 e 1 coluna).
+
+---
+
+## 5. JavaScript e breakpoint de mobile
+
+- **Função `isMobileView()` (app.js):** Deve usar **apenas** o breakpoint **`905px`** (e não 760px nem outro). É usada para:
+  - Visibilidade das setas da category bar
+  - Bloqueio ou libertação do wheel scroll na category bar
+- **Regra para modificações futuras:** Qualquer lógica que dependa de “estar em mobile” deve basear-se no mesmo critério que o CSS: **905px**. Se for necessário usar `matchMedia`, usar `(max-width: 905px)` (e não 760px).
+
+---
+
+## 6. Evitar duplicação
+
+- **HTML (index.php):** Um único `<meta name="viewport" content="width=device-width, initial-scale=1.0">`. Não duplicar.
+- **app.js:** Não registar o mesmo listener duas vezes no mesmo elemento (ex.: `clearSearch` tinha dois `click`; deve existir apenas o que também trata do colapso do search no mobile).
+- **CSS:** Não voltar a criar um bloco **`@media (max-width: 760px)`**. Tudo o que for “em mobile” (layout single column, checkout oculto, skeleton mobile, etc.) deve estar no bloco **`@media (max-width: 905px)`**, em **`assets/css/layout/responsive.css`** (ou no componente correspondente se for override local). Ver também `docs/breakpoints-media-queries.md`: um breakpoint = um bloco. Ver `docs/mapa-css-dash-pos.md` para saber onde editar.
+
+---
+
+## 7. O que NÃO alterar (fora do âmbito do plano)
+
+- Containers de impressão de fatura (`#inv-a4-container-principal`, `#fatura80-container-inv80`) em `position: fixed; top: -9999px`.
+- Comportamento de `closeAlert()` sem argumento ou de `localStorage` para formato de fatura — são temas de refactor separados.
+- Resize com bottom sheet aberto (solução futura possivelmente em `updateResponsiveUI()`) — não está no âmbito deste plano.
+
+---
+
+## 8. Checklist rápido para alterações futuras
+
+Ao tocar em responsividade (index.php, CSS do dashboard — ver `docs/mapa-css-dash-pos.md` —, app.js):
+
+1. **Breakpoint:** Usar só um dos valores da tabela (Secção 2); nunca 760px.
+2. **CSS:** Novos estilos por breakpoint → dentro do bloco `@media` **existente** para esse breakpoint (905px, 768px, etc.).
+3. **Tipografia / espaço:** Preferir `var(--font-*)` e `var(--space-*)`; se precisar de outro valor, usar `clamp()`.
+4. **Dimensões de botões/ícones/grid:** Preferir `clamp(min, vw, max)` em vez de px fixo.
+5. **JS “mobile”:** Usar 905px (ex.: `isMobileView()` ou `matchMedia('(max-width:905px)')`).
+6. **Duplicados:** Não duplicar viewport, listeners nem blocos `@media (max-width: 760px)`.
+
+---
+
+*Documento criado para referência nas modificações futuras relacionadas com o Plano de Correcções de Responsividade — Dash-POS v1.0.*
+
+|
+|
+|
+|
+|
+|
+|
+FIM
+
+assets-js-modulos.md 
+|
+|
+|
+|
+|
+|
+|
+
+# Módulos JavaScript em `assets/js` (exceto app.js)
+
+Este documento descreve os ficheiros JavaScript em `assets/js` que **não** são o `app.js`: o que fazem, qual o seu objetivo no sistema e como se integram com o resto do POS. O `app.js` é o núcleo do dashboard (produtos, carrinho, checkout, SSE) e está documentado separadamente.
+
+---
+
+## Índice
+
+1. [Visão geral](#1-visão-geral)
+2. [clientes.js](#2-clientesjs)
+3. [monetary-formatter.js](#3-monetary-formatterjs)
+4. [fatura.js](#4-faturajs)
+5. [fatura80.js](#5-fatura80js)
+6. [Integração entre módulos](#6-integração-entre-módulos)
+7. [Referência rápida (API exposta)](#7-referência-rápida-api-exposta)
+
+---
+
+## 1. Visão geral
+
+| Ficheiro | Objetivo principal | Usado por |
+|----------|--------------------|-----------|
+| **clientes.js** | Gestão do painel de clientes: listar, pesquisar, selecionar e cadastrar clientes. | app.js (painel lateral, checkout) |
+| **monetary-formatter.js** | Formatação e edição do valor monetário no input de “valor recebido” (teclado, operações +/−). | app.js (keypad, footer do carrinho) |
+| **fatura.js** | Renderização da fatura em formato **A4** para impressão (múltiplas páginas, QR por página). | app.js (após venda; dados locais ou backend) |
+| **fatura80.js** | Renderização do recibo em formato **80mm** (térmico) para impressão. | app.js (após venda; dados locais ou backend) |
+
+Todos estes ficheiros são carregados na página principal (`pages/index.php`) e expõem funções ou objetos no `window` para o `app.js` (e eventualmente outros scripts) utilizarem.
+
+---
+
+## 2. clientes.js
+
+### Objetivo
+
+Módulo de **gestão de clientes** no POS: carregar a lista de clientes da API, pesquisar em tempo real, exibir resultados no painel lateral, selecionar um cliente para a venda e cadastrar novo cliente quando a pesquisa não encontra resultados.
+
+### O que faz
+
+- **Classe `ClientManager`** (singleton após `DOMContentLoaded`):
+  - **Inicialização:** faz cache dos elementos do DOM do painel de clientes (`#clientListPanel`, `#clientSearchInput`, `#selectedClientCard`, formulário de novo cliente, etc.) e associa os eventos.
+  - **API:** usa `../api/cliente.php` com:
+    - `GET ?acao=listar_cliente` — carrega todos os clientes (timeout 5s).
+    - `POST` com `acao: 'verificar_cliente'` — cria ou encontra cliente (nome obrigatório; telefone, email, endereco, nif opcionais).
+  - **Pesquisa:** no `input` da pesquisa, filtra em tempo real por `nome` ou `nif`. Se houver resultados, mostra a lista (máx. 6 cards); se não houver, mostra o formulário para “Nome do cliente” e cadastro.
+  - **Lista:** renderiza cards (`.client-card`) com nome, morada, telefone, NIF. Limita a 6 itens e indica “+N cliente(s) não exibido(s)”.
+  - **Seleção:** ao clicar num card, guarda o cliente selecionado, atualiza o card de “cliente selecionado”, fecha o painel (se existir `closeClientPanel()`), chama `window.handleClientSelection(id, nome, dados)` para o checkout e emite o evento `clientSelected` no `document`.
+  - **Novo cliente:** submete o formulário com validação (nome obrigatório; email com regex se preenchido). Após sucesso, recarrega a lista, seleciona o cliente criado, limpa o formulário e mostra mensagem de sucesso via `showAlert` (se existir).
+  - **Utilitários:** `escapeHtml` (anti-XSS), `showError` / `showSuccess` (alertas), `getSelectedClient()` para outros módulos.
+
+### Integração com o sistema
+
+- O **app.js** deve garantir que existam no DOM os IDs esperados (painel, input, formulário, etc.) e que as funções globais `closeClientPanel`, `showAlert` e `handleClientSelection` estejam definidas.
+- `handleClientSelection` é a ponte para o checkout integrado: recebe o cliente escolhido para associar à venda.
+- Acesso global: `window.ClientManager`, `window.getClientManager()`.
+
+---
+
+## 3. monetary-formatter.js
+
+### Objetivo
+
+Controlar o **campo de valor monetário** (ex.: “valor recebido”) usado no keypad do POS: formatação em locale (pt-AO, Kz), entrada apenas via teclado/teclado numérico, e suporte a **operações de soma e subtração** no próprio campo (ex.: “Kz 100 + Kz 50” e Enter para obter 150).
+
+### O que faz
+
+- **Classe `MonetaryFormatter`** (instanciada com `inputId` e `options`):
+  - **Configuração:** `locale` (default `pt-AO`), `currency` (default `Kz`), `decimals` (default 2), `allowNegative` (default false). Callback opcional `onValueChange`.
+  - **Estado interno:** `internalValue` (valor atual), e em modo operação: `operationMode` (`'addition'` ou `'subtraction'`), `operationBuffer` (valor digitado após +/−), `previousValue` (valor antes do operador).
+  - **Entrada:** `keypadInput(value)` — dígitos e ponto decimal; limita casas decimais. Em modo operação, escreve no `operationBuffer`; caso contrário, no `internalValue`.
+  - **Teclado:** `handleKeyboard(event)` — trata `+` (inicia soma), `-` (inicia subtração), `Enter` (executa operação), `Escape` (cancela operação), dígitos, `,`/`.`/`Decimal`, `Backspace`, `Delete`/`Clear`. Em subtração, se `allowNegative === false` e o resultado fosse negativo, cancela a operação.
+  - **Operações:** `startOperation(operation)`, `executeOperation()`, `cancelOperation()`. Após executar, o resultado passa a ser o novo valor e o modo operação é limpo.
+  - **Formatação:** o input é mostrado como “Kz X,XX” ou “Kz A + Kz B” / “Kz A − Kz B” em modo operação. O elemento é tratado como `readonly` na lógica de formatação; a edição real é feita pelos handlers.
+  - **DOM:** `_refreshInputReference()` — atualiza a referência ao `input` por ID (útil quando o elemento é recriado, ex.: bottom sheet). `enable()` / `disable()` ligam/desligam os listeners de `keydown`, `input` e `paste` (paste é bloqueado). `destroy()` remove listeners e referências.
+  - **API:** `getValue()`, `setValue(newValue)`, `backspace()`, `clear()`.
+
+### Integração com o sistema
+
+- O **app.js** cria uma instância de `MonetaryFormatter` associada ao input do valor recebido (ex.: `#footerAmountInput` ou id usado no checkout), chama `enable()` quando o campo está ativo e pode usar `getValue()` para obter o valor numérico e `onValueChange` para atualizar troco/estado de pagamento.
+- Não expõe construtor no `window` de forma explícita no ficheiro; o app.js usa a classe se estiver no scope (script carregado antes do app.js).
+
+---
+
+## 4. fatura.js
+
+### Objetivo
+
+Renderizar a **fatura em formato A4** para impressão: múltiplas páginas (16 produtos por página), cabeçalho com dados da empresa e do cliente, tabela de produtos, “transportado”/“a transportar” entre páginas, resumo de impostos, total por extenso em kwanzas, formas de pagamento e QR Code por página. Funciona tanto com dados montados no frontend (carrinho + checkout) como com dados devolvidos pelo backend após processar a venda.
+
+### O que faz
+
+- **Proteção:** evita carregamento duplicado (`window.FATURA_JS_LOADED`).
+- **Números por extenso:** `numeroParaExtenso` (PT) e `numeroParaExtensoAOA` (kwanzas/cêntimos) para o total pago.
+- **Paginação:** `PRODUTOS_POR_PAGINA = 16`. `dividirProdutosEmPaginas(produtos)`, `calcularTotalPagina`, `calcularTransportado` para valores “transportado” e “a transportar” entre páginas.
+- **Formatação:** `formatarMoeda(valor)` com `Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`.
+- **Renderização por página:** `criarPaginaFatura(produtos, numeroPagina, totalPaginas, todasPaginas, dadosFatura)` gera o HTML de uma página A4 (classe `inv-a4-interface-fatura`): cabeçalho (logo, empresa, título “FATURA RECIBO”, cliente, QR); corpo (tabela data/hora/contribuinte/telefone/endereço; tabela de produtos; transportado/a transportar); rodapé (resumo de impostos, totais, valor por extenso, formas de pagamento, operador, “Pag X de Y”). Gera QR Code com a lib `QRCode` após inserir no DOM.
+- **Container:** `renderizarFaturaComPaginas(dadosFatura)` limpa `#inv-a4-container-principal`, cria um wrapper para múltiplas páginas e acrescenta uma página por cada “fatia” de produtos.
+- **Dados a partir do carrinho:** `prepararDadosFatura(cart, checkoutCustomerData, checkoutPaymentData)` monta o objeto `dadosFatura` (numeroFatura, data, hora, cliente, produtos, totais, impostos, formasPagamento, observação, operador) para uso local. Usa `window.getActivePaymentMethods` se existir para as formas de pagamento.
+- **Dados a partir do backend:** `renderizarFaturaComDadosBackend(dadosBackend)` transforma a resposta da API (ex.: após `vender.php`) no formato esperado por `renderizarFaturaComPaginas` (empresa, cliente, produtos_fatura, totais, resumo_impostos, formas_pagamento, etc.), garante que exista `#inv-a4-container-principal` (cria e esconde fora da tela se necessário) e chama `renderizarFaturaComPaginas(dadosFatura)`.
+
+### Integração com o sistema
+
+- O **app.js** (ou fluxo de venda) decide se a impressão é A4 ou 80mm; para A4 carrega `fatura.css` e usa `renderizarFaturaComPaginas` (dados locais) ou `renderizarFaturaComDadosBackend` (dados do backend). O container A4 fica tipicamente fora da vista (`position: fixed; top: -9999px`) e é enviado para a impressora.
+- Funções expostas: `window.renderizarFaturaComPaginas`, `window.prepararDadosFatura`, `window.formatarMoeda`, `window.renderizarFaturaComDadosBackend`.
+
+---
+
+## 5. fatura80.js
+
+### Objetivo
+
+Renderizar o **recibo térmico 80mm** para impressão: uma única “página” com logo, empresa, cliente, tabela de produtos, totais (total a pagar, valor pago, troco), formas de pagamento, resumo de impostos, rodapé legal e QR Code. Funciona com dados montados no frontend ou com dados do backend.
+
+### O que faz
+
+- **Proteção:** evita carregamento duplicado (`window.FATURA80_JS_LOADED`).
+- **Formatação:** `formatarMoeda(valor)` em pt-AO (igual ao fatura.js).
+- **HTML do recibo:** `gerarHTMLFatura80(dadosFatura)` gera o HTML completo com classes `inv80`/`-inv80`: logo, dados da empresa, bloco cliente (exmo sr(a), data emissão, NIF, contacto, número fatura, “ORIGINAL”), tabela de produtos (Desc, Qtd, Preço Uni., Desc.(%), Taxa(%), Total), totais (total a pagar, valor pago, troco), meio de pagamento (linhas metodo/valor), rodapé de software, resumo de impostos, rodapé legal, agradecimento e container para QR Code.
+- **Renderização:** `renderizarFatura80(dadosFatura)` obtém ou cria o elemento `#fatura80-container-inv80`, define `innerHTML` com o resultado de `gerarHTMLFatura80`, e após um pequeno delay gera o QR Code em `#qrcode-inv80` com a lib `QRCode`.
+- **Dados a partir do carrinho:** `prepararDadosFatura80(cart, checkoutCustomerData, checkoutPaymentData)` monta o objeto com produtos, totais (subtotal, desconto, imposto, valorAPagar, pago, troco), impostos, formasPagamento (array de `{ metodo, valor }`), empresa e cliente. Usa valores default para empresa (Hélio Trading, etc.) e operador.
+- **Dados a partir do backend:** `renderizarFatura80ComDadosBackend(dadosBackend)` mapeia a resposta da API para o formato esperado por `renderizarFatura80` (codigo_documento, dados_empresa, cliente, produtos_fatura, totais, resumo_impostos, formas_pagamento, etc.) e chama `renderizarFatura80(dadosFatura)`.
+
+### Integração com o sistema
+
+- O **app.js** (ou fluxo de venda) carrega `fatura80.css` e usa `renderizarFatura80` ou `renderizarFatura80ComDadosBackend` conforme a origem dos dados. O container 80mm é tipicamente posicionado para impressão térmica.
+- Funções expostas: `window.renderizarFatura80`, `window.prepararDadosFatura80`, `window.renderizarFatura80ComDadosBackend`, `window.populateInvoice80` (alias), `window.formatarMoeda`.
+
+---
+
+## 6. Integração entre módulos
+
+- **app.js** é o orquestrador: usa o painel de clientes (e `handleClientSelection`), o formatador monetário no input de valor recebido, e após concluir a venda escolhe fatura A4 ou 80mm e chama as funções de renderização correspondentes (com dados locais ou com resposta do backend).
+- **clientes.js** depende de: `api/cliente.php`, DOM do painel de clientes, e (opcionalmente) `closeClientPanel`, `showAlert`, `handleClientSelection` definidos no app ou noutro script.
+- **monetary-formatter.js** é usado pelo app.js numa instância por input; não depende de outros módulos.
+- **fatura.js** e **fatura80.js** dependem da biblioteca **QRCode** (global) e de um container no DOM; recebem dados no formato definido por cada um (preparados localmente ou transformados a partir do backend). Não dependem um do outro; o app decide qual usar conforme o tipo de documento/impressora.
+
+---
+
+## 7. Referência rápida (API exposta)
+
+| Módulo | No `window` | Uso típico |
+|--------|-------------|------------|
+| **clientes.js** | `ClientManager`, `getClientManager()` | Obter instância do gestor; `getClientManager().getSelectedClient()` |
+| **clientes.js** | (esperado pelo módulo) `closeClientPanel()`, `showAlert()`, `handleClientSelection(id, nome, dados)` | Fechar painel; alertas; passar cliente ao checkout |
+| **monetary-formatter.js** | Classe `MonetaryFormatter` (se script carregado no mesmo scope) | `new MonetaryFormatter('idInput', { onValueChange })` + `enable()` / `getValue()` |
+| **fatura.js** | `renderizarFaturaComPaginas(dadosFatura)`, `prepararDadosFatura(cart, customer, payment)`, `renderizarFaturaComDadosBackend(dadosBackend)`, `formatarMoeda` | Renderizar A4 com dados locais ou backend |
+| **fatura80.js** | `renderizarFatura80(dadosFatura)`, `prepararDadosFatura80(cart, customer, payment)`, `renderizarFatura80ComDadosBackend(dadosBackend)`, `populateInvoice80`, `formatarMoeda` | Renderizar 80mm com dados locais ou backend |
+
+---
+
+*Documento criado com base na leitura dos ficheiros em `assets/js` (exceto app.js) — Dash-POS.*
+
+
+|
+|
+|
+|
+|
+|
+|
+
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+breakpoints-media-queries.md 
+|
+|
+|
+|
+|
+|
+|
+
+|
+|
+|
+|
+|
+|
+|
+
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+
+mapa-css-das-pos.md 
+|
+|
+|
+|
+|
+|
+|
+
+|
+|
+|
+|
+|
+|
+|
+
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+mapa js-dash-pos.md
+|
+|
+|
+|
+|
+|
+|
+
+
+|
+|
+|
+|
+|
+|
+|
+
+FIM
+
+|
+|
+|
+|
+|
+|
+|
+

@@ -232,7 +232,7 @@ async function processProformaInvoice() {
       observacao = '';
     }
 
-    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/vender.php", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -352,7 +352,7 @@ async function processOrcamentoInvoice() {
       observacao = '';
     }
 
-    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/vender.php", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -472,7 +472,7 @@ async function processFaturaInvoice() {
       observacao = '';
     }
 
-    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/vender.php", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -662,7 +662,7 @@ async function processReceiptInvoice() {
     
     console.log('📤 [PAYMENT] Enviando dados para backend...');
     
-    const response = await fetch('http://localhost/Dash-POS/api/vender.php', {
+    const response = await fetch(window.location.origin + "/Dash-POS/api/vender.php", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(paymentData)
