@@ -210,11 +210,23 @@ function initBottomSheetSystem() {
       var docTypeNames = { 'factura-recibo': 'Factura-Recibo', 'factura-proforma': 'Factura Proforma', 'factura': 'Factura', 'orcamento': 'Orçamento' };
       var currentDocType = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
       var docTypeLabel = docTypeNames[currentDocType] || currentDocType || 'Factura';
+      if (currentDocType === 'factura-recibo') {
+        var fmt = (typeof formatoFaturaAtual !== 'undefined' && formatoFaturaAtual) ? formatoFaturaAtual : (document.querySelector('input[name="invoiceFormat"]:checked')?.value || 'A4');
+        docTypeLabel = docTypeLabel + ' ' + (fmt === '80mm' ? '80mm' : 'A4');
+      }
+      var totalVal = (typeof currentCartTotal !== 'undefined' ? currentCartTotal : 0) || 0;
+      var totalFormatted = (typeof currency !== 'undefined' && currency && typeof currency.format === 'function') ? currency.format(totalVal) : (totalVal.toFixed(2) + ' Kz');
 
       var tabBar = document.createElement('div');
       tabBar.className = 'cart-sheet-tabs';
       tabBar.setAttribute('role', 'tablist');
-      tabBar.innerHTML = '<button type="button" class="cart-sheet-tab active" role="tab" aria-selected="true" data-cart-tab="fatura">' + docTypeLabel + '</button>' +
+      tabBar.innerHTML =
+        '<button type="button" class="cart-sheet-tab active" role="tab" aria-selected="true" data-cart-tab="fatura">' +
+          '<span class="cart-sheet-tab-inner">' +
+            '<span class="cart-sheet-tab-doc-label">' + docTypeLabel + '</span>' +
+            '<span class="cart-sheet-tab-total">Total a pagar: <span id="cartSheetTabTotal">' + totalFormatted + '</span></span>' +
+          '</span>' +
+        '</button>' +
         '<button type="button" class="cart-sheet-tab" role="tab" aria-selected="false" data-cart-tab="ordem">Ordem de Venda</button>';
       sheetBody.appendChild(tabBar);
 
@@ -446,6 +458,16 @@ function initBottomSheetSystem() {
       else sheet.style.transform = 'translateY(0)';
     });
   }
+
+  /** Atualiza o total a pagar na primeira aba do bottom sheet (carrinho), quando o sheet está aberto. */
+  function updateBottomSheetCartTabTotal() {
+    var el = document.getElementById('cartSheetTabTotal');
+    if (!el) return;
+    var totalVal = (typeof currentCartTotal !== 'undefined' ? currentCartTotal : 0) || 0;
+    var formatted = (typeof currency !== 'undefined' && currency && typeof currency.format === 'function') ? currency.format(totalVal) : (totalVal.toFixed(2) + ' Kz');
+    el.textContent = formatted;
+  }
+  window.updateBottomSheetCartTabTotal = updateBottomSheetCartTabTotal;
 
   updateStickyCartBadge();
   window.updateStickyCartBadge = updateStickyCartBadge;

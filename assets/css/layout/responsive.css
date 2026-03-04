@@ -421,7 +421,7 @@
   }
 
   .cart-sheet-tab-panel-fatura {
-    padding-bottom: 8px;
+    padding-bottom: 0;
     box-sizing: border-box;
   }
   .cart-sheet-tab-panel-fatura #cartContentArea {

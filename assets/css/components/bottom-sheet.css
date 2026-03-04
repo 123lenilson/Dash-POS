@@ -239,13 +239,38 @@
   justify-content: center;
   text-align: center;
 }
+.cart-sheet-tab-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.cart-sheet-tab-doc-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1.2;
+}
+.cart-sheet-tab-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.2;
+}
 .cart-sheet-tab:hover {
   color: #333;
+}
+.cart-sheet-tab:hover .cart-sheet-tab-total {
+  color: #000;
 }
 .cart-sheet-tab.active {
   background: #fff;
   color: var(--color-selection, #333);
   box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.cart-sheet-tab.active .cart-sheet-tab-total {
+  color: #000;
 }
 
 .cart-sheet-tab-panel {
@@ -265,6 +290,7 @@
 .cart-sheet-tab-panel-fatura {
   display: flex;
   flex-direction: column;
+  padding: 0 12px 0; /* sem espaço em baixo: cart-footer colado ao limite do bottom sheet */
 }
 .cart-sheet-tab-panel-fatura #cartContentArea {
   flex: 0 0 80%;
@@ -408,6 +434,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+/* Carrinho no sheet: sem padding em baixo para o cart-footer ficar colado ao limite do bottom sheet */
+.bottom-sheet-body:has(.cart-sheet-tab-panel-fatura) {
+  padding-bottom: 0;
 }
 
 /* Quando o sheet mostra o painel de clientes, o body cede espaço ao wrapper sem padding duplicado */

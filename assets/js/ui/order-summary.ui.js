@@ -197,6 +197,9 @@ function updateOrderSummaryFooter(netTotal, taxTotal, retention, totalPagar) {
 
   // Atualiza os valores exibidos nos cards de pagamento
   updateFooterPaymentCards();
+
+  // Atualiza o total na aba do bottom sheet (carrinho), se estiver aberto
+  if (typeof window.updateBottomSheetCartTabTotal === 'function') window.updateBottomSheetCartTabTotal();
 }
 
 /**
