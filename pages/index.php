@@ -217,8 +217,11 @@
 
       <!-- ===== CABEÇALHO DO CARRINHO ===== -->
       <div class="cart-header">
-        <!-- Botão Tipo de Factura (esquerda) e Botão Limpar (direita) -->
+        <!-- Botão Voltar (sheet, ≤905px) | Tipo de Factura (esquerda) | Botão Limpar (direita) -->
         <div class="cart-header-title">
+          <button type="button" class="cart-sheet-back-btn" id="cartSheetBackBtn" aria-label="Voltar">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
           <button class="toggle-select-painel tipoFat-btn" onclick="openPanel('documentoPanel')">
             <i class="fa-solid fa-file-invoice"></i>
             <div class="cliente-text">

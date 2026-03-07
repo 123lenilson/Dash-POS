@@ -41,6 +41,22 @@
   gap: 8px;
 }
 
+/* Botão Voltar: visível apenas no bottom sheet (estilos em responsive.css @ 905px) */
+.cart-sheet-back-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .btn-clear-cart {
   margin-left: auto;
   background: transparent;

@@ -23,7 +23,7 @@
   }
 }
 
-/* Bot√£o menu mobile - base (escondido por defeito) */
+/* Botùo menu mobile - base (escondido por defeito) */
 .main-header .mobile-menu-btn,
 .header .mobile-menu-btn,
 .navbar .mobile-menu-btn {
@@ -178,6 +178,14 @@
 }
 
 @media (max-width: 905px) {
+  :root {
+    --font-xs:    clamp(8px,  0.8vw,  10px);
+    --font-sm:    clamp(10px, 0.9vw,  12px);
+    --font-base:  clamp(11px, 1vw,    13px);
+    --font-md:    clamp(12px, 1.1vw,  14px);
+    --font-lg:    clamp(13px, 1.3vw,  16px);
+  }
+
   .app-skeleton { grid-template-columns: 1fr; }
   .skeleton-layout-side { display: none; }
   .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
@@ -353,6 +361,7 @@
     gap: 0;
     overflow: hidden;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    position: relative;
   }
   .footer-amount-row .footer-amount-wrapper:focus-within {
     border-color: #000000;
@@ -365,7 +374,8 @@
     width: 100%;
     height: auto;
     padding: 0;
-    /* 20pt Word ‚âà 26.67px; em mobile mant√©m grande com clamp */
+    padding-right: clamp(40px, 8vw, 70px);
+    /* 20pt Word ? 26.67px; em mobile mantùm grande com clamp */
     font-size: clamp(20px, 2.5vw, 28px);
     font-weight: 700;
     text-align: center;
@@ -399,6 +409,10 @@
     border-radius: 4px;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    right: var(--space-sm);
+    top: 50%;
+    transform: translateY(-50%);
   }
   .keypad-final-row .keypad-exact-btn {
     display: none !important;
@@ -420,26 +434,41 @@
     display: none !important;
   }
 
+  .bottom-sheet-body {
+    padding-bottom: var(--space-lg);
+  }
+
+  /* Bottom Sheet: painel de faturacao ù altura inteligente (lista ocupa espaùo, rodapù sù o necessùrio) */
   .cart-sheet-tab-panel-fatura {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0 12px 0;
     padding-bottom: 0;
     box-sizing: border-box;
   }
   .cart-sheet-tab-panel-fatura #cartContentArea {
-    flex: 0 0 80%;
+    flex: 1 1 auto;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
   }
   .cart-sheet-tab-panel-fatura .cart-footer {
-    flex: 0 0 20%;
-    min-height: 0;
+    flex: 0 0 auto;
+    flex-grow: 0;
     flex-shrink: 0;
+    flex-basis: auto;
+    min-height: 0;
     overflow: hidden;
     overflow-y: hidden;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    padding: var(--space-xs) 0 0;
+    padding: var(--space-xs) 0 var(--space-sm);
     gap: clamp(3px, 0.3vw, 4px);
     border-top: 1px solid var(--line, #e5e7eb);
   }
@@ -447,6 +476,63 @@
   .cart-sheet-tab-panel-fatura .cart-footer .footer-amount-row {
     flex-shrink: 0;
     min-height: 0;
+  }
+  .bottom-sheet-body:has(.cart-sheet-tab-panel-fatura) {
+    padding-bottom: 0;
+    min-height: 0;
+  }
+
+  /* Bot„o Voltar no header do carrinho (bottom sheet): visÌvel e estilizado em ?905px */
+  .bottom-sheet .cart-header .cart-sheet-back-btn {
+    display: flex;
+    background: #ffffff;
+    color: var(--gray-700, #374151);
+    position: relative;
+    overflow: hidden;
+    outline: none;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:hover {
+    background: var(--gray-200, #e5e7eb);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus,
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus-visible {
+    background: var(--gray-200, #e5e7eb);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus-visible {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:active {
+    background: var(--gray-300, #d1d5db);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn i {
+    font-size: clamp(18px, 1.6vw, 22px);
+    font-weight: 900;
+  }
+
+  .bottom-sheet .cart-header .cart-sheet-back-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:active::after {
+    animation: cartBackRipple 0.4s ease-out;
+  }
+
+  @keyframes cartBackRipple {
+    0% {
+      opacity: 0.3;
+      transform: scale(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
   }
 
   .interface{
@@ -510,6 +596,51 @@
   }
   .client-panel-close-btn i {
     font-size: var(--font-lg);
+  }
+
+  /* Painel de selecionar cliente: fontes maiores em mobile/tablet (< 905px) */
+  .panel-header-slider h3 {
+    font-size: var(--font-sm);
+  }
+  .panel-header-slider h3 i {
+    font-size: var(--font-xs);
+  }
+  .section-title {
+    font-size: var(--font-xs);
+    letter-spacing: 0.7px;
+  }
+  .client-card-name {
+    font-size: var(--font-base);
+  }
+  .client-card-details {
+    font-size: var(--font-sm);
+  }
+  .client-search-input {
+    font-size: var(--font-base);
+  }
+  .client-search-input::placeholder {
+    font-size: var(--font-base);
+  }
+  .client-card-indicator {
+    font-size: var(--font-lg);
+  }
+  .client-form-input {
+    font-size: var(--font-base);
+  }
+  .client-form-input::placeholder {
+    font-size: var(--font-sm);
+  }
+  .client-form-submit {
+    font-size: var(--font-base);
+  }
+  .client-name {
+    font-size: var(--font-md);
+  }
+  .client-details {
+    font-size: var(--font-base);
+  }
+  .btn-new-client {
+    font-size: var(--font-base);
   }
 }
 
@@ -596,5 +727,43 @@
   .client-form-submit {
     padding: var(--space-sm) var(--space-lg);
     font-size: var(--font-sm);
+  }
+}
+
+@media (max-width: 630px) {
+  .footer-amount-row {
+    flex-wrap: wrap;
+  }
+
+  /* Cancela o mecanismo horizontal e troca para vertical */
+  .footer-amount-row .payment-status-element {
+    order: -1;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100% !important;   /* anula o max-width: 0 do base */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0 !important;
+    transform: translateY(16px);
+    transition: max-height 0.35s ease,
+                opacity 0.35s ease,
+                padding 0.3s ease,
+                transform 0.35s ease;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Quando o JS adiciona .visible ó sobe e expande verticalmente */
+  .footer-amount-row .payment-status-element.visible {
+    max-height: 60px;
+    opacity: 1;
+    padding: 6px 10px !important;
+    transform: translateY(0);
+  }
+
+  /* Conte˙do do status (Ìcone + texto) centralizado */
+  .footer-amount-row .payment-status-element .status-text {
+    align-items: center;
   }
 }

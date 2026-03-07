@@ -407,6 +407,12 @@ function initBottomSheetSystem() {
 
     if (panelType === 'cart') {
       /* Conteúdo é o carrinho real (#cartContentArea) movido para o sheet; os cards já têm os handlers (removeCartProduct, toggleCardExpansion, etc.). */
+      var backBtn = sheetBody.querySelector('.cart-sheet-back-btn');
+      if (backBtn) {
+        backBtn.onclick = function () {
+          closeBottomSheet();
+        };
+      }
     }
 
     if (panelType === 'doctype') {
