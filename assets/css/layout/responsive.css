@@ -23,7 +23,7 @@
   }
 }
 
-/* Botùo menu mobile - base (escondido por defeito) */
+/* BotÔøΩo menu mobile - base (escondido por defeito) */
 .main-header .mobile-menu-btn,
 .header .mobile-menu-btn,
 .navbar .mobile-menu-btn {
@@ -375,7 +375,7 @@
     height: auto;
     padding: 0;
     padding-right: clamp(40px, 8vw, 70px);
-    /* 20pt Word ? 26.67px; em mobile mantùm grande com clamp */
+    /* 20pt Word ? 26.67px; em mobile mantÔøΩm grande com clamp */
     font-size: clamp(20px, 2.5vw, 28px);
     font-weight: 700;
     text-align: center;
@@ -438,7 +438,7 @@
     padding-bottom: var(--space-lg);
   }
 
-  /* Bottom Sheet: painel de faturacao ù altura inteligente (lista ocupa espaùo, rodapù sù o necessùrio) */
+  /* Bottom Sheet: painel de faturacao ÔøΩ altura inteligente (lista ocupa espaÔøΩo, rodapÔøΩ sÔøΩ o necessÔøΩrio) */
   .cart-sheet-tab-panel-fatura {
     display: flex;
     flex-direction: column;
@@ -482,7 +482,7 @@
     min-height: 0;
   }
 
-  /* Bot„o Voltar no header do carrinho (bottom sheet): visÌvel e estilizado em ?905px */
+  /* BotÔøΩo Voltar no header do carrinho (bottom sheet): visÔøΩvel e estilizado em ?905px */
   .bottom-sheet .cart-header .cart-sheet-back-btn {
     display: flex;
     background: #ffffff;
@@ -642,6 +642,64 @@
   .btn-new-client {
     font-size: var(--font-base);
   }
+
+  /* Ordem de Venda: Contentores no Bottom Sheet (‚â§905px) */
+  .ordem-sheet-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ordem-summary-section {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: clamp(6px, 0.8vw, 9px);
+    margin-bottom: clamp(6px, 0.8vw, 9px);
+  }
+
+  .order-summary-content {
+    padding-left: clamp(8px, 2vw, 16px);
+    padding-right: clamp(8px, 2vw, 16px);
+  }
+
+  /* Font-size aumentado para a linha "Total a pagar" */
+  .order-row--total .order-row-label,
+  .order-row--total .order-row-value {
+    font-size: clamp(20px, 3.5vw, 35px);
+  }
+
+  /* Classe espec√≠fica para destacar ainda mais o Total a pagar no bottom sheet */
+  .order-total-highlighted .order-row-label,
+  .order-total-highlighted .order-row-value {
+    font-size: clamp(20px, 3.5vw, 35px) !important;
+  }
+
+  .ordem-obs-section {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: clamp(6px, 0.8vw, 9px);
+    margin-bottom: clamp(6px, 0.8vw, 9px);
+  }
+
+  /* Font-size para texto na ordem de venda (‚â§905px) */
+  .order-summary-content .order-row-label,
+  .order-summary-content .order-row-value {
+    font-size: clamp(12px, 1.8vw, 18px);
+  }
+
+  .order-obs-view .order-obs-header,
+  .order-obs-view .order-obs-tab,
+  .order-obs-view .order-obs-panel,
+  .order-obs-view .order-desc-panel {
+    font-size: clamp(12px, 1.8vw, 18px);
+  }
+
+  .obs-textarea,
+  .order-desc-input {
+    font-size: clamp(12px, 1.8vw, 18px);
+  }
 }
 
 @media (max-width: 768px) {
@@ -754,7 +812,7 @@
     align-items: center;
   }
 
-  /* Quando o JS adiciona .visible ó sobe e expande verticalmente */
+  /* Quando o JS adiciona .visible ÔøΩ sobe e expande verticalmente */
   .footer-amount-row .payment-status-element.visible {
     max-height: 60px;
     opacity: 1;
@@ -762,7 +820,7 @@
     transform: translateY(0);
   }
 
-  /* Conte˙do do status (Ìcone + texto) centralizado */
+  /* ConteÔøΩdo do status (ÔøΩcone + texto) centralizado */
   .footer-amount-row .payment-status-element .status-text {
     align-items: center;
   }

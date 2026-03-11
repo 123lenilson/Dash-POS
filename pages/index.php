@@ -418,7 +418,7 @@
                     <div class="order-total-divider"></div>
 
                     <!-- Linha: Total a pagar — destacada -->
-                    <div class="order-row order-row--total">
+                    <div class="order-row order-row--total order-total-highlighted">
                       <span class="order-row-label">Total a pagar</span>
                       <span class="order-row-value" id="summaryTotalPagar">Kz 0,00</span>
                     </div>

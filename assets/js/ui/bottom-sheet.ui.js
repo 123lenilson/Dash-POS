@@ -239,7 +239,87 @@ function initBottomSheetSystem() {
       var ordemPanel = document.createElement('div');
       ordemPanel.className = 'cart-sheet-tab-panel cart-sheet-tab-panel-ordem';
       ordemPanel.setAttribute('hidden', '');
-      ordemPanel.innerHTML = '<div class="cart-sheet-ordem-placeholder">Ordem de Venda (em breve)</div>';
+      
+      // Contentor pai: stacked verticalmente
+      var ordemContainer = document.createElement('div');
+      ordemContainer.className = 'ordem-sheet-container';
+      
+      // Contentor 1: Resumo da Ordem
+      var summarySection = document.createElement('div');
+      summarySection.className = 'ordem-summary-section';
+      summarySection.innerHTML = `
+        <div class="order-summary-content">
+          <div class="order-row">
+            <span class="order-row-label">Total ilíquido</span>
+            <span class="order-row-value" id="summaryNetTotalSheet">Kz 0,00</span>
+          </div>
+          <div class="order-row">
+            <span class="order-row-label">Total impostos</span>
+            <span class="order-row-value order-row-value--tax" id="summaryTaxTotalSheet">Kz 0,00</span>
+          </div>
+          <div class="order-row">
+            <span class="order-row-label">Retenção</span>
+            <span class="order-row-value order-row-value--retention" id="summaryRetentionSheet">Kz 0,00</span>
+          </div>
+          <div class="order-total-divider"></div>
+          <div class="order-row order-row--total">
+            <span class="order-row-label">Total a pagar</span>
+            <span class="order-row-value" id="summaryTotalPagarSheet">Kz 0,00</span>
+          </div>
+        </div>
+      `;
+      ordemContainer.appendChild(summarySection);
+      
+      // Contentor 2: OBS | Desc
+      var obsSection = document.createElement('div');
+      obsSection.className = 'ordem-obs-section';
+      obsSection.innerHTML = `
+        <div class="order-obs-view">
+          <div class="order-obs-header">
+            <div class="order-obs-tabs">
+              <button type="button" class="order-obs-tab active" aria-selected="true">Observação</button>
+              <button type="button" class="order-obs-tab" aria-selected="false">Desc.</button>
+            </div>
+            <button class="obs-back-btn" type="button">
+              <i class="fa-solid fa-arrow-left"></i> Voltar
+            </button>
+          </div>
+          <div class="order-obs-body-wrapper">
+            <div class="order-obs-inner-track">
+              <div class="order-obs-panel">
+                <div class="order-obs-content">
+                  <textarea
+                    class="obs-textarea"
+                    placeholder="Adicione uma observação ao pedido..."
+                    rows="4"
+                  ></textarea>
+                  <button class="obs-submit-btn" type="button">
+                    <i class="fa-solid fa-check"></i> Confirmar
+                  </button>
+                </div>
+              </div>
+              <div class="order-desc-panel">
+                <div class="order-desc-content">
+                  <label class="order-desc-label" for="orderDiscountInputSheet">Desconto (valor ou %)</label>
+                  <input
+                    type="text"
+                    id="orderDiscountInputSheet"
+                    class="order-desc-input"
+                    placeholder="Ex: 500 ou 10%"
+                    inputmode="decimal"
+                  />
+                  <button class="order-desc-apply-btn" type="button">
+                    <i class="fa-solid fa-percent"></i> Aplicar desconto
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      ordemContainer.appendChild(obsSection);
+      
+      ordemPanel.appendChild(ordemContainer);
       sheetBody.appendChild(ordemPanel);
 
       tabBar.querySelectorAll('.cart-sheet-tab').forEach(function (btn) {
