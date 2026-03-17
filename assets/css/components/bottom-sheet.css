@@ -176,6 +176,10 @@
   pointer-events: none;
 }
 
+.bottom-sheet.bottom-sheet-client {
+  background: #F1F3F5;
+}
+
 .bottom-sheet.active {
   visibility: visible;
   pointer-events: auto;

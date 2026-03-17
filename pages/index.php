@@ -136,7 +136,7 @@
                 <div class="client-card-content">
                   <div class="client-card-name">Consumidor Final</div>
                   <div class="client-card-details">
-                    <span>Endereço: N/A</span> | <span>Telefone: N/A</span> | <span>NIF: N/A</span>
+                    <span><i class="fa-solid fa-location-dot"></i> N/A</span> | <span><i class="fa-solid fa-phone"></i> N/A</span> | <span><i class="fa-solid fa-file-text"></i> N/A</span>
                   </div>
                 </div>
                 <div class="client-card-indicator">
@@ -200,7 +200,7 @@
                 />
 
                 <button type="submit" class="client-form-submit">
-                  Salvar Cliente como novo
+                  Salvar Cliente
                 </button>
               </form>
             </div>

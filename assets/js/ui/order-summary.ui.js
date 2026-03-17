@@ -86,6 +86,14 @@ function initOrderSummarySlider() {
   window.updateOrderSummaryDescTabState = updateDescTabBlockState;
   updateDescTabBlockState();
 
+  // Atualizar também o bottom sheet se estiver aberto quando o tipo de documento muda
+  window.updateOrderSummaryDescTabStateWithSheet = function() {
+    updateDescTabBlockState();
+    if (typeof window.currentSheetOrdemContainer !== 'undefined' && window.currentSheetOrdemContainer) {
+      updateDescTabBlockStateInSheetContainer(window.currentSheetOrdemContainer);
+    }
+  };
+
   // Toggle to OBS view (como em leia.txt); ao abrir, mostrar sempre a aba Observação
   obsToggleBtn.addEventListener('click', function () {
     setObsTab('obs');
@@ -217,8 +225,147 @@ function getOrderObservation() {
   return '';
 }
 
+/**
+ * Atualiza estado de bloqueio da aba Desc dentro de um ordemContainer específico
+ */
+function updateDescTabBlockStateInSheetContainer(ordemContainer) {
+  if (!ordemContainer) return;
+
+  const obsTabDesc = ordemContainer.querySelector('.order-obs-tab:nth-child(2)');
+  const innerSlider = ordemContainer.querySelector('.order-obs-inner-track');
+  if (!obsTabDesc) return;
+
+  const tipo = (typeof getTipoDocumentoAtual === 'function') ? getTipoDocumentoAtual() : tipoDocumentoAtual;
+  const blockDesc = tipo === 'factura-proforma' || tipo === 'factura' || tipo === 'orcamento';
+  obsTabDesc.classList.toggle('disabled', blockDesc);
+  obsTabDesc.setAttribute('aria-disabled', blockDesc ? 'true' : 'false');
+  
+  // Cadeado: só inserir no DOM quando bloqueado; remover quando Factura-Recibo
+  const lockEl = obsTabDesc.querySelector('.obs-tab-lock-icon');
+  if (blockDesc) {
+    if (!lockEl) {
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid fa-lock obs-tab-lock-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.style.marginLeft = '4px';
+      icon.style.fontSize = '10px';
+      obsTabDesc.appendChild(icon);
+    }
+  } else {
+    if (lockEl) lockEl.remove();
+  }
+  
+  // Se DESC está bloqueado e está visível, voltar para OBS
+  if (blockDesc && obsTabDesc.classList.contains('active') && innerSlider) {
+    innerSlider.style.transform = 'translateX(0px)';
+    obsTabDesc.classList.remove('active');
+    obsTabDesc.setAttribute('aria-selected', 'false');
+    const obsTabObservacao = ordemContainer.querySelector('.order-obs-tab:nth-child(1)');
+    if (obsTabObservacao) {
+      obsTabObservacao.classList.add('active');
+      obsTabObservacao.setAttribute('aria-selected', 'true');
+    }
+  }
+}
+
+/**
+ * Inicializa os listeners da área OBS|Desc dentro do Bottom Sheet (mobile)
+ * Recebe o contentor raiz (ordemContainer) e liga todos os listeners aos elementos dentro dele
+ */
+function initOrderSummaryInSheet(ordemContainer) {
+  if (!ordemContainer) {
+    console.warn('Order summary sheet: container not provided');
+    return;
+  }
+
+  // Tabs OBS | Desc
+  const obsTabObservacao = ordemContainer.querySelector('.order-obs-tab:nth-child(1)');
+  const obsTabDesc = ordemContainer.querySelector('.order-obs-tab:nth-child(2)');
+  const innerSlider = ordemContainer.querySelector('.order-obs-inner-track');
+  const textarea = ordemContainer.querySelector('.obs-textarea');
+  const obsSubmitBtn = ordemContainer.querySelector('.obs-submit-btn');
+  const discountInput = ordemContainer.querySelector('.order-desc-input');
+  const discountApplyBtn = ordemContainer.querySelector('.order-desc-apply-btn');
+  const bodyWrapper = innerSlider ? innerSlider.parentElement : null;
+
+  if (!obsTabObservacao || !obsTabDesc || !innerSlider) {
+    console.warn('Order summary sheet: required elements not found');
+    return;
+  }
+
+  // Guardar referência global ao contentor atual do sheet para uso em updateOrderSummaryDescTabState
+  window.currentSheetOrdemContainer = ordemContainer;
+
+  function setObsTab(panel) {
+    if (panel === 'desc') {
+      const offsetPx = bodyWrapper.offsetWidth;
+      innerSlider.style.transform = 'translateX(-' + offsetPx + 'px)';
+      obsTabObservacao.classList.remove('active');
+      obsTabObservacao.setAttribute('aria-selected', 'false');
+      obsTabDesc.classList.add('active');
+      obsTabDesc.setAttribute('aria-selected', 'true');
+      if (discountInput) {
+        setTimeout(function () {
+          discountInput.focus();
+        }, 350);
+      }
+    } else {
+      innerSlider.style.transform = 'translateX(0px)';
+      obsTabObservacao.classList.add('active');
+      obsTabObservacao.setAttribute('aria-selected', 'true');
+      obsTabDesc.classList.remove('active');
+      obsTabDesc.setAttribute('aria-selected', 'false');
+    }
+  }
+
+  // Atualizar estado de bloqueio da aba Desc (baseado no tipo de documento)
+  updateDescTabBlockStateInSheetContainer(ordemContainer);
+
+  // Tab Observação
+  obsTabObservacao.addEventListener('click', function () {
+    setObsTab('obs');
+  });
+
+  // Tab Desc
+  obsTabDesc.addEventListener('click', function () {
+    if (obsTabDesc.classList.contains('disabled')) return;
+    setObsTab('desc');
+  });
+
+  // Submit observation
+  if (obsSubmitBtn && textarea) {
+    obsSubmitBtn.addEventListener('click', function () {
+      const observation = textarea.value.trim();
+      window.orderObservation = observation;
+      console.log('📝 Observação salva (sheet):', observation);
+      obsSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo!';
+      obsSubmitBtn.style.background = '#4caf50';
+      setTimeout(function () {
+        obsSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar';
+        obsSubmitBtn.style.background = '';
+      }, 1500);
+    });
+  }
+
+  // Apply discount
+  if (discountApplyBtn && discountInput) {
+    discountApplyBtn.addEventListener('click', function () {
+      const value = parseFloat((discountInput.value || '').replace(/\s/g, '').replace(',', '.')) || 0;
+      window.orderDiscountValue = value;
+      console.log('💰 Desconto aplicado (sheet):', value);
+      if (typeof showAlert === 'function') {
+        showAlert('info', 'Desconto', value ? 'Valor de desconto definido: ' + currency.format(value) : 'Introduza um valor.', 3000);
+      }
+    });
+  }
+
+  console.log('✅ Order Summary Sheet Listeners initialized');
+}
+
 // Expose functions globally
 window.updateOrderSummaryFooter = updateOrderSummaryFooter;
 window.getOrderObservation = getOrderObservation;
 window.initOrderSummarySlider = initOrderSummarySlider;
+window.initOrderSummaryInSheet = initOrderSummaryInSheet;
+window.updateDescTabBlockStateInSheetContainer = updateDescTabBlockStateInSheetContainer;
 

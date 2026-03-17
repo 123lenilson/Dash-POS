@@ -21,6 +21,11 @@
     grid-template-columns: 1fr !important;
     padding: 0 var(--space-md) var(--space-xl);
   }
+  .product-grid .card { margin:0; }
+
+  .card-expanded-area .inputs-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Bot�o menu mobile - base (escondido por defeito) */
@@ -615,6 +620,10 @@
   .client-card-details {
     font-size: var(--font-sm);
   }
+  
+  .client-card-details i {
+    font-size: calc(var(--font-sm) - 2px);
+  }
   .client-search-input {
     font-size: var(--font-base);
   }
@@ -643,50 +652,29 @@
     font-size: var(--font-base);
   }
 
-  /* Ordem de Venda: Contentores no Bottom Sheet (≤905px) */
-  .ordem-sheet-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .ordem-summary-section {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: clamp(6px, 0.8vw, 9px);
-    margin-bottom: clamp(6px, 0.8vw, 9px);
-  }
-
   .order-summary-content {
     padding-left: clamp(8px, 2vw, 16px);
     padding-right: clamp(8px, 2vw, 16px);
+    padding-top: clamp(16px, 2vw, 22px);
+    padding-bottom: clamp(16px, 2vw, 22px);
   }
 
   /* Font-size aumentado para a linha "Total a pagar" */
   .order-row--total .order-row-label,
   .order-row--total .order-row-value {
-    font-size: clamp(20px, 3.5vw, 35px);
+    font-size: clamp(20px, 3.5vw, 22px);
   }
 
   /* Classe específica para destacar ainda mais o Total a pagar no bottom sheet */
   .order-total-highlighted .order-row-label,
   .order-total-highlighted .order-row-value {
-    font-size: clamp(20px, 3.5vw, 35px) !important;
-  }
-
-  .ordem-obs-section {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: clamp(6px, 0.8vw, 9px);
-    margin-bottom: clamp(6px, 0.8vw, 9px);
+    font-size: clamp(20px, 3.5vw, 22px) !important;
   }
 
   /* Font-size para texto na ordem de venda (≤905px) */
   .order-summary-content .order-row-label,
   .order-summary-content .order-row-value {
-    font-size: clamp(12px, 1.8vw, 18px);
+    font-size: clamp(16px, 2.5vw, 22px);
   }
 
   .order-obs-view .order-obs-header,
@@ -696,9 +684,92 @@
     font-size: clamp(12px, 1.8vw, 18px);
   }
 
+  .order-obs-tab {
+    padding-top: clamp(8px, 1.2vw, 12px) !important;
+    padding-bottom: clamp(8px, 1.2vw, 12px) !important;
+  }
+
+  .obs-submit-btn,
+  .order-desc-apply-btn {
+    padding: clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px) !important;
+    font-size: clamp(16px, 2.5vw, 20px) !important;
+  }
+
   .obs-textarea,
   .order-desc-input {
     font-size: clamp(12px, 1.8vw, 18px);
+  }
+
+  /* ─── ORDEM DE VENDA + OBS|DESC: 50/50 no Bottom Sheet ≤905px ─── */
+
+  /* Painel ordem: flex column, ocupa todo o espaço cedido pelo pai */
+  .cart-sheet-tab-panel-ordem {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* Container pai: flex column, cresce para preencher o painel */
+  .ordem-sheet-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 0;
+  }
+
+  /* 1ª metade — Ordem de Venda: exactamente 50% da altura */
+  .ordem-summary-section {
+    flex: 0 0 50%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 2ª metade — OBS | Desc: exactamente os outros 50% */
+  .ordem-obs-section {
+    flex: 0 0 50%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid var(--gray-200, #e5e7eb);
+    padding-top: var(--space-sm);
+  }
+
+  /* OBS|Desc: order-obs-view ocupa largura total dentro da secção */
+  .ordem-obs-section .order-obs-view {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* OBS|Desc: esconder botão Voltar */
+  .ordem-obs-section .obs-back-btn {
+    display: none !important;
+  }
+
+  /* OBS|Desc: header em linha só com as tabs */
+  .ordem-obs-section .order-obs-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    padding-bottom: var(--space-xs);
+    gap: 0;
+  }
+
+  /* OBS|Desc: tabs a 100% da largura */
+  .ordem-obs-section .order-obs-tabs {
+    width: 100%;
   }
 }
 
@@ -734,15 +805,34 @@
   }
 
   .client-card {
-    padding: var(--space-sm) var(--space-md);
+    padding: clamp(14px, 2vw, 26px) var(--space-lg);
   }
 
   .client-card-name {
-    font-size: var(--font-sm);
+    font-size: clamp(14px, 1.8vw, 18px);
   }
 
   .client-card-details {
-    font-size: var(--font-xs);
+    font-size: clamp(12px, 1.5vw, 15px);
+  }
+  
+  .client-card-details i {
+    font-size: calc(var(--font-xs) - 2px);
+  }
+
+  .client-search-input,
+  .client-form-input {
+    font-size: clamp(14px, 1.8vw, 18px);
+  }
+
+  .client-search-input::placeholder,
+  .client-form-input::placeholder {
+    font-size: clamp(12px, 1.5vw, 15px);
+  }
+
+  .client-form-submit {
+    padding: clamp(14px, 2vw, 26px) var(--space-lg);
+    font-size: clamp(14px, 1.8vw, 18px);
   }
 
   .section-title {

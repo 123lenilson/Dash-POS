@@ -31,6 +31,14 @@ function initBottomSheetSystem() {
   function openBottomSheet(title, contentHTML, panelType) {
     currentPanel = panelType;
     if (sheetTitle) sheetTitle.textContent = title;
+    
+    // Adicionar classe específica para o bottom sheet de clientes
+    if (panelType === 'client') {
+      sheet.classList.add('bottom-sheet-client');
+    } else {
+      sheet.classList.remove('bottom-sheet-client');
+    }
+    
     if (panelType === 'client') {
       sheetBody.innerHTML = '';
       var panelBody = document.querySelector('#clientePanelSlider .panel-body-slider');
@@ -74,9 +82,9 @@ function initBottomSheetSystem() {
               return '<div class="client-card" data-client-id="' + c.idcliente + '">' +
                 '<div class="client-card-content"><div class="client-card-name">' + esc(c.nome) + '</div>' +
                 '<div class="client-card-details">' +
-                '<span>Endereço: ' + esc(c.morada || 'N/A') + '</span> | ' +
-                '<span>Telefone: ' + esc(c.telefone || 'N/A') + '</span> | ' +
-                '<span>NIF: ' + esc(c.nif || 'N/A') + '</span>' +
+                '<span><i class="fa-solid fa-location-dot"></i> ' + esc(c.morada || 'N/A') + '</span> | ' +
+                '<span><i class="fa-solid fa-phone"></i> ' + esc(c.telefone || 'N/A') + '</span> | ' +
+                '<span><i class="fa-solid fa-file-text"></i> ' + esc(c.nif || 'N/A') + '</span>' +
                 '</div></div></div>';
             }).join('');
             listPanel.querySelectorAll('.client-card').forEach(function (card) {
@@ -322,6 +330,11 @@ function initBottomSheetSystem() {
       ordemPanel.appendChild(ordemContainer);
       sheetBody.appendChild(ordemPanel);
 
+      // Inicializa os listeners da área OBS|Desc dentro do sheet (mobile)
+      if (typeof window.initOrderSummaryInSheet === 'function') {
+        window.initOrderSummaryInSheet(ordemContainer);
+      }
+
       tabBar.querySelectorAll('.cart-sheet-tab').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var tab = this.getAttribute('data-cart-tab');
@@ -361,6 +374,11 @@ function initBottomSheetSystem() {
     var panelType = currentPanel;
     currentPanel = null;
     sheet.classList.add('closing');
+
+    // Limpar referência ao contentor do sheet quando fechado
+    if (typeof window !== 'undefined') {
+      window.currentSheetOrdemContainer = null;
+    }
 
     var _closeDone = false;
     var _fallbackTimer = null;

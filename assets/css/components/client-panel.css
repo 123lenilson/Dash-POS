@@ -9,7 +9,7 @@
   width: 400px;
   min-width: 400px;
   height: 100%;
-  background: var(--card);
+  background: #F1F3F5;
   border-left: 1px solid var(--line);
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -36,7 +36,7 @@
   justify-content: space-between;
   padding: 6px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: var(--card);
+  background: #F1F3F5;
   flex-shrink: 0;
 }
 
@@ -145,17 +145,22 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: #f5f5f5;
+  background: #FFFFFF;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   gap: 10px;
+  border: 1px solid #E5E7EB;
 }
 
 .client-card:hover {
   background: #ebebeb;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.client-card.active {
+  border: 1px solid #000000;
 }
 
 .client-card-content {
@@ -173,20 +178,38 @@
 }
 
 .client-card-details {
-  font-size: 9.5px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--gray-500);
   line-height: 1.4;
   font-weight: 400;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
 }
 
 .client-card-details span {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  vertical-align: middle;
+}
+
+.client-card-details i {
+  font-size: calc(var(--font-sm) - 2px);
+  color: #CBCBCB;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .client-card-indicator {
   flex-shrink: 0;
-  font-size: 17px;
-  color: #f97316;
+  font-size: var(--font-lg);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,29 +292,25 @@
 }
 
 .client-form-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
   width: 100%;
-  padding: 10px 16px;
-  background: var(--color-primary);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--color-selection);
   border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-selection);
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 4px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
 }
 
 .client-form-submit:hover {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--color-primary-shadow);
-}
-
-.client-form-submit:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px var(--color-primary-shadow);
+  opacity: 0.9;
 }
 
 /* LISTA DE CLIENTES */

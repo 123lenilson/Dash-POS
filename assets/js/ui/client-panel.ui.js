@@ -66,11 +66,11 @@ function _createClientCardHTML(client) {
             <div class="client-card-content">
                 <div class="client-card-name">${esc(client.nome)}</div>
                 <div class="client-card-details">
-                    ${client.morada ? `<span>Endereço: ${esc(client.morada)}</span>` : '<span>Endereço: N/A</span>'}
+                    ${client.morada ? `<span><i class="fa-solid fa-location-dot"></i> ${esc(client.morada)}</span>` : '<span><i class="fa-solid fa-location-dot"></i> N/A</span>'}
                     |
-                    ${client.telefone ? `<span>Telefone: ${esc(client.telefone)}</span>` : '<span>Telefone: N/A</span>'}
+                    ${client.telefone ? `<span><i class="fa-solid fa-phone"></i> ${esc(client.telefone)}</span>` : '<span><i class="fa-solid fa-phone"></i> N/A</span>'}
                     |
-                    ${client.nif ? `<span>NIF: ${esc(client.nif)}</span>` : '<span>NIF: N/A</span>'}
+                    ${client.nif ? `<span><i class="fa-solid fa-file-text"></i> ${esc(client.nif)}</span>` : '<span><i class="fa-solid fa-file-text"></i> N/A</span>'}
                 </div>
             </div>
         </div>
@@ -98,11 +98,11 @@ function updateSelectedClientCard(client) {
         <div class="client-card-content">
             <div class="client-card-name">${esc(client.nome)}</div>
             <div class="client-card-details">
-                ${client.morada ? `<span>Endereço: ${esc(client.morada)}</span>` : '<span>Endereço: N/A</span>'}
+                ${client.morada ? `<span><i class="fa-solid fa-location-dot"></i> ${esc(client.morada)}</span>` : '<span><i class="fa-solid fa-location-dot"></i> N/A</span>'}
                 |
-                ${client.telefone ? `<span>Telefone: ${esc(client.telefone)}</span>` : '<span>Telefone: N/A</span>'}
+                ${client.telefone ? `<span><i class="fa-solid fa-phone"></i> ${esc(client.telefone)}</span>` : '<span><i class="fa-solid fa-phone"></i> N/A</span>'}
                 |
-                ${client.nif ? `<span>NIF: ${esc(client.nif)}</span>` : '<span>NIF: N/A</span>'}
+                ${client.nif ? `<span><i class="fa-solid fa-file-text"></i> ${esc(client.nif)}</span>` : '<span><i class="fa-solid fa-file-text"></i> N/A</span>'}
             </div>
         </div>
         <div class="client-card-indicator">
