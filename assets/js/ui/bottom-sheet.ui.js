@@ -162,7 +162,9 @@ function initBottomSheetSystem() {
             if (typeof window.updateOrderSummaryDescTabState === 'function') window.updateOrderSummaryDescTabState();
             if (typeof updateCartFooterLockIcons === 'function') updateCartFooterLockIcons(invoiceType);
 
-            setTimeout(function () { closeBottomSheet(); }, 250);
+            if (invoiceType !== 'factura-recibo') {
+              setTimeout(function () { closeBottomSheet(); }, 250);
+            }
           });
         });
 
@@ -189,6 +191,8 @@ function initBottomSheetSystem() {
             this.classList.add('active');
 
             if (typeof updateInvoiceTypeDisplay === 'function') updateInvoiceTypeDisplay(tipoDocumentoAtual);
+
+            setTimeout(function () { closeBottomSheet(); }, 250);
           });
         });
       }
@@ -494,7 +498,7 @@ function initBottomSheetSystem() {
       // Garantir que os botões de fechar que vieram do painel desktop
       // também fechem o bottom sheet (em vez de apenas o painel slider).
       sheetBody.querySelectorAll(
-        '.panel-close-slider, .client-panel-close-btn'
+        '.panel-close-slider, .client-panel-close-btn, .cart-sheet-back-btn'
       ).forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -515,6 +519,13 @@ function initBottomSheetSystem() {
 
     if (panelType === 'doctype') {
       /* Handlers já ligados ao clone em openBottomSheet — nada a fazer aqui. */
+      var backBtn = sheetBody.querySelector('.cart-sheet-back-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeBottomSheet();
+        });
+      }
     }
   }
 

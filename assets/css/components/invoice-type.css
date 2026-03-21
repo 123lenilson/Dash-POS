@@ -38,14 +38,14 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  font-size: 12px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text);
 }
 
 .invoice-type-header i {
   color: var(--accent);
-  font-size: 14px;
+  font-size: var(--font-lg);
 }
 
 .invoice-type-options {
@@ -108,7 +108,7 @@
 }
 
 .radio-label {
-  font-size: 11px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--text);
   user-select: none;
@@ -194,7 +194,7 @@
 }
 
 .toggle-label {
-  font-size: clamp(0.5rem, 0.25vw + 0.4rem, 0.75rem);
+  font-size: var(--font-base);
   font-weight: 500;
   color: #555555;
   order: 1;
@@ -294,7 +294,7 @@
 }
 
 .format-label {
-  font-size: clamp(0.45rem, 0.2vw + 0.35rem, 0.65rem);
+  font-size: var(--font-sm);
   font-weight: 500;
   color: #777777;
   order: 1;
@@ -374,7 +374,7 @@
 }
 
 .doc-type-item i:first-child { font-size: 24px; color: #666; }
-.doc-type-item span { flex: 1; font-size: 14px; font-weight: 600; color: #111; }
+.doc-type-item span { flex: 1; font-size: var(--font-md); font-weight: 600; color: #111; }
 .doc-type-check { font-size: 18px; color: #000000; opacity: 0; transition: opacity 0.2s ease; }
 .doc-type-item.active .doc-type-check { opacity: 1; }
 

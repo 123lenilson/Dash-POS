@@ -123,6 +123,15 @@
             </button>
           </div>
           <div class="panel-body-slider">
+            <!-- CABEÇALHO ESTÁTICO PARA O BOTTOM SHEET -->
+            <div class="cart-header sheet-only-header" style="display: none;">
+              <div class="cart-header-title" style="justify-content: flex-start; gap: 12px; width: 100%;">
+                <button type="button" class="cart-sheet-back-btn" aria-label="Voltar">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <span class="bottom-sheet-title" style="font-size: var(--font-lg); font-weight: 600; color: #334155; margin: 0;">Selecionar Cliente</span>
+              </div>
+            </div>
 
             <!-- SEÇÃO 1: CLIENTE SELECIONADO -->
             <div class="client-section">
@@ -248,6 +257,15 @@
           <!-- Painel de Seleção de Tipo de Fatura (Slider da esquerda) -->
           <div class="doc-type-panel-slider" id="docTypePanelSlider">
             <div class="invoice-type-options-panel">
+              <!-- CABEÇALHO ESTÁTICO PARA O BOTTOM SHEET -->
+              <div class="cart-header sheet-only-header" style="display: none;">
+                <div class="cart-header-title" style="justify-content: flex-start; gap: 12px; width: 100%;">
+                  <button type="button" class="cart-sheet-back-btn" aria-label="Voltar">
+                    <i class="fa-solid fa-arrow-left"></i>
+                  </button>
+                  <span class="bottom-sheet-title" style="font-size: var(--font-lg); font-weight: 600; color: #334155; margin: 0;">Tipo de Factura</span>
+                </div>
+              </div>
 
               <!-- Opção 1: Factura-Recibo (padrão, com sub-toggle de formato) -->
               <div class="invoice-option-group">

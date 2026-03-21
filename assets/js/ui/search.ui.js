@@ -239,24 +239,92 @@ clearSearch.addEventListener('click', () => {
 
 /* ======= HEADER SEARCH MOBILE (≤905px): expandir/colapsar ao clicar no ícone ======= */
 (function setupHeaderSearchToggle() {
+
+  /* ── Detecta se o searchBarInner está no slot (modo mobile) ── */
   function isHeaderSearchMode() {
     var inner = document.getElementById('searchBarInner');
-    return inner && inner.parentElement && inner.parentElement.id === 'headerSearchSlot';
+    return inner && inner.parentElement &&
+           inner.parentElement.id === 'headerSearchSlot';
   }
+
+  /* ── Detecta o intervalo ≤540px ── */
+  function isTinyMobile() {
+    return window.innerWidth <= 540;
+  }
+
+  /* ── Cria o botão ← UMA única vez e injeta no slot ── */
+  var backBtn = document.createElement('button');
+  backBtn.className = 'search-back-btn';
+  backBtn.setAttribute('aria-label', 'Fechar pesquisa');
+  backBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>';
+  var slot = document.getElementById('headerSearchSlot');
+  if (slot) {
+    slot.insertBefore(backBtn, slot.firstChild);
+  }
+
+  /* ── Abre a pesquisa (só relevante em ≤540px) ── */
+  function openSearch() {
+    var wrapper = document.querySelector('.search-wrapper');
+    if (!wrapper) return;
+    wrapper.classList.remove('search-wrapper--collapsed');
+    wrapper.classList.add('search-wrapper--expanded');
+    if (isTinyMobile()) {
+      var header = document.querySelector('.main-header');
+      if (header) header.classList.add('search-open');
+    }
+    searchInput.focus();
+  }
+
+  /* ── Fecha a pesquisa ── */
+  function closeSearch() {
+    var wrapper = document.querySelector('.search-wrapper');
+    if (!wrapper) return;
+    wrapper.classList.remove('search-wrapper--expanded');
+    wrapper.classList.add('search-wrapper--collapsed');
+    var header = document.querySelector('.main-header');
+    if (header) header.classList.remove('search-open');
+  }
+
+  /* ── Listener global de cliques ── */
   document.addEventListener('click', function (e) {
     if (!isHeaderSearchMode()) return;
     var wrapper = document.querySelector('.search-wrapper');
     if (!wrapper) return;
-    var slot = document.getElementById('headerSearchSlot');
-    if (e.target.closest('#headerSearchSlot') && (e.target.closest('.search-icon-left') || (wrapper.classList.contains('search-wrapper--collapsed') && e.target.closest('.search-wrapper')))) {
-      wrapper.classList.remove('search-wrapper--collapsed');
-      wrapper.classList.add('search-wrapper--expanded');
-      searchInput.focus();
+
+    /* Em 541px–905px: o input está sempre visível, nenhum toggle necessário */
+    if (!isTinyMobile()) return;
+
+    /* Clique no botão ← → fecha */
+    if (e.target.closest('.search-back-btn')) {
+      closeSearch();
+      e.preventDefault();
+      return;
+    }
+
+    /* Clique na lupa ou no wrapper colapsado → abre */
+    if (
+      e.target.closest('#headerSearchSlot') &&
+      (
+        e.target.closest('.search-icon-left') ||
+        (wrapper.classList.contains('search-wrapper--collapsed') &&
+         e.target.closest('.search-wrapper'))
+      )
+    ) {
+      openSearch();
       e.preventDefault();
     } else if (!e.target.closest('#headerSearchSlot')) {
-      wrapper.classList.remove('search-wrapper--expanded');
-      wrapper.classList.add('search-wrapper--collapsed');
+      /* Clique fora → fecha */
+      closeSearch();
     }
   });
+
+  /* ── Resize: limpa search-open se a janela crescer acima de 540px ── */
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 540) {
+      var header = document.querySelector('.main-header');
+      if (header) header.classList.remove('search-open');
+    }
+  });
+
 })();
 

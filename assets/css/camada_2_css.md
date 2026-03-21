@@ -15,6 +15,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
    Parte do sistema Dash-POS
    ================================================ */
 
+
 #alertContainer {
   position: fixed;
   bottom: var(--space-xl);
@@ -303,7 +304,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
     font-size: 13px;
   }
 }
-```
 
 <!-- ========== FIM: components/alerts.css ========== -->
 
@@ -315,7 +315,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 
 *Nota: Sem alterações de CSS na correção doctype/cart (alterações apenas em bottom-sheet.ui.js; ver camada_2_js.md).*
 
-```css
 /* ================================================
    COMPONENTE: Bottom Sheet
    Ficheiro: assets/css/components/bottom-sheet.css
@@ -494,6 +493,10 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   pointer-events: none;
 }
 
+.bottom-sheet.bottom-sheet-client {
+  background: #F1F3F5;
+}
+
 .bottom-sheet.active {
   visibility: visible;
   pointer-events: auto;
@@ -557,13 +560,38 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   justify-content: center;
   text-align: center;
 }
+.cart-sheet-tab-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.cart-sheet-tab-doc-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1.2;
+}
+.cart-sheet-tab-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.2;
+}
 .cart-sheet-tab:hover {
   color: #333;
+}
+.cart-sheet-tab:hover .cart-sheet-tab-total {
+  color: #000;
 }
 .cart-sheet-tab.active {
   background: #fff;
   color: var(--color-selection, #333);
   box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.cart-sheet-tab.active .cart-sheet-tab-total {
+  color: #000;
 }
 
 .cart-sheet-tab-panel {
@@ -583,6 +611,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .cart-sheet-tab-panel-fatura {
   display: flex;
   flex-direction: column;
+  padding: 0 12px 0; /* sem espaço em baixo: cart-footer colado ao limite do bottom sheet */
 }
 .cart-sheet-tab-panel-fatura #cartContentArea {
   flex: 0 0 80%;
@@ -727,6 +756,11 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   flex-direction: column;
   gap: 14px;
 }
+/* Carrinho no sheet: sem padding em baixo para o cart-footer ficar colado ao limite do bottom sheet */
+.bottom-sheet-body:has(.cart-sheet-tab-panel-fatura) {
+  padding-bottom: 0;
+}
+
 /* Quando o sheet mostra o painel de clientes, o body cede espaço ao wrapper sem padding duplicado */
 .bottom-sheet-body:has(> .bottom-sheet-client-panel-body) {
   padding: 0;
@@ -757,7 +791,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .bottom-sheet-body::-webkit-scrollbar-thumb {
   background: #d0d0d0;
 }
-```
+
 
 <!-- ========== FIM: components/bottom-sheet.css ========== -->
 
@@ -766,8 +800,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 <!-- ========== INÍCIO: components/cart-footer.css ========== -->
 
 ## components/cart-footer.css
-
-```css
 /* ================================================
    COMPONENTE: Cart Footer
    Ficheiro: assets/css/components/cart-footer.css
@@ -833,7 +865,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  padding: 6px 8px;
+  padding: 6px 8px 0;
   gap: 6px;
 }
 
@@ -1816,7 +1848,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
     justify-content: center;
   }
 }
-```
+
 
 <!-- ========== FIM: components/cart-footer.css ========== -->
 
@@ -1825,8 +1857,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 <!-- ========== INÍCIO: components/cart.css ========== -->
 
 ## components/cart.css
-
-```css
 /* ================================================
    COMPONENTE: Cart
    Ficheiro: assets/css/components/cart.css
@@ -1868,6 +1898,22 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+/* Botão Voltar: visível apenas no bottom sheet (estilos em responsive.css @ 905px) */
+.cart-sheet-back-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .btn-clear-cart {
@@ -2287,7 +2333,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .input-field:last-child input:focus {
   border-color: #E5E7EB;
 }
-```
+
 
 <!-- ========== FIM: components/cart.css ========== -->
 
@@ -2296,8 +2342,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 <!-- ========== INÍCIO: components/categories.css ========== -->
 
 ## components/categories.css
-
-```css
 /* ================================================
    COMPONENTE: Categories
    Ficheiro: assets/css/components/categories.css
@@ -2416,7 +2460,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 40px calc(100% - 40px), rgba(0,0,0,0) calc(100% - 20px) 100%);
   -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 40px calc(100% - 40px), rgba(0,0,0,0) calc(100% - 20px) 100%);
 }
-```
+
 
 <!-- ========== FIM: components/categories.css ========== -->
 
@@ -2425,8 +2469,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 <!-- ========== INÍCIO: components/client-panel.css ========== -->
 
 ## components/client-panel.css
-
-```css
 /* ================================================
    COMPONENTE: Client Panel
    Ficheiro: assets/css/components/client-panel.css
@@ -2438,7 +2480,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   width: 400px;
   min-width: 400px;
   height: 100%;
-  background: var(--card);
+  background: #F1F3F5;
   border-left: 1px solid var(--line);
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -2465,7 +2507,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   justify-content: space-between;
   padding: 6px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: var(--card);
+  background: #F1F3F5;
   flex-shrink: 0;
 }
 
@@ -2574,17 +2616,22 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: #f5f5f5;
+  background: #FFFFFF;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   gap: 10px;
+  border: 1px solid #E5E7EB;
 }
 
 .client-card:hover {
   background: #ebebeb;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.client-card.active {
+  border: 1px solid #000000;
 }
 
 .client-card-content {
@@ -2602,20 +2649,38 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 }
 
 .client-card-details {
-  font-size: 9.5px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--gray-500);
   line-height: 1.4;
   font-weight: 400;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
 }
 
 .client-card-details span {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  vertical-align: middle;
+}
+
+.client-card-details i {
+  font-size: calc(var(--font-sm) - 2px);
+  color: #CBCBCB;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .client-card-indicator {
   flex-shrink: 0;
-  font-size: 17px;
-  color: #f97316;
+  font-size: var(--font-lg);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2698,29 +2763,25 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 }
 
 .client-form-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
   width: 100%;
-  padding: 10px 16px;
-  background: var(--color-primary);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--color-selection);
   border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-selection);
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 4px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
 }
 
 .client-form-submit:hover {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--color-primary-shadow);
-}
-
-.client-form-submit:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px var(--color-primary-shadow);
+  opacity: 0.9;
 }
 
 /* LISTA DE CLIENTES */
@@ -2851,17 +2912,13 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .btn-save:hover {
   background: var(--color-primary-hover);
 }
-```
+
 
 <!-- ========== FIM: components/client-panel.css ========== -->
 
 ---
 
 <!-- ========== INÍCIO: components/header.css ========== -->
-
-## components/header.css
-
-```css
 /* ================================================
    COMPONENTE: Header
    Ficheiro: assets/css/components/header.css
@@ -2931,17 +2988,12 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .user-info{ display:flex; flex-direction:column; line-height:1; }
 .user-info strong{ font-size: var(--font-sm); font-weight:600; }
 .user-info span{ font-size: var(--font-xs); color:var(--muted); }
-```
 
 <!-- ========== FIM: components/header.css ========== -->
 
 ---
 
 <!-- ========== INÍCIO: components/invoice-type.css ========== -->
-
-## components/invoice-type.css
-
-```css
 /* ================================================
    COMPONENTE: Invoice Type
    Ficheiro: assets/css/components/invoice-type.css
@@ -3343,17 +3395,13 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
     width: 55%;
   }
 }
-```
+
 
 <!-- ========== FIM: components/invoice-type.css ========== -->
 
 ---
 
 <!-- ========== INÍCIO: components/keypad.css ========== -->
-
-## components/keypad.css
-
-```css
 /* ================================================
    COMPONENTE: Keypad
    Ficheiro: assets/css/components/keypad.css
@@ -3502,7 +3550,7 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 .keypad-exact-btn--inline {
   display: none;
 }
-```
+
 
 <!-- ========== FIM: components/keypad.css ========== -->
 
@@ -3511,8 +3559,6 @@ Este documento consolida todo o código CSS da pasta **components/** (`assets/cs
 <!-- ========== INÍCIO: components/modals.css ========== -->
 
 ## components/modals.css
-
-```css
 /* ================================================
    COMPONENTE: Modals
    Ficheiro: assets/css/components/modals.css
@@ -3608,7 +3654,7 @@ body.overflow-hidden {
 #clearCart.btn.light:active {
   transform: translateY(0);
 }
-```
+
 
 <!-- ========== FIM: components/modals.css ========== -->
 
@@ -3617,8 +3663,6 @@ body.overflow-hidden {
 <!-- ========== INÍCIO: components/payment-methods.css ========== -->
 
 ## components/payment-methods.css
-
-```css
 /* ================================================
    COMPONENTE: Payment Methods
    Ficheiro: assets/css/components/payment-methods.css
@@ -3695,7 +3739,7 @@ body.overflow-hidden {
 .payment-methods {
   display: none;
 }
-```
+
 
 <!-- ========== FIM: components/payment-methods.css ========== -->
 
@@ -3704,8 +3748,6 @@ body.overflow-hidden {
 <!-- ========== INÍCIO: components/product-card.css ========== -->
 
 ## components/product-card.css
-
-```css
 /* ================================================
    COMPONENTE: Product Card
    Ficheiro: assets/css/components/product-card.css
@@ -4003,7 +4045,7 @@ body.overflow-hidden {
   overflow-y: auto;
   overflow-x: hidden;
 }
-```
+
 
 <!-- ========== FIM: components/product-card.css ========== -->
 
@@ -4012,8 +4054,6 @@ body.overflow-hidden {
 <!-- ========== INÍCIO: components/search.css ========== -->
 
 ## components/search.css
-
-```css
 /* ================================================
    COMPONENTE: Search
    Ficheiro: assets/css/components/search.css
@@ -4192,7 +4232,7 @@ body.overflow-hidden {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
-```
+
 
 <!-- ========== FIM: components/search.css ========== -->
 
@@ -4201,8 +4241,6 @@ body.overflow-hidden {
 <!-- ========== INÍCIO: components/skeleton.css ========== -->
 
 ## components/skeleton.css
-
-```css
 /* ================================================
    COMPONENTE: Skeleton
    Ficheiro: assets/css/components/skeleton.css
@@ -4303,7 +4341,6 @@ body.overflow-hidden {
   right: var(--space-xl);
   z-index: 10000;
 }
-```
 
 <!-- ========== FIM: components/skeleton.css ========== -->
 
@@ -4312,8 +4349,6 @@ body.overflow-hidden {
 <!-- ========== INÍCIO: components/toggle-select-painel.css ========== -->
 
 ## components/toggle-select-painel.css
-
-```css
 /* ================================================
    COMPONENTE: Toggle Select Painel
    Botão reutilizável para abrir painéis (ex.: Cliente, Tipo de Factura)
@@ -4459,6 +4494,6 @@ body.overflow-hidden {
 .cart-header .toggle-select-painel > i:last-child {
   font-size: var(--font-base);
 }
-```
+
 
 <!-- ========== FIM: components/toggle-select-painel.css ========== -->

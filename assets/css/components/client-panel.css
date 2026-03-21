@@ -151,6 +151,8 @@
   transition: all 0.2s ease;
   gap: 10px;
   border: 1px solid #E5E7EB;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .client-card:hover {
@@ -168,6 +170,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .client-card-name {
@@ -175,6 +179,10 @@
   font-weight: 700;
   color: #334155;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .client-card-details {
@@ -186,10 +194,16 @@
   flex-wrap: wrap;
   gap: var(--space-xs);
   align-items: center;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .client-card-details span {
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
@@ -204,6 +218,7 @@
   justify-content: center;
   vertical-align: middle;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .client-card-indicator {

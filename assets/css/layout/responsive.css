@@ -184,17 +184,23 @@
 
 @media (max-width: 905px) {
   :root {
-    --font-xs:    clamp(8px,  0.8vw,  10px);
-    --font-sm:    clamp(10px, 0.9vw,  12px);
-    --font-base:  clamp(11px, 1vw,    13px);
-    --font-md:    clamp(12px, 1.1vw,  14px);
-    --font-lg:    clamp(13px, 1.3vw,  16px);
+    --font-xs:    clamp(10px, 2.5vw, 12px);
+    --font-sm:    clamp(12px, 3.0vw, 14px);
+    --font-base:  clamp(13px, 3.4vw, 15px);
+    --font-md:    clamp(14px, 3.7vw, 16px);
+    --font-lg:    clamp(15px, 4.0vw, 18px);
   }
 
   .app-skeleton { grid-template-columns: 1fr; }
   .skeleton-layout-side { display: none; }
   .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
   .skeleton-mobile-wrap { display: block !important; }
+
+  .main-header-right {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+  }
 
   .main-header-right .header-search-slot {
     display: flex;
@@ -204,6 +210,11 @@
     min-width: 0;
     justify-content: flex-end;
   }
+
+  .search-back-btn {
+    display: none !important;
+  }
+
   .main-header-right .date-time {
     display: none;
   }
@@ -216,72 +227,53 @@
   .main-header .header-search-slot .search-wrapper {
     display: flex;
     align-items: center;
-    padding: 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    flex: 0 0 auto;
+    flex: 1;
     min-width: 0;
-    gap: var(--space-sm);
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .search-icon-left {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    border-radius: 50%;
-    background: #E0E0E0;
-    color: #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-lg);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed input,
-  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .clear-btn {
-    width: 0;
-    min-width: 0;
-    overflow: hidden;
-    opacity: 0;
-    padding: 0;
-    margin: 0;
-    border: none;
-    pointer-events: none;
-    position: absolute;
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--collapsed .barcode-toggle-inline {
-    flex-shrink: 0;
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded {
     background: #fff;
     border: 1px solid #d1d5db;
     border-radius: 9999px;
-    padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
     gap: var(--space-sm);
+    box-shadow: var(--shadow);
+    max-width: none;
+  }
+
+  .main-header .header-search-slot .search-wrapper input {
     flex: 1;
-    max-width: 180px;
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .search-icon-left {
-    font-size: var(--font-md);
-    flex-shrink: 0;
-  }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded input {
-    width: 100%;
     min-width: 0;
     opacity: 1;
     position: static;
     pointer-events: auto;
     font-size: var(--font-md);
+    border: none;
+    outline: none;
+    background: transparent;
   }
-  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .barcode-toggle-inline,
-  .main-header .header-search-slot .search-wrapper.search-wrapper--expanded .clear-btn {
+
+  .main-header .header-search-slot .search-wrapper .search-icon-left {
+    font-size: var(--font-md);
+    flex-shrink: 0;
+    color: #9aa0b4;
+    /* Remove o estilo de botão circular que existia no estado collapsed */
+    width: auto;
+    height: auto;
+    min-width: unset;
+    min-height: unset;
+    border-radius: 0;
+    background: transparent;
+    cursor: default;
+  }
+
+  .main-header .header-search-slot .search-wrapper .clear-btn {
     width: auto;
     min-width: 0;
     opacity: 1;
     position: static;
     pointer-events: auto;
+  }
+
+  .main-header .header-search-slot .search-wrapper .barcode-toggle-inline {
+    flex-shrink: 0;
   }
   .sticky-section-home .search-bar-container {
     display: none;
@@ -293,18 +285,8 @@
     border-radius: 9999px;
   }
 
-  .search-icon-left {
-    font-size: var(--font-md);
-  }
-
-  .search-wrapper input {
-    font-size: var(--font-md);
-  }
-
   .barcode-toggle-inline {
-    padding: clamp(3px, 0.3vw, 4px) var(--space-md);
-    gap: var(--space-xs);
-    border-radius: 6px;
+    display: none !important;
   }
 
   .toggle-switch {
@@ -322,12 +304,7 @@
     transform: translateX(12px);
   }
 
-  .toggle-label-short {
-    font-size: var(--font-sm);
-  }
-
   .clear-btn {
-    font-size: var(--font-lg);
     padding: clamp(2px, 0.2vw, 4px) var(--space-xs);
   }
 
@@ -335,16 +312,10 @@
     padding: var(--space-lg) var(--space-lg);
   }
   .invoice-toggle-option {
-    padding: var(--space-md) var(--space-lg);
-  }
-  .toggle-label {
-    font-size: var(--font-lg);
+    padding: clamp(20px, 4vw, 24px) var(--space-lg);
   }
   .format-toggle-option {
-    padding: var(--space-md) var(--space-lg);
-  }
-  .format-label {
-    font-size: var(--font-md);
+    padding: clamp(16px, 2vw, 20px) var(--space-lg);
   }
 
   .footer-amount-row {
@@ -590,7 +561,7 @@
     background: #f1f5f9;
     color: #64748b;
     cursor: pointer;
-    display: flex;
+    display: none !important;
     align-items: center;
     justify-content: center;
     transition: background 0.2s ease, color 0.2s ease;
@@ -601,55 +572,6 @@
   }
   .client-panel-close-btn i {
     font-size: var(--font-lg);
-  }
-
-  /* Painel de selecionar cliente: fontes maiores em mobile/tablet (< 905px) */
-  .panel-header-slider h3 {
-    font-size: var(--font-sm);
-  }
-  .panel-header-slider h3 i {
-    font-size: var(--font-xs);
-  }
-  .section-title {
-    font-size: var(--font-xs);
-    letter-spacing: 0.7px;
-  }
-  .client-card-name {
-    font-size: var(--font-base);
-  }
-  .client-card-details {
-    font-size: var(--font-sm);
-  }
-  
-  .client-card-details i {
-    font-size: calc(var(--font-sm) - 2px);
-  }
-  .client-search-input {
-    font-size: var(--font-base);
-  }
-  .client-search-input::placeholder {
-    font-size: var(--font-base);
-  }
-  .client-card-indicator {
-    font-size: var(--font-lg);
-  }
-  .client-form-input {
-    font-size: var(--font-base);
-  }
-  .client-form-input::placeholder {
-    font-size: var(--font-sm);
-  }
-  .client-form-submit {
-    font-size: var(--font-base);
-  }
-  .client-name {
-    font-size: var(--font-md);
-  }
-  .client-details {
-    font-size: var(--font-base);
-  }
-  .btn-new-client {
-    font-size: var(--font-base);
   }
 
   .order-summary-content {
@@ -773,7 +695,179 @@
   }
 }
 
+@media (max-width: 540px) {
+
+  /* Reverte o wrapper para estado opaco/invisível por defeito */
+  .main-header .header-search-slot .search-wrapper {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    flex: 0 0 auto;
+  }
+
+  /* Estado FECHADO (collapsed): só mostra o ícone de lupa como botão circular */
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--collapsed .search-icon-left {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    background: #E0E0E0;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-lg);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* Estado FECHADO: esconde input e botões */
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--collapsed input,
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--collapsed .clear-btn,
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--collapsed .barcode-toggle-inline {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  /* Estado ABERTO (expanded): input ocupa toda a largura */
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--expanded {
+    flex: 1;
+    max-width: none;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 9999px;
+    padding: var(--space-sm) var(--space-md);
+    box-shadow: var(--shadow);
+  }
+
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--expanded input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    opacity: 1;
+    position: static;
+    pointer-events: auto;
+    font-size: var(--font-md);
+  }
+
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--expanded .clear-btn,
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--expanded .barcode-toggle-inline {
+    width: auto;
+    min-width: 0;
+    opacity: 1;
+    position: static;
+    pointer-events: auto;
+  }
+
+  .main-header .header-search-slot
+  .search-wrapper.search-wrapper--expanded .search-icon-left {
+    width: auto;
+    height: auto;
+    min-width: unset;
+    border-radius: 0;
+    background: transparent;
+    cursor: default;
+  }
+
+  /* Quando search aberta: esconde o utilizador */
+  .main-header.search-open .user {
+    display: none !important;
+    pointer-events: none;
+  }
+
+  /* Quando search abre: esconde o lado esquerdo do header (burger button) */
+  .main-header.search-open .main-header-left {
+    display: none !important;
+    pointer-events: none;
+  }
+
+  /* Quando search abre: o lado direito ocupa o header inteiro */
+  .main-header.search-open .main-header-right {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Quando search abre: o slot ocupa todo o lado direito */
+  .main-header.search-open .header-search-slot {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Quando search abre: o search-bar-inner ocupa o slot todo */
+  .main-header.search-open .header-search-slot .search-bar-inner {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  /* Quando search abre: o wrapper expande sem limite */
+  .main-header.search-open .header-search-slot .search-wrapper {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  /* Botão de voltar ← (injectado via JS) */
+  .search-back-btn {
+    display: none; /* base: escondido */
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #E0E0E0;
+    color: #555;
+    cursor: pointer;
+    font-size: var(--font-lg);
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+
+  .search-back-btn:hover {
+    background: #d1d5db;
+  }
+
+  .main-header.search-open .search-back-btn {
+    display: flex !important; /* só aparece quando search está aberta em ≤540px */
+  }
+
+}
+
 @media (max-width: 768px) {
+  :root {
+    --font-xs:    clamp(10px, 2.8vw, 12px);
+    --font-sm:    clamp(12px, 3.2vw, 14px);
+    --font-base:  clamp(13px, 3.6vw, 15px);
+    --font-md:    clamp(14px, 4.0vw, 16px);
+    --font-lg:    clamp(15px, 4.3vw, 18px);
+  }
+
   #alertContainer {
     bottom: 10px;
     left: 10px;
@@ -808,54 +902,24 @@
     padding: clamp(14px, 2vw, 26px) var(--space-lg);
   }
 
-  .client-card-name {
-    font-size: clamp(14px, 1.8vw, 18px);
-  }
-
-  .client-card-details {
-    font-size: clamp(12px, 1.5vw, 15px);
-  }
-  
-  .client-card-details i {
-    font-size: calc(var(--font-xs) - 2px);
-  }
-
-  .client-search-input,
-  .client-form-input {
-    font-size: clamp(14px, 1.8vw, 18px);
-  }
-
-  .client-search-input::placeholder,
-  .client-form-input::placeholder {
-    font-size: clamp(12px, 1.5vw, 15px);
-  }
-
   .client-form-submit {
     padding: clamp(14px, 2vw, 26px) var(--space-lg);
-    font-size: clamp(14px, 1.8vw, 18px);
   }
 
   .section-title {
-    font-size: clamp(8px, 0.8vw, 10px);
     font-weight: 800;
     letter-spacing: 0.7px;
   }
 
   .client-search-input {
     padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-sm);
     border-radius: 6px !important;
     -webkit-border-radius: 6px !important;
     -moz-border-radius: 6px !important;
   }
 
   .client-search-input::placeholder {
-    font-size: var(--font-sm);
     color: #94a3b8;
-  }
-
-  .client-card-indicator {
-    font-size: var(--font-md);
   }
 
   .client-form {
@@ -864,17 +928,14 @@
 
   .client-form-input {
     padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-sm);
   }
 
   .client-form-input::placeholder {
-    font-size: var(--font-xs);
     color: #94a3b8;
   }
 
   .client-form-submit {
     padding: var(--space-sm) var(--space-lg);
-    font-size: var(--font-sm);
   }
 }
 

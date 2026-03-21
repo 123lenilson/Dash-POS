@@ -1041,6 +1041,7 @@ Este documento consolida todo o código CSS da **raiz** de `assets/css/`, da pas
    Parte do sistema Dash-POS
    ================================================ */
 
+
 :root{
   --bg:#f6f7fb;
   --card:#ffffff;
@@ -1093,7 +1094,7 @@ Este documento consolida todo o código CSS da **raiz** de `assets/css/`, da pas
   --space-lg:   clamp(8px,  1vw,     12px);
   --space-xl:   clamp(10px, 1.2vw,   16px);
 }
-```
+
 
 <!-- ========== FIM: base/variables.css ========== -->
 
@@ -1127,7 +1128,6 @@ body{
 /* scrollbars gerais (onde permitimos) */
 .side::-webkit-scrollbar, .main::-webkit-scrollbar { width:6px; height:6px; }
 .side::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb { background:#e7e7ef; border-radius:6px; }
-```
 
 <!-- ========== FIM: base/reset.css ========== -->
 
@@ -1249,7 +1249,7 @@ body{
 .interface.panel-open .checkout-panel {
   width: 100% !important;
 }
-```
+
 
 <!-- ========== FIM: layout/interface.css ========== -->
 
@@ -1285,9 +1285,14 @@ body{
     grid-template-columns: 1fr !important;
     padding: 0 var(--space-md) var(--space-xl);
   }
+  .product-grid .card { margin:0; }
+
+  .card-expanded-area .inputs-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Botão menu mobile - base (escondido por defeito) */
+/* Bot�o menu mobile - base (escondido por defeito) */
 .main-header .mobile-menu-btn,
 .header .mobile-menu-btn,
 .navbar .mobile-menu-btn {
@@ -1442,6 +1447,14 @@ body{
 }
 
 @media (max-width: 905px) {
+  :root {
+    --font-xs:    clamp(8px,  0.8vw,  10px);
+    --font-sm:    clamp(10px, 0.9vw,  12px);
+    --font-base:  clamp(11px, 1vw,    13px);
+    --font-md:    clamp(12px, 1.1vw,  14px);
+    --font-lg:    clamp(13px, 1.3vw,  16px);
+  }
+
   .app-skeleton { grid-template-columns: 1fr; }
   .skeleton-layout-side { display: none; }
   .skeleton-product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
@@ -1617,6 +1630,7 @@ body{
     gap: 0;
     overflow: hidden;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    position: relative;
   }
   .footer-amount-row .footer-amount-wrapper:focus-within {
     border-color: #000000;
@@ -1629,7 +1643,8 @@ body{
     width: 100%;
     height: auto;
     padding: 0;
-    /* 20pt Word ≈ 26.67px; em mobile mantém grande com clamp */
+    padding-right: clamp(40px, 8vw, 70px);
+    /* 20pt Word ? 26.67px; em mobile mant�m grande com clamp */
     font-size: clamp(20px, 2.5vw, 28px);
     font-weight: 700;
     text-align: center;
@@ -1663,6 +1678,10 @@ body{
     border-radius: 4px;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    right: var(--space-sm);
+    top: 50%;
+    transform: translateY(-50%);
   }
   .keypad-final-row .keypad-exact-btn {
     display: none !important;
@@ -1684,26 +1703,41 @@ body{
     display: none !important;
   }
 
+  .bottom-sheet-body {
+    padding-bottom: var(--space-lg);
+  }
+
+  /* Bottom Sheet: painel de faturacao � altura inteligente (lista ocupa espa�o, rodap� s� o necess�rio) */
   .cart-sheet-tab-panel-fatura {
-    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0 12px 0;
+    padding-bottom: 0;
     box-sizing: border-box;
   }
   .cart-sheet-tab-panel-fatura #cartContentArea {
-    flex: 0 0 80%;
+    flex: 1 1 auto;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
   }
   .cart-sheet-tab-panel-fatura .cart-footer {
-    flex: 0 0 20%;
-    min-height: 0;
+    flex: 0 0 auto;
+    flex-grow: 0;
     flex-shrink: 0;
+    flex-basis: auto;
+    min-height: 0;
     overflow: hidden;
     overflow-y: hidden;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    padding: var(--space-xs) 0 0;
+    padding: var(--space-xs) 0 var(--space-sm);
     gap: clamp(3px, 0.3vw, 4px);
     border-top: 1px solid var(--line, #e5e7eb);
   }
@@ -1711,6 +1745,63 @@ body{
   .cart-sheet-tab-panel-fatura .cart-footer .footer-amount-row {
     flex-shrink: 0;
     min-height: 0;
+  }
+  .bottom-sheet-body:has(.cart-sheet-tab-panel-fatura) {
+    padding-bottom: 0;
+    min-height: 0;
+  }
+
+  /* Bot�o Voltar no header do carrinho (bottom sheet): vis�vel e estilizado em ?905px */
+  .bottom-sheet .cart-header .cart-sheet-back-btn {
+    display: flex;
+    background: #ffffff;
+    color: var(--gray-700, #374151);
+    position: relative;
+    overflow: hidden;
+    outline: none;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:hover {
+    background: var(--gray-200, #e5e7eb);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus,
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus-visible {
+    background: var(--gray-200, #e5e7eb);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:focus-visible {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:active {
+    background: var(--gray-300, #d1d5db);
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn i {
+    font-size: clamp(18px, 1.6vw, 22px);
+    font-weight: 900;
+  }
+
+  .bottom-sheet .cart-header .cart-sheet-back-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+  }
+  .bottom-sheet .cart-header .cart-sheet-back-btn:active::after {
+    animation: cartBackRipple 0.4s ease-out;
+  }
+
+  @keyframes cartBackRipple {
+    0% {
+      opacity: 0.3;
+      transform: scale(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
   }
 
   .interface{
@@ -1775,6 +1866,175 @@ body{
   .client-panel-close-btn i {
     font-size: var(--font-lg);
   }
+
+  /* Painel de selecionar cliente: fontes maiores em mobile/tablet (< 905px) */
+  .panel-header-slider h3 {
+    font-size: var(--font-sm);
+  }
+  .panel-header-slider h3 i {
+    font-size: var(--font-xs);
+  }
+  .section-title {
+    font-size: var(--font-xs);
+    letter-spacing: 0.7px;
+  }
+  .client-card-name {
+    font-size: var(--font-base);
+  }
+  .client-card-details {
+    font-size: var(--font-sm);
+  }
+  
+  .client-card-details i {
+    font-size: calc(var(--font-sm) - 2px);
+  }
+  .client-search-input {
+    font-size: var(--font-base);
+  }
+  .client-search-input::placeholder {
+    font-size: var(--font-base);
+  }
+  .client-card-indicator {
+    font-size: var(--font-lg);
+  }
+  .client-form-input {
+    font-size: var(--font-base);
+  }
+  .client-form-input::placeholder {
+    font-size: var(--font-sm);
+  }
+  .client-form-submit {
+    font-size: var(--font-base);
+  }
+  .client-name {
+    font-size: var(--font-md);
+  }
+  .client-details {
+    font-size: var(--font-base);
+  }
+  .btn-new-client {
+    font-size: var(--font-base);
+  }
+
+  .order-summary-content {
+    padding-left: clamp(8px, 2vw, 16px);
+    padding-right: clamp(8px, 2vw, 16px);
+    padding-top: clamp(16px, 2vw, 22px);
+    padding-bottom: clamp(16px, 2vw, 22px);
+  }
+
+  /* Font-size aumentado para a linha "Total a pagar" */
+  .order-row--total .order-row-label,
+  .order-row--total .order-row-value {
+    font-size: clamp(20px, 3.5vw, 22px);
+  }
+
+  /* Classe específica para destacar ainda mais o Total a pagar no bottom sheet */
+  .order-total-highlighted .order-row-label,
+  .order-total-highlighted .order-row-value {
+    font-size: clamp(20px, 3.5vw, 22px) !important;
+  }
+
+  /* Font-size para texto na ordem de venda (≤905px) */
+  .order-summary-content .order-row-label,
+  .order-summary-content .order-row-value {
+    font-size: clamp(16px, 2.5vw, 22px);
+  }
+
+  .order-obs-view .order-obs-header,
+  .order-obs-view .order-obs-tab,
+  .order-obs-view .order-obs-panel,
+  .order-obs-view .order-desc-panel {
+    font-size: clamp(12px, 1.8vw, 18px);
+  }
+
+  .order-obs-tab {
+    padding-top: clamp(8px, 1.2vw, 12px) !important;
+    padding-bottom: clamp(8px, 1.2vw, 12px) !important;
+  }
+
+  .obs-submit-btn,
+  .order-desc-apply-btn {
+    padding: clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px) !important;
+    font-size: clamp(16px, 2.5vw, 20px) !important;
+  }
+
+  .obs-textarea,
+  .order-desc-input {
+    font-size: clamp(12px, 1.8vw, 18px);
+  }
+
+  /* ─── ORDEM DE VENDA + OBS|DESC: 50/50 no Bottom Sheet ≤905px ─── */
+
+  /* Painel ordem: flex column, ocupa todo o espaço cedido pelo pai */
+  .cart-sheet-tab-panel-ordem {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* Container pai: flex column, cresce para preencher o painel */
+  .ordem-sheet-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 0;
+  }
+
+  /* 1ª metade — Ordem de Venda: exactamente 50% da altura */
+  .ordem-summary-section {
+    flex: 0 0 50%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 2ª metade — OBS | Desc: exactamente os outros 50% */
+  .ordem-obs-section {
+    flex: 0 0 50%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid var(--gray-200, #e5e7eb);
+    padding-top: var(--space-sm);
+  }
+
+  /* OBS|Desc: order-obs-view ocupa largura total dentro da secção */
+  .ordem-obs-section .order-obs-view {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* OBS|Desc: esconder botão Voltar */
+  .ordem-obs-section .obs-back-btn {
+    display: none !important;
+  }
+
+  /* OBS|Desc: header em linha só com as tabs */
+  .ordem-obs-section .order-obs-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    padding-bottom: var(--space-xs);
+    gap: 0;
+  }
+
+  /* OBS|Desc: tabs a 100% da largura */
+  .ordem-obs-section .order-obs-tabs {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1809,15 +2069,34 @@ body{
   }
 
   .client-card {
-    padding: var(--space-sm) var(--space-md);
+    padding: clamp(14px, 2vw, 26px) var(--space-lg);
   }
 
   .client-card-name {
-    font-size: var(--font-sm);
+    font-size: clamp(14px, 1.8vw, 18px);
   }
 
   .client-card-details {
-    font-size: var(--font-xs);
+    font-size: clamp(12px, 1.5vw, 15px);
+  }
+  
+  .client-card-details i {
+    font-size: calc(var(--font-xs) - 2px);
+  }
+
+  .client-search-input,
+  .client-form-input {
+    font-size: clamp(14px, 1.8vw, 18px);
+  }
+
+  .client-search-input::placeholder,
+  .client-form-input::placeholder {
+    font-size: clamp(12px, 1.5vw, 15px);
+  }
+
+  .client-form-submit {
+    padding: clamp(14px, 2vw, 26px) var(--space-lg);
+    font-size: clamp(14px, 1.8vw, 18px);
   }
 
   .section-title {
@@ -1862,6 +2141,43 @@ body{
     font-size: var(--font-sm);
   }
 }
-```
+
+@media (max-width: 630px) {
+  .footer-amount-row {
+    flex-wrap: wrap;
+  }
+
+  /* Cancela o mecanismo horizontal e troca para vertical */
+  .footer-amount-row .payment-status-element {
+    order: -1;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100% !important;   /* anula o max-width: 0 do base */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0 !important;
+    transform: translateY(16px);
+    transition: max-height 0.35s ease,
+                opacity 0.35s ease,
+                padding 0.3s ease,
+                transform 0.35s ease;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Quando o JS adiciona .visible � sobe e expande verticalmente */
+  .footer-amount-row .payment-status-element.visible {
+    max-height: 60px;
+    opacity: 1;
+    padding: 6px 10px !important;
+    transform: translateY(0);
+  }
+
+  /* Conte�do do status (�cone + texto) centralizado */
+  .footer-amount-row .payment-status-element .status-text {
+    align-items: center;
+  }
+}
 
 <!-- ========== FIM: layout/responsive.css ========== -->

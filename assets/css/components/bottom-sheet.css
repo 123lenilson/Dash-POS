@@ -319,6 +319,20 @@
   min-height: 0;
   border-bottom: 1px solid var(--line, #e5e7eb);
 }
+
+/* Cabeçalhos estáticos injetados nos painéis só para o mobile */
+.bottom-sheet .sheet-only-header {
+  display: flex !important;
+  background: transparent;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  margin-bottom: 10px;
+}
+.bottom-sheet.bottom-sheet-client .sheet-only-header {
+  background: #F1F3F5;
+  margin-bottom: 0;
+  padding: 14px 14px 12px;
+}
 .bottom-sheet .bottom-sheet-body .cart-header .cart-header-title {
   min-height: 0;
 }
@@ -366,7 +380,7 @@
   flex-shrink: 0;
 }
 .bottom-sheet-doc-type-title {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: #334155;
 }
@@ -389,7 +403,7 @@
   color: #334155;
 }
 .bottom-sheet-close-btn-doc i {
-  font-size: 14px;
+  font-size: var(--font-lg);
 }
 
 .bottom-sheet-header {
@@ -473,4 +487,13 @@
 
 .bottom-sheet-body::-webkit-scrollbar-thumb {
   background: #d0d0d0;
+}
+
+/* =========================================
+   COMPORTAMENTO MOBILE (<= 905px)
+   ========================================= */
+@media (max-width: 905px) {
+  .bottom-sheet .bottom-sheet-title {
+    display: none !important;
+  }
 }
